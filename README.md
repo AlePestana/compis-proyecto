@@ -1,2 +1,2 @@
-To inifiny and beyond
+To infinity and beyond
 # compis-proyecto
