@@ -4,11 +4,11 @@ class Person
 {
   attributes <-
     int age;
-    char name[30];    
+    char name[30];
   ->
 
   methods <-
-    int func one(<- int x; ->)
+    int func one(var <- int x; ->)
     {
       return (age - x);
     }
@@ -20,7 +20,7 @@ var <-
   Person student;
 ->
 
-int func fact(<- int j; ->) 
+int func fact(var <- int j; ->) 
 var <-
   int i;
 ->
@@ -34,7 +34,7 @@ var <-
   }
 }
 
-func pelos(<- int y; ->)
+func pelos(var <- int y; ->)
 var <-
   int x;
 ->
