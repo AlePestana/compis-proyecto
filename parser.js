@@ -14,31 +14,51 @@ const grammar = {
 		},
 		rules: [
 			['\\s+', '/* skip whitespace */'],
+
+			// General Keywords
 			['program', "return 'PROGRAM'"],
+			['main', "return 'MAIN'"],
+
+			
 			['var', "return 'VAR'"],
+
+			// IO
+			['print', "return 'PRINT'"],
+
+
+			// Types
 			['int', "return 'TYPE'"],
 			['float', "return 'TYPE'"],
-			['print', "return 'PRINT'"],
+			
 			['if', "return 'IF'"],
 			['else', "return 'ELSE'"],
 
 			['{letter}({letter}|{digit})*', "return 'ID'"],
+
+			// Literals
 			['{digits}\\.{digits}', "return 'CTE_F'"],
 			['{digits}', "return 'CTE_I'"],
 			['\\"({letters}|{digits})+\\"', "return 'CTE_STRING'"],
 
+			// Relational Operators
 			['\\<\\>', "return '<>'"],
 			['\\<', "return '<'"],
 			['\\>', "return '>'"],
 			['\\=', "return '='"],
+
+			// Arithmetic Operators
 			['\\*', "return '*'"],
 			['\\/', "return '/'"],
 			['-', "return '-'"],
 			['\\+', "return '+'"],
+
+			// Brackets
 			['\\(', "return '('"],
 			['\\)', "return ')'"],
 			['\\{', "return '{'"],
 			['\\}', "return '}'"],
+
+			// Punctuation
 			['\\:', "return ':'"],
 			['\\;', "return ';'"],
 			['\\,', "return ','"],
