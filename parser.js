@@ -81,6 +81,7 @@ const grammar = {
 			['\\:', "return ':'"],
 			['\\;', "return ';'"],
 			['\\,', "return ','"],
+			['\\.', "return '.'"],
 
 			['[{blank}{tab}{newline}{whitespace}]', "return 'WS'"],
 			['$', "return 'EOF'"],
