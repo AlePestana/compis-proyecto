@@ -3,10 +3,13 @@ const Parser = require('jison').Parser
 const grammar = {
 	lex: {
 		macros: {
+			// Foundations
 			digit: '[0-9]',
-			digits: '[0-9]+',
+			digits: '{digit}+',
 			letter: '[a-zA-Z]',
-			letters: '[a-zA-Z]+',
+			letters: '{letter}+',
+
+			// Spacing
 			blank: ' ',
 			tab: `\t`,
 			newline: `\n`,
@@ -14,34 +17,71 @@ const grammar = {
 		},
 		rules: [
 			['\\s+', '/* skip whitespace */'],
+
+			// General reserved words
 			['program', "return 'PROGRAM'"],
+			['main', "return 'MAIN'"],
 			['var', "return 'VAR'"],
-			['int', "return 'TYPE'"],
+
+			// Class reserved words
+			['class', "return 'CLASS'"],
+			['extends', "return 'EXTENDS'"],
+			['attributes', "return 'ATTRIBUTES'"],
+			['methods', "return 'METHODS'"],
+
+			// Function reserved words
+			['func', "return 'FUNC'"],
+			['return', "return 'RETURN'"],
+
+			// Types
+			['int', "return 'TYPE'"], // Change TYPE to respective type?
 			['float', "return 'TYPE'"],
+			['char', "return 'TYPE'"],
+
+			// IO
+			['read', "return 'READ'"],
 			['print', "return 'PRINT'"],
+			
+			// Control reserved words
 			['if', "return 'IF'"],
 			['else', "return 'ELSE'"],
 
+			// Iteration reserved words
+			['while', "return 'WHILE'"],
+			['for', "return 'FOR'"],
+			['until', "return 'UNTIL'"],
+
+			// IDs
 			['{letter}({letter}|{digit})*', "return 'ID'"],
+
+			// Literals
 			['{digits}\\.{digits}', "return 'CTE_F'"],
 			['{digits}', "return 'CTE_I'"],
 			['\\"({letters}|{digits})+\\"', "return 'CTE_STRING'"],
 
+			// Relational Operators
 			['\\<\\>', "return '<>'"],
 			['\\<', "return '<'"],
 			['\\>', "return '>'"],
 			['\\=', "return '='"],
+
+			// Arithmetic Operators
 			['\\*', "return '*'"],
 			['\\/', "return '/'"],
 			['-', "return '-'"],
 			['\\+', "return '+'"],
+
+			// Brackets
 			['\\(', "return '('"],
 			['\\)', "return ')'"],
 			['\\{', "return '{'"],
 			['\\}', "return '}'"],
+
+			// Punctuation
 			['\\:', "return ':'"],
 			['\\;', "return ';'"],
 			['\\,', "return ','"],
+			['\\.', "return '.'"],
 
 			['[{blank}{tab}{newline}{whitespace}]', "return 'WS'"],
 			['$', "return 'EOF'"],
