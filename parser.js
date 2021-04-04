@@ -34,14 +34,14 @@ const grammar = {
 			['return', "return 'RETURN'"],
 
 			// Types
-			['int', "return 'TYPE'"], // Change TYPE to respective type?
-			['float', "return 'TYPE'"],
-			['char', "return 'TYPE'"],
+			['int', "return 'INT'"],
+			['float', "return 'FLOAT'"],
+			['char', "return 'CHAR'"],
 
 			// IO
 			['read', "return 'READ'"],
 			['print', "return 'PRINT'"],
-			
+
 			// Control reserved words
 			['if', "return 'IF'"],
 			['else', "return 'ELSE'"],
@@ -55,15 +55,21 @@ const grammar = {
 			['{letter}({letter}|{digit})*', "return 'ID'"],
 
 			// Literals
-			['{digits}\\.{digits}', "return 'CTE_F'"],
-			['{digits}', "return 'CTE_I'"],
-			['\\"({letters}|{digits})+\\"', "return 'CTE_STRING'"],
+			['{digits}\\.{digits}', "return 'FLOAT_CTE'"],
+			['{digits}', "return 'INT_CTE'"],
+			['\\"({letters}|{digits})+\\"', "return 'STRING_CTE'"],
+
+			['\\<-', "return '<-'"],
+			['\\->', "return '->'"],
 
 			// Relational Operators
-			['\\<\\>', "return '<>'"],
 			['\\<', "return '<'"],
 			['\\>', "return '>'"],
 			['\\=', "return '='"],
+			['\\==', "return '=='"],
+			['\\!=', "return '!='"],
+			['&', "return '&'"],
+			['\\|', "return '|'"],
 
 			// Arithmetic Operators
 			['\\*', "return '*'"],
@@ -94,6 +100,7 @@ const grammar = {
 		initial: [['program', 'return $1']],
 
 		program: [
+			['<- PROGRAM ->', '$$ = true'],
 			['PROGRAM ID ; block EOF', '$$ = true'],
 			['PROGRAM ID ; vars block EOF', '$$ = true'],
 		],
@@ -104,8 +111,8 @@ const grammar = {
 		],
 
 		var_helper: [
-			['id_helper : TYPE', '$$ = $1'],
-			['id_helper : TYPE , var_helper', '$$ = $6'],
+			['id_helper : type', '$$ = $1'],
+			['id_helper : type , var_helper', '$$ = $6'],
 		],
 
 		vars: [['VAR var_helper ;', '$$ = $3']],
@@ -175,14 +182,15 @@ const grammar = {
 		],
 
 		type: [
-			['INT', '$$ = int'],
-			['FLOAT', '$$ = float'],
+			['INT', '$$'],
+			['FLOAT', '$$'],
+			['CHAR', '$$'],
 		],
 
 		var_cte: [
 			['ID', '$$ = yytext'],
-			['CTE_F', '$$ = Number(yytext)'],
-			['CTE_I', '$$ = Number(yytext)'],
+			['FLOAT_CTE', '$$ = Number(yytext)'],
+			['INT_CTE', '$$ = Number(yytext)'],
 		],
 
 		cte_string: [['CTE_STRING', '$$ = yytext']],
