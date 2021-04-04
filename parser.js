@@ -106,7 +106,15 @@ const grammar = {
 			],
 		],
 
-		classes: [['', '$$']],
+		classes: [
+			['CLASS ID { attributes methods }', '$$'],
+			['CLASS ID EXTENDS ID { attributes methods }', '$$'],
+			['', '$$'],
+		],
+
+		attributes: [['ATTRIBUTES <- vars ->', '$$']],
+
+		methods: [['METHODS <- funcs ->', '$$']],
 
 		vars: [['', '$$']],
 
@@ -209,8 +217,23 @@ const grammar = {
 const parser = new Parser(grammar)
 
 // Correct input
-const correct_answer = parser.parse('program prog1; main() {}')
-console.log('works? --> ' + (correct_answer ? 'yes :)' : 'no :('))
+const test1 = parser.parse('program prog1; main() {}')
+console.log('TEST - General program structure (empty)')
+console.log('--> ' + (test1 ? 'yes :)' : 'no :('))
+
+const test2 = parser.parse(`
+	program prog1; 
+	class myClass1 { attributes <- -> methods <- -> } 
+	main() {}`)
+console.log('TEST - Class declarations (empty)')
+console.log('--> ' + (test2 ? 'yes :)' : 'no :('))
+
+const test3 = parser.parse(`
+	program prog1; 
+	class myClass1 extends myClass2 { attributes <- -> methods <- -> } 
+	main() {}`)
+console.log('TEST - Class declarations (empty) with father class')
+console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
 // Incorrect input
 // const wrong_answer1 = parser.parse(
