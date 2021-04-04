@@ -188,7 +188,15 @@ const grammar = {
 			['iteration', '$$'],
 		],
 
-		expression: [['exp', '$$']],
+		expression: [
+			['exp', '$$'],
+			['exp > exp', '$$'],
+			['exp < exp', '$$'],
+			['exp == exp', '$$'],
+			['exp != exp', '$$'],
+			['exp & exp', '$$'],
+			['exp | exp', '$$'],
+		],
 
 		exp: [
 			['term', '$$'],
@@ -206,6 +214,7 @@ const grammar = {
 			['( expression )', '$$'],
 			['+ block', '$$'],
 			['- block', '$$'],
+			['block', '$$'],
 			['var_name', '$$'],
 		],
 
@@ -219,6 +228,7 @@ const grammar = {
 		paramsCall: [
 			['expression', '$$'],
 			['expression , paramsCall', '$$'],
+			['', '$$'],
 		],
 
 		assignment: [['var_name = expression ;', '$$']],
@@ -421,6 +431,24 @@ const test13 = parser.parse(
 	'program prog1; main() { object1.attribute1 = id1; }'
 )
 console.log('--> ' + (test13 ? 'yes :)' : 'no :('))
+
+// Expressions (tested with Assignments)
+console.log('--------------\nExpression (tested with Assignment)')
+console.log('TEST - Expression Parentheses')
+const test14 = parser.parse('program prog1; main() { id1 = (id1); }')
+console.log('--> ' + (test14 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Expression Multiplication Division')
+const test15 = parser.parse('program prog1; main() { id1 = id2 * (id1) / id3; }')
+console.log('--> ' + (test15 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Expression Addition Substraction')
+const test16 = parser.parse('program prog1; main() { id1 = id4 + id2 * (id1) / id3 - id5; }')
+console.log('--> ' + (test16 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Expression Relop >')
+const test17 = parser.parse('program prog1; main() { id1 = id6 > id4 + id2 * (id1) / id3 - id5; }')
+console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
 
 // Incorrect input
 // const wrong_answer1 = parser.parse(
