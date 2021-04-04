@@ -240,7 +240,28 @@ const grammar = {
 
 		void_func_call: [['ID ( paramsCall ) ;', '$$']],
 
-		io: [['', '$$']],
+		io: [
+			['read', '$$'],
+			['print', '$$'],
+		],
+
+		read: [
+			['READ ( var_names ) ;', '$$'],
+		],
+
+		var_names: [
+			['var_name , var_names', '$$'],
+			['var_name', '$$'],
+		],
+
+		print: [
+			['PRINT ( expressions ) ;', '$$'],
+		],
+
+		expressions: [
+			['expression , expressions', '$$'],
+			['expression', '$$'],
+		],
 
 		control: [['', '$$']],
 
@@ -450,7 +471,7 @@ console.log('TEST - Expression Relop >')
 const test17 = parser.parse('program prog1; main() { id1 = id6 > id4 + id2 * (id1) / id3 - id5; }')
 console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
 
-// Assignment
+// Void Func Call
 console.log('--------------\nVoid Func Call')
 console.log('TEST - Calling of a void func without parameters')
 const test18 = parser.parse('program prog1; main() { voidFunc1(); }')
@@ -463,6 +484,29 @@ console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
 console.log('TEST - Calling of a void func with parameters')
 const test20 = parser.parse('program prog1; main() { voidFunc1(2 + 2, id1, idFunc2(2*3, id4)); }') // Interesting failure, can call an id that starts with int
 console.log('--> ' + (test20 ? 'yes :)' : 'no :('))
+
+// IO
+console.log('\n\n--------------\nIO\n')
+
+// Read
+console.log('--------------\nRead')
+console.log('TEST - Reading of a single variable')
+const test21 = parser.parse('program prog1; main() { read(id1); }')
+console.log('--> ' + (test21 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Reading of multiple variables')
+const test22 = parser.parse('program prog1; main() { read(id1, id[1], id[2][3], objId.attrId); }')
+console.log('--> ' + (test22 ? 'yes :)' : 'no :('))
+
+// Print
+console.log('--------------\nPrint')
+console.log('TEST - Printing of a single expression')
+const test23 = parser.parse('program prog1; main() { print(id1); }')
+console.log('--> ' + (test23 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Printing of a multiple expression')
+const test24 = parser.parse('program prog1; main() { print(id1, 2 + 2, id[1], id[2][3], objId.attrId); }')
+console.log('--> ' + (test24 ? 'yes :)' : 'no :('))
 
 // Incorrect input
 // const wrong_answer1 = parser.parse(
