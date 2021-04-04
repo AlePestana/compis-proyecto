@@ -238,7 +238,7 @@ const grammar = {
 			['id . id', '$$'],
 		],
 
-		void_func_call: [['', '$$']],
+		void_func_call: [['ID ( paramsCall ) ;', '$$']],
 
 		io: [['', '$$']],
 
@@ -449,6 +449,20 @@ console.log('--> ' + (test16 ? 'yes :)' : 'no :('))
 console.log('TEST - Expression Relop >')
 const test17 = parser.parse('program prog1; main() { id1 = id6 > id4 + id2 * (id1) / id3 - id5; }')
 console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
+
+// Assignment
+console.log('--------------\nVoid Func Call')
+console.log('TEST - Calling of a void func without parameters')
+const test18 = parser.parse('program prog1; main() { voidFunc1(); }')
+console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
+
+// console.log('TEST - Calling of a void func with parameters')
+// const test19 = parser.parse('program prog1; main() { voidFunc1(2 + 2, id1, intFunc2()); }') // Interesting failure, can call an id that starts with int
+// console.log('--> ' + (test19 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Calling of a void func with parameters')
+const test20 = parser.parse('program prog1; main() { voidFunc1(2 + 2, id1, idFunc2(2*3, id4)); }') // Interesting failure, can call an id that starts with int
+console.log('--> ' + (test20 ? 'yes :)' : 'no :('))
 
 // Incorrect input
 // const wrong_answer1 = parser.parse(
