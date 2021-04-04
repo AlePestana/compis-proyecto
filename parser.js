@@ -100,10 +100,19 @@ const grammar = {
 		initial: [['program', 'return $1']],
 
 		program: [
-			['<- PROGRAM ->', '$$ = true'],
-			['PROGRAM ID ; block EOF', '$$ = true'],
-			['PROGRAM ID ; vars block EOF', '$$ = true'],
+			[
+				'PROGRAM ID ; classes vars funcs MAIN ( ) { statements } EOF',
+				'$$ = true',
+			],
 		],
+
+		classes: [['', '$$']],
+
+		vars: [['', '$$']],
+
+		funcs: [['', '$$']],
+
+		statements: [['', '$$']],
 
 		id_helper: [
 			['ID', '$$ = yytext'],
@@ -115,7 +124,7 @@ const grammar = {
 			['id_helper : type , var_helper', '$$ = $6'],
 		],
 
-		vars: [['VAR var_helper ;', '$$ = $3']],
+		// vars: [['VAR var_helper ;', '$$ = $3']],
 
 		assignment: [['ID = expression ;', '$$ = $3']],
 
@@ -200,21 +209,19 @@ const grammar = {
 const parser = new Parser(grammar)
 
 // Correct input
-const correct_answer = parser.parse(
-	'program prog1; var id1, id2:float; {id1 = 1.1;}'
-)
-console.log('correct answer --> ' + correct_answer)
+const correct_answer = parser.parse('program prog1; main() {}')
+console.log('works? --> ' + (correct_answer ? 'yes :)' : 'no :('))
 
 // Incorrect input
-const wrong_answer1 = parser.parse(
-	'program 3hi; var id1, id2:float; {id1 = 1.1;}'
-)
-console.log('wrong answer 1 --> ' + wrong_answer1)
+// const wrong_answer1 = parser.parse(
+// 	'program 3hi; var id1, id2:float; {id1 = 1.1;}'
+// )
+// console.log('wrong answer 1 --> ' + wrong_answer1)
 
-const wrong_answer2 = parser.parse('prog someID;')
-console.log('wrong answer 2 --> ' + wrong_answer2)
+// const wrong_answer2 = parser.parse('prog someID;')
+// console.log('wrong answer 2 --> ' + wrong_answer2)
 
-const wrong_answer3 = parser.parse('program prog3;')
-console.log('wrong answer 3 --> ' + wrong_answer3)
+// const wrong_answer3 = parser.parse('program prog3;')
+// console.log('wrong answer 3 --> ' + wrong_answer3)
 // program prog1; var id1, id2:float; { }
 // program prog1; var id1, id2:int; {id1 = 1;}
