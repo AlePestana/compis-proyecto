@@ -153,9 +153,33 @@ const grammar = {
 			['ID', '$$'], // Class_name
 		],
 
-		funcs: [['', '$$']],
+		funcs: [
+			['func funcs', '$$'],
+			['', '$$'],
+		],
+
+		func: [
+			['FUNC ID ( params ) vars { func_statements }', '$$'],
+			['return_type FUNC ID ( params ) vars { func_statements }', '$$'],
+		],
+
+		return_type: [
+			['type', '$$'],
+			['', '$$'], // void functions
+		],
+
+		params: [['vars', '$$']],
+
+		func_statements: [
+			['statements', '$$'],
+			['RETURN expression ;', '$$'],
+		],
+
+		expression: [['ID', '$$']],
 
 		statements: [['', '$$']],
+
+		// ---------------------------------------------------
 
 		id_helper: [
 			['ID', '$$ = yytext'],
@@ -194,12 +218,12 @@ const grammar = {
 
 		exp: [['term exp_helper', '$$']],
 
-		expression: [
-			['exp', '$$ = $1'],
-			['exp > exp', '$$ = $1 > $2'],
-			['exp < exp', '$$ = $1 < $2'],
-			['exp <> exp', '$$ = $1 != $2'],
-		],
+		// expression: [
+		// 	['exp', '$$ = $1'],
+		// 	['exp > exp', '$$ = $1 > $2'],
+		// 	['exp < exp', '$$ = $1 < $2'],
+		// 	['exp <> exp', '$$ = $1 != $2'],
+		// ],
 
 		wtg_helper: [
 			[', expression wtg_helper', '$$'],
@@ -249,51 +273,78 @@ const parser = new Parser(grammar)
 
 // Program
 console.log('--------------\nProgram')
-const test1 = parser.parse('program prog1; main() {}')
 console.log('TEST - General program structure (empty)')
+const test1 = parser.parse('program prog1; main() {}')
 console.log('--> ' + (test1 ? 'yes :)' : 'no :('))
 
 // Classes
 console.log('--------------\nClasses')
+console.log('TEST - Class declarations (empty)')
 const test2 = parser.parse(`
 	program prog1; 
 	class myClass1 { attributes <- -> methods <- -> } 
 	main() {}`)
-console.log('TEST - Class declarations (empty)')
 console.log('--> ' + (test2 ? 'yes :)' : 'no :('))
 
+console.log('TEST - Class declarations (empty) with father class')
 const test3 = parser.parse(`
 	program prog1; 
 	class myClass1 extends myClass2 { attributes <- -> methods <- -> } 
 	main() {}`)
-console.log('TEST - Class declarations (empty) with father class')
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
 // Variables
 console.log('--------------\nVariables')
+console.log('TEST - Vars declarations 1 var')
 const test4 = parser.parse(`
 	program prog1; 
-	class myClass1 extends myClass2 { attributes <- -> methods <- -> } 
 	var <- int id1; -> 
 	main() {}`)
-console.log('TEST - Vars declarations 1 var')
 console.log('--> ' + (test4 ? 'yes :)' : 'no :('))
 
+console.log('TEST - Vars declarations n vars')
 const test5 = parser.parse(`
 	program prog1; 
-	class myClass1 extends myClass2 { attributes <- -> methods <- -> } 
 	var <- int id1, id2; float id3; -> 
 	main() {}`)
-console.log('TEST - Vars declarations n vars')
 console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
 
+console.log('TEST - Vars declarations n vars with multi-dim vars')
 const test6 = parser.parse(`
 	program prog1; 
-	class myClass1 extends myClass2 { attributes <- -> methods <- -> } 
 	var <- int id1, id2[1]; float id3, id4[n, m]; -> 
 	main() {}`)
-console.log('TEST - Vars declarations n vars with multi-dim vars')
 console.log('--> ' + (test6 ? 'yes :)' : 'no :('))
+
+// Funcs
+console.log('--------------\nFuncs')
+console.log('TEST - Func declaration (empty)')
+const test7 = parser.parse(`
+	program prog1; 
+	int func myFunc1 () { }
+	main() {}`)
+console.log('--> ' + (test7 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Void func declaration (empty)')
+const test8 = parser.parse(`
+	program prog1; 
+	func myFunc1 () { }
+	main() {}`)
+console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Func declaration with parameters')
+const test9 = parser.parse(`
+	program prog1; 
+	func myFunc1 (var <- int id1; ->) { }
+	main() {}`)
+console.log('--> ' + (test9 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Func declaration with parameters and statements')
+const test10 = parser.parse(`
+	program prog1; 
+	func myFunc1 (var <- int id1; ->) { return id1; }
+	main() {}`)
+console.log('--> ' + (test10 ? 'yes :)' : 'no :('))
 
 // Incorrect input
 // const wrong_answer1 = parser.parse(
