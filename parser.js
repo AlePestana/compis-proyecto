@@ -385,6 +385,12 @@ console.log('TEST - Assignment of variable of multi-dim struct')
 const test12 = parser.parse('program prog1; main() { id1[1][n] = id1; }')
 console.log('--> ' + (test12 ? 'yes :)' : 'no :('))
 
+console.log('TEST - Assignment of variable of object')
+const test13 = parser.parse(
+	'program prog1; main() { object1.attribute1 = id1; }'
+)
+console.log('--> ' + (test13 ? 'yes :)' : 'no :('))
+
 // Incorrect input
 // const wrong_answer1 = parser.parse(
 // 	'program 3hi; var id1, id2:float; {id1 = 1.1;}'
