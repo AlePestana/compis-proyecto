@@ -188,7 +188,38 @@ const grammar = {
 			['iteration', '$$'],
 		],
 
-		expression: [['ID', '$$']],
+		expression: [['exp', '$$']],
+
+		exp: [
+			['term', '$$'],
+			['term + exp', '$$'],
+			['term - exp', '$$'],
+		],
+
+		term: [
+			['factor', '$$'],
+			['factor * term', '$$'],
+			['factor / term', '$$'],
+		],
+
+		factor: [
+			['( expression )', '$$'],
+			['+ block', '$$'],
+			['- block', '$$'],
+			['var_name', '$$'],
+		],
+
+		block: [
+			//['void_func_call', '$$'], This one doesn't return anything so can't be part of an expression?
+			['INT_CTE', '$$'],
+			['FLOAT_CTE', '$$'],
+			['ID ( paramsCall )', '$$'] // calling a function with return type
+		],
+
+		paramsCall: [
+			['expression', '$$'],
+			['expression , paramsCall', '$$'],
+		],
 
 		assignment: [['var_name = expression ;', '$$']],
 
