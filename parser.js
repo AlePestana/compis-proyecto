@@ -82,6 +82,8 @@ const grammar = {
 			['\\)', "return ')'"],
 			['\\{', "return '{'"],
 			['\\}', "return '}'"],
+			['\\[', "return '['"],
+			['\\]', "return ']'"],
 
 			// Punctuation
 			['\\:', "return ':'"],
@@ -116,7 +118,40 @@ const grammar = {
 
 		methods: [['METHODS <- funcs ->', '$$']],
 
-		vars: [['', '$$']],
+		vars: [
+			['var vars', '$$'],
+			['', '$$'],
+		],
+
+		var: [['VAR <- type id ids ; var_list ->', '$$']],
+
+		var_list: [
+			['type id ids ; var_list', '$$'],
+			['', '$$'],
+		],
+
+		ids: [
+			[', id ids', '$$'],
+			['', '$$'],
+		],
+
+		id: [
+			['ID', '$$'],
+			['ID [ index ]', '$$'],
+			['ID [ index , index ]', '$$'],
+		],
+
+		index: [
+			['ID', '$$'],
+			['INT_CTE', '$$'],
+		],
+
+		type: [
+			['INT', '$$'],
+			['FLOAT', '$$'],
+			['CHAR', '$$'],
+			['ID', '$$'], // Class_name
+		],
 
 		funcs: [['', '$$']],
 
@@ -198,12 +233,6 @@ const grammar = {
 			['{ statute block_hlpr }', '$$'],
 		],
 
-		type: [
-			['INT', '$$'],
-			['FLOAT', '$$'],
-			['CHAR', '$$'],
-		],
-
 		var_cte: [
 			['ID', '$$ = yytext'],
 			['FLOAT_CTE', '$$ = Number(yytext)'],
@@ -217,10 +246,15 @@ const grammar = {
 const parser = new Parser(grammar)
 
 // Correct input
+
+// Program
+console.log('--------------\nProgram')
 const test1 = parser.parse('program prog1; main() {}')
 console.log('TEST - General program structure (empty)')
 console.log('--> ' + (test1 ? 'yes :)' : 'no :('))
 
+// Classes
+console.log('--------------\nClasses')
 const test2 = parser.parse(`
 	program prog1; 
 	class myClass1 { attributes <- -> methods <- -> } 
@@ -234,6 +268,32 @@ const test3 = parser.parse(`
 	main() {}`)
 console.log('TEST - Class declarations (empty) with father class')
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
+
+// Variables
+console.log('--------------\nVariables')
+const test4 = parser.parse(`
+	program prog1; 
+	class myClass1 extends myClass2 { attributes <- -> methods <- -> } 
+	var <- int id1; -> 
+	main() {}`)
+console.log('TEST - Vars declarations 1 var')
+console.log('--> ' + (test4 ? 'yes :)' : 'no :('))
+
+const test5 = parser.parse(`
+	program prog1; 
+	class myClass1 extends myClass2 { attributes <- -> methods <- -> } 
+	var <- int id1, id2; float id3; -> 
+	main() {}`)
+console.log('TEST - Vars declarations n vars')
+console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
+
+const test6 = parser.parse(`
+	program prog1; 
+	class myClass1 extends myClass2 { attributes <- -> methods <- -> } 
+	var <- int id1, id2[1]; float id3, id4[n, m]; -> 
+	main() {}`)
+console.log('TEST - Vars declarations n vars with multi-dim vars')
+console.log('--> ' + (test6 ? 'yes :)' : 'no :('))
 
 // Incorrect input
 // const wrong_answer1 = parser.parse(
