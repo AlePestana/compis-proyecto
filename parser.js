@@ -172,7 +172,7 @@ const grammar = {
 
 		func_statements: [
 			['statements', '$$'],
-			['RETURN expression ;', '$$'],
+			['RETURN expression ; func_statements', '$$'],
 		],
 
 		expression: [['ID', '$$']],
