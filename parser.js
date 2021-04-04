@@ -138,7 +138,7 @@ const grammar = {
 		id: [
 			['ID', '$$'],
 			['ID [ index ]', '$$'],
-			['ID [ index , index ]', '$$'],
+			['ID [ index ] [ index ]', '$$'],
 		],
 
 		index: [
@@ -175,48 +175,74 @@ const grammar = {
 			['RETURN expression ; func_statements', '$$'],
 		],
 
+		statements: [
+			['statement statements', '$$'],
+			['', '$$'],
+		],
+
+		statement: [
+			['assignment', '$$'],
+			['void_func_call', '$$'],
+			['io', '$$'],
+			['control', '$$'],
+			['iteration', '$$'],
+		],
+
 		expression: [['ID', '$$']],
 
-		statements: [['', '$$']],
+		assignment: [['var_name = expression ;', '$$']],
+
+		var_name: [
+			['id', '$$'],
+			['id . id', '$$'],
+		],
+
+		void_func_call: [['', '$$']],
+
+		io: [['', '$$']],
+
+		control: [['', '$$']],
+
+		iteration: [['', '$$']],
 
 		// ---------------------------------------------------
 
-		id_helper: [
-			['ID', '$$ = yytext'],
-			['ID , id_helper', '$$ = $1'],
-		],
+		// id_helper: [
+		// 	['ID', '$$ = yytext'],
+		// 	['ID , id_helper', '$$ = $1'],
+		// ],
 
-		var_helper: [
-			['id_helper : type', '$$ = $1'],
-			['id_helper : type , var_helper', '$$ = $6'],
-		],
+		// var_helper: [
+		// 	['id_helper : type', '$$ = $1'],
+		// 	['id_helper : type , var_helper', '$$ = $6'],
+		// ],
 
 		// vars: [['VAR var_helper ;', '$$ = $3']],
 
-		assignment: [['ID = expression ;', '$$ = $3']],
+		// assignment: [['ID = expression ;', '$$ = $3']],
 
-		factor: [
-			['( expression )', '$$ = $1'],
-			['var_cte', '$$ = $1'],
-			['+ var_cte', '$$ = $1'],
-			['- var_cte', '$$ = $1'],
-		],
+		// factor: [
+		// 	['( expression )', '$$ = $1'],
+		// 	['var_cte', '$$ = $1'],
+		// 	['+ var_cte', '$$ = $1'],
+		// 	['- var_cte', '$$ = $1'],
+		// ],
 
-		term_helper: [
-			['* factor term_helper', '$$'],
-			['/ factor term_helper', '$$'],
-			['', '$$'],
-		],
+		// term_helper: [
+		// 	['* factor term_helper', '$$'],
+		// 	['/ factor term_helper', '$$'],
+		// 	['', '$$'],
+		// ],
 
-		term: [['factor term_helper', '$$']],
+		// term: [['factor term_helper', '$$']],
 
-		exp_helper: [
-			['+ term exp_helper', '$$'],
-			['- term exp_helper', '$$'],
-			['', '$$'],
-		],
+		// exp_helper: [
+		// 	['+ term exp_helper', '$$'],
+		// 	['- term exp_helper', '$$'],
+		// 	['', '$$'],
+		// ],
 
-		exp: [['term exp_helper', '$$']],
+		// exp: [['term exp_helper', '$$']],
 
 		// expression: [
 		// 	['exp', '$$ = $1'],
@@ -225,45 +251,45 @@ const grammar = {
 		// 	['exp <> exp', '$$ = $1 != $2'],
 		// ],
 
-		wtg_helper: [
-			[', expression wtg_helper', '$$'],
-			[', CTE_STRING wtg_helper', '$$'],
-			['', '$$'],
-		],
+		// wtg_helper: [
+		// 	[', expression wtg_helper', '$$'],
+		// 	[', CTE_STRING wtg_helper', '$$'],
+		// 	['', '$$'],
+		// ],
 
-		writing: [
-			['PRINT ( expression wtg_helper ) ;', '$$'],
-			['PRINT ( CTE_STRING wtg_helper ) ;', '$$'],
-		],
+		// writing: [
+		// 	['PRINT ( expression wtg_helper ) ;', '$$'],
+		// 	['PRINT ( CTE_STRING wtg_helper ) ;', '$$'],
+		// ],
 
-		condition: [
-			['IF ( expression ) block ;', '$$'],
-			['IF ( expression ) block ; ELSE block ;', '$$'],
-		],
+		// condition: [
+		// 	['IF ( expression ) block ;', '$$'],
+		// 	['IF ( expression ) block ; ELSE block ;', '$$'],
+		// ],
 
-		statute: [
-			['assignment', '$$'],
-			['condition', '$$'],
-			['writing', '$$'],
-		],
+		// statute: [
+		// 	['assignment', '$$'],
+		// 	['condition', '$$'],
+		// 	['writing', '$$'],
+		// ],
 
-		block_hlpr: [
-			['statute block_hlpr', '$$'],
-			['', '$$'],
-		],
+		// block_hlpr: [
+		// 	['statute block_hlpr', '$$'],
+		// 	['', '$$'],
+		// ],
 
-		block: [
-			['{ }', '$$'],
-			['{ statute block_hlpr }', '$$'],
-		],
+		// block: [
+		// 	['{ }', '$$'],
+		// 	['{ statute block_hlpr }', '$$'],
+		// ],
 
-		var_cte: [
-			['ID', '$$ = yytext'],
-			['FLOAT_CTE', '$$ = Number(yytext)'],
-			['INT_CTE', '$$ = Number(yytext)'],
-		],
+		// var_cte: [
+		// 	['ID', '$$ = yytext'],
+		// 	['FLOAT_CTE', '$$ = Number(yytext)'],
+		// 	['INT_CTE', '$$ = Number(yytext)'],
+		// ],
 
-		cte_string: [['CTE_STRING', '$$ = yytext']],
+		// cte_string: [['CTE_STRING', '$$ = yytext']],
 	},
 }
 
@@ -312,7 +338,7 @@ console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
 console.log('TEST - Vars declarations n vars with multi-dim vars')
 const test6 = parser.parse(`
 	program prog1; 
-	var <- int id1, id2[1]; float id3, id4[n, m]; -> 
+	var <- int id1, id2[1]; float id3, id4[n][m]; -> 
 	main() {}`)
 console.log('--> ' + (test6 ? 'yes :)' : 'no :('))
 
@@ -345,6 +371,19 @@ const test10 = parser.parse(`
 	func myFunc1 (var <- int id1; ->) { return id1; }
 	main() {}`)
 console.log('--> ' + (test10 ? 'yes :)' : 'no :('))
+
+// Statements
+console.log('--------------\nStatements\n')
+
+// Assignment
+console.log('--------------\nAssignment')
+console.log('TEST - Assignment of simple variable')
+const test11 = parser.parse('program prog1; main() { id1 = id1; }')
+console.log('--> ' + (test11 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Assignment of variable of multi-dim struct')
+const test12 = parser.parse('program prog1; main() { id1[1][n] = id1; }')
+console.log('--> ' + (test12 ? 'yes :)' : 'no :('))
 
 // Incorrect input
 // const wrong_answer1 = parser.parse(
