@@ -255,15 +255,24 @@ const grammar = {
 		],
 
 		print: [
-			['PRINT ( expressions ) ;', '$$'],
+			['PRINT ( printParams ) ;', '$$'],
 		],
 
-		expressions: [
-			['expression , expressions', '$$'],
+		printParams: [
+			['expression , printParams', '$$'],
 			['expression', '$$'],
+			['STRING_CTE , printParams', '$$'],
+			['STRING_CTE', '$$'],
 		],
 
-		control: [['', '$$']],
+		control: [
+			['IF ( expression ) { statements } else', '$$'],
+		],
+
+		else: [
+			['ELSE { statements }', '$$'],
+			['', '$$'],
+		],
 
 		iteration: [['', '$$']],
 
@@ -507,6 +516,20 @@ console.log('--> ' + (test23 ? 'yes :)' : 'no :('))
 console.log('TEST - Printing of a multiple expression')
 const test24 = parser.parse('program prog1; main() { print(id1, 2 + 2, id[1], id[2][3], objId.attrId); }')
 console.log('--> ' + (test24 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Printing a string')
+const test25 = parser.parse('program prog1; main() { print("HiMom"); }')
+console.log('--> ' + (test25 ? 'yes :)' : 'no :('))
+
+// Control statements
+console.log('\n\n--------------\nControl')
+console.log('TEST - if without else')
+const test26 = parser.parse('program prog1; main() { if (id1 > id2) { print("HiMom"); } }')
+console.log('--> ' + (test26 ? 'yes :)' : 'no :('))
+
+console.log('TEST - if with else')
+const test27 = parser.parse('program prog1; main() { if (id1 > id2) { print("HiMom"); } else { print("ByeMom"); } }')
+console.log('--> ' + (test27 ? 'yes :)' : 'no :('))
 
 // Incorrect input
 // const wrong_answer1 = parser.parse(
