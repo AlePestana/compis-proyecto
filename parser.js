@@ -274,7 +274,18 @@ const grammar = {
 			['', '$$'],
 		],
 
-		iteration: [['', '$$']],
+		iteration: [
+			['while', '$$'],
+			['for', '$$'],
+		],
+
+		while: [
+			['WHILE ( expression ) { statements }', '$$'],
+		],
+
+		for: [
+			['FOR ( var_name = expression UNTIL expression ) { statements }', '$$'],
+		],
 
 		// ---------------------------------------------------
 
@@ -530,6 +541,19 @@ console.log('--> ' + (test26 ? 'yes :)' : 'no :('))
 console.log('TEST - if with else')
 const test27 = parser.parse('program prog1; main() { if (id1 > id2) { print("HiMom"); } else { print("ByeMom"); } }')
 console.log('--> ' + (test27 ? 'yes :)' : 'no :('))
+
+// Iteration statements
+console.log('\n\n--------------\nIteration')
+
+console.log('\n--------------\nWhile Loop')
+console.log('TEST - while loop')
+const test28 = parser.parse('program prog1; main() { while (id1 > id2) { id1 = id1 + 1; } }')
+console.log('--> ' + (test28 ? 'yes :)' : 'no :('))
+
+console.log('--------------\nFor Loop')
+console.log('TEST - for loop')
+const test29 = parser.parse('program prog1; main() { for (id1 = 1 until 5) { print(id1); } }')
+console.log('--> ' + (test29 ? 'yes :)' : 'no :('))
 
 // Incorrect input
 // const wrong_answer1 = parser.parse(
