@@ -155,12 +155,7 @@ const grammar = {
 
 		func: [
 			['FUNC ID ( params ) vars { func_statements }', '$$'],
-			['return_type FUNC ID ( params ) vars { func_statements }', '$$'],
-		],
-
-		return_type: [
-			['type', '$$'],
-			['', '$$'], // void functions
+			['type FUNC ID ( params ) vars { func_statements }', '$$'],
 		],
 
 		params: [['vars', '$$']],
