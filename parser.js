@@ -119,11 +119,9 @@ const grammar = {
 		methods: [['METHODS <- funcs ->', '$$']],
 
 		vars: [
-			['var vars', '$$'],
+			['VAR <- type id ids ; var_list ->', '$$'],
 			['', '$$'],
 		],
-
-		var: [['VAR <- type id ids ; var_list ->', '$$']],
 
 		var_list: [
 			['type id ids ; var_list', '$$'],
@@ -141,10 +139,7 @@ const grammar = {
 			['ID [ index ] [ index ]', '$$'],
 		],
 
-		index: [
-			['ID', '$$'],
-			['INT_CTE', '$$'],
-		],
+		index: [['expression', '$$']],
 
 		type: [
 			['INT', '$$'],
