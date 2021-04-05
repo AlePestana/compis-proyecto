@@ -114,7 +114,7 @@ const grammar = {
 			['', '$$'],
 		],
 
-		attributes: [['ATTRIBUTES <- vars ->', '$$']],
+		attributes: [['ATTRIBUTES <- var_list ->', '$$']],
 
 		methods: [['METHODS <- funcs ->', '$$']],
 
@@ -209,7 +209,6 @@ const grammar = {
 		],
 
 		block: [
-			//['void_func_call', '$$'], This one doesn't return anything so can't be part of an expression?
 			['INT_CTE', '$$'],
 			['FLOAT_CTE', '$$'],
 			['ID ( params_call )', '$$'], // calling a function with return type
@@ -296,6 +295,13 @@ const test3 = parser.parse(`
 	class myClass1 extends myClass2 { attributes <- -> methods <- -> } 
 	main() {}`)
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Class declarations with variables')
+const test3a = parser.parse(`
+	program prog1; 
+	class myClass1 extends myClass2 { attributes <- int id1; -> methods <- -> } 
+	main() {}`)
+console.log('--> ' + (test3a ? 'yes :)' : 'no :('))
 
 // Variables
 console.log('--------------\nVariables')
