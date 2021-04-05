@@ -275,13 +275,13 @@ const parser = new Parser(grammar)
 // Correct input
 
 // Program
-console.log('--------------\nProgram')
+console.log('\n--------------\nProgram')
 console.log('TEST - General program structure (empty)')
 const test1 = parser.parse('program prog1; main() {}')
 console.log('--> ' + (test1 ? 'yes :)' : 'no :('))
 
 // Classes
-console.log('--------------\nClasses')
+console.log('\n--------------\nClasses')
 console.log('TEST - Class declarations (empty)')
 const test2 = parser.parse(`
 	program prog1; 
@@ -304,7 +304,7 @@ const test3a = parser.parse(`
 console.log('--> ' + (test3a ? 'yes :)' : 'no :('))
 
 // Variables
-console.log('--------------\nVariables')
+console.log('\n--------------\nVariables')
 console.log('TEST - Vars declarations 1 var')
 const test4 = parser.parse(`
 	program prog1; 
@@ -327,7 +327,7 @@ const test6 = parser.parse(`
 console.log('--> ' + (test6 ? 'yes :)' : 'no :('))
 
 // Funcs
-console.log('--------------\nFuncs')
+console.log('\n--------------\nFuncs')
 console.log('TEST - Func declaration (empty)')
 const test7 = parser.parse(`
 	program prog1; 
@@ -357,10 +357,10 @@ const test10 = parser.parse(`
 console.log('--> ' + (test10 ? 'yes :)' : 'no :('))
 
 // Statements
-console.log('--------------\nStatements\n')
+console.log('\n--------------\nStatements')
 
 // Assignment
-console.log('--------------\nAssignment')
+console.log('\n--------------\nAssignment')
 console.log('TEST - Assignment of simple variable')
 const test11 = parser.parse('program prog1; main() { id1 = id1; }')
 console.log('--> ' + (test11 ? 'yes :)' : 'no :('))
@@ -376,7 +376,7 @@ const test13 = parser.parse(
 console.log('--> ' + (test13 ? 'yes :)' : 'no :('))
 
 // Expressions (tested with Assignments)
-console.log('--------------\nExpression (tested with Assignment)')
+console.log('\n--------------\nExpression (tested with Assignment)')
 console.log('TEST - Expression Parentheses')
 const test14 = parser.parse('program prog1; main() { id1 = (id1); }')
 console.log('--> ' + (test14 ? 'yes :)' : 'no :('))
@@ -399,27 +399,33 @@ const test17 = parser.parse(
 )
 console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
 
+console.log('TEST - Expression with var name')
+const test17a = parser.parse('program prog1; main() { id1 = id6; }')
+console.log('--> ' + (test17a ? 'yes :)' : 'no :('))
+
 // Void Func Call
-console.log('--------------\nVoid Func Call')
+console.log('\n--------------\nVoid Func Call')
 console.log('TEST - Calling of a void func without parameters')
 const test18 = parser.parse('program prog1; main() { voidFunc1(); }')
 console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
 
-// console.log('TEST - Calling of a void func with parameters')
-// const test19 = parser.parse('program prog1; main() { voidFunc1(2 + 2, id1, intFunc2()); }') // Interesting failure, can call an id that starts with int
-// console.log('--> ' + (test19 ? 'yes :)' : 'no :('))
-
 console.log('TEST - Calling of a void func with parameters')
+const test19 = parser.parse(
+	'program prog1; main() { voidFunc1(2 + 2, id1, voidFunc2()); }'
+) // Interesting failure, can call an id that starts with int
+console.log('--> ' + (test19 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Calling of a void func with parameters with another func')
 const test20 = parser.parse(
 	'program prog1; main() { voidFunc1(2 + 2, id1, idFunc2(2*3, id4)); }'
 ) // Interesting failure, can call an id that starts with int
 console.log('--> ' + (test20 ? 'yes :)' : 'no :('))
 
 // IO
-console.log('\n\n--------------\nIO\n')
+console.log('\n--------------\nIO')
 
 // Read
-console.log('--------------\nRead')
+console.log('\n--------------\nRead')
 console.log('TEST - Reading of a single variable')
 const test21 = parser.parse('program prog1; main() { read(id1); }')
 console.log('--> ' + (test21 ? 'yes :)' : 'no :('))
@@ -431,12 +437,12 @@ const test22 = parser.parse(
 console.log('--> ' + (test22 ? 'yes :)' : 'no :('))
 
 // Print
-console.log('--------------\nPrint')
+console.log('\n--------------\nPrint')
 console.log('TEST - Printing of a single expression')
 const test23 = parser.parse('program prog1; main() { print(id1); }')
 console.log('--> ' + (test23 ? 'yes :)' : 'no :('))
 
-console.log('TEST - Printing of a multiple expression')
+console.log('TEST - Printing of multiple expressions')
 const test24 = parser.parse(
 	'program prog1; main() { print(id1, 2 + 2, id[1], id[2][3], objId.attrId); }'
 )
@@ -446,8 +452,14 @@ console.log('TEST - Printing a string')
 const test25 = parser.parse('program prog1; main() { print("HiMom"); }')
 console.log('--> ' + (test25 ? 'yes :)' : 'no :('))
 
+console.log('TEST - Printing a string with expressions')
+const test25a = parser.parse(
+	'program prog1; main() { print("ByeMom", id1[4]); }'
+)
+console.log('--> ' + (test25a ? 'yes :)' : 'no :('))
+
 // Control statements
-console.log('\n\n--------------\nControl')
+console.log('\n--------------\nControl')
 console.log('TEST - if without else')
 const test26 = parser.parse(
 	'program prog1; main() { if (id1 > id2) { print("HiMom"); } }'
@@ -461,7 +473,7 @@ const test27 = parser.parse(
 console.log('--> ' + (test27 ? 'yes :)' : 'no :('))
 
 // Iteration statements
-console.log('\n\n--------------\nIteration')
+console.log('\n--------------\nIteration')
 
 console.log('\n--------------\nWhile Loop')
 console.log('TEST - while loop')
@@ -470,23 +482,9 @@ const test28 = parser.parse(
 )
 console.log('--> ' + (test28 ? 'yes :)' : 'no :('))
 
-console.log('--------------\nFor Loop')
+console.log('\n--------------\nFor Loop')
 console.log('TEST - for loop')
 const test29 = parser.parse(
 	'program prog1; main() { for (id1 = 1 until 5) { print(id1); } }'
 )
 console.log('--> ' + (test29 ? 'yes :)' : 'no :('))
-
-// Incorrect input
-// const wrong_answer1 = parser.parse(
-// 	'program 3hi; var id1, id2:float; {id1 = 1.1;}'
-// )
-// console.log('wrong answer 1 --> ' + wrong_answer1)
-
-// const wrong_answer2 = parser.parse('prog someID;')
-// console.log('wrong answer 2 --> ' + wrong_answer2)
-
-// const wrong_answer3 = parser.parse('program prog3;')
-// console.log('wrong answer 3 --> ' + wrong_answer3)
-// program prog1; var id1, id2:float; { }
-// program prog1; var id1, id2:int; {id1 = 1;}
