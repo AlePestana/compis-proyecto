@@ -222,12 +222,12 @@ const grammar = {
 			//['void_func_call', '$$'], This one doesn't return anything so can't be part of an expression?
 			['INT_CTE', '$$'],
 			['FLOAT_CTE', '$$'],
-			['ID ( paramsCall )', '$$'] // calling a function with return type
+			['ID ( params_call )', '$$'], // calling a function with return type
 		],
 
-		paramsCall: [
+		params_call: [
 			['expression', '$$'],
-			['expression , paramsCall', '$$'],
+			['expression , params_call', '$$'],
 			['', '$$'],
 		],
 
@@ -238,36 +238,30 @@ const grammar = {
 			['id . id', '$$'],
 		],
 
-		void_func_call: [['ID ( paramsCall ) ;', '$$']],
+		void_func_call: [['ID ( params_call ) ;', '$$']],
 
 		io: [
 			['read', '$$'],
 			['print', '$$'],
 		],
 
-		read: [
-			['READ ( var_names ) ;', '$$'],
-		],
+		read: [['READ ( var_names ) ;', '$$']],
 
 		var_names: [
 			['var_name , var_names', '$$'],
 			['var_name', '$$'],
 		],
 
-		print: [
-			['PRINT ( printParams ) ;', '$$'],
-		],
+		print: [['PRINT ( print_params ) ;', '$$']],
 
-		printParams: [
-			['expression , printParams', '$$'],
+		print_params: [
+			['expression , print_params', '$$'],
 			['expression', '$$'],
-			['STRING_CTE , printParams', '$$'],
+			['STRING_CTE , print_params', '$$'],
 			['STRING_CTE', '$$'],
 		],
 
-		control: [
-			['IF ( expression ) { statements } else', '$$'],
-		],
+		control: [['IF ( expression ) { statements } else', '$$']],
 
 		else: [
 			['ELSE { statements }', '$$'],
@@ -279,99 +273,11 @@ const grammar = {
 			['for', '$$'],
 		],
 
-		while: [
-			['WHILE ( expression ) { statements }', '$$'],
-		],
+		while: [['WHILE ( expression ) { statements }', '$$']],
 
 		for: [
 			['FOR ( var_name = expression UNTIL expression ) { statements }', '$$'],
 		],
-
-		// ---------------------------------------------------
-
-		// id_helper: [
-		// 	['ID', '$$ = yytext'],
-		// 	['ID , id_helper', '$$ = $1'],
-		// ],
-
-		// var_helper: [
-		// 	['id_helper : type', '$$ = $1'],
-		// 	['id_helper : type , var_helper', '$$ = $6'],
-		// ],
-
-		// vars: [['VAR var_helper ;', '$$ = $3']],
-
-		// assignment: [['ID = expression ;', '$$ = $3']],
-
-		// factor: [
-		// 	['( expression )', '$$ = $1'],
-		// 	['var_cte', '$$ = $1'],
-		// 	['+ var_cte', '$$ = $1'],
-		// 	['- var_cte', '$$ = $1'],
-		// ],
-
-		// term_helper: [
-		// 	['* factor term_helper', '$$'],
-		// 	['/ factor term_helper', '$$'],
-		// 	['', '$$'],
-		// ],
-
-		// term: [['factor term_helper', '$$']],
-
-		// exp_helper: [
-		// 	['+ term exp_helper', '$$'],
-		// 	['- term exp_helper', '$$'],
-		// 	['', '$$'],
-		// ],
-
-		// exp: [['term exp_helper', '$$']],
-
-		// expression: [
-		// 	['exp', '$$ = $1'],
-		// 	['exp > exp', '$$ = $1 > $2'],
-		// 	['exp < exp', '$$ = $1 < $2'],
-		// 	['exp <> exp', '$$ = $1 != $2'],
-		// ],
-
-		// wtg_helper: [
-		// 	[', expression wtg_helper', '$$'],
-		// 	[', CTE_STRING wtg_helper', '$$'],
-		// 	['', '$$'],
-		// ],
-
-		// writing: [
-		// 	['PRINT ( expression wtg_helper ) ;', '$$'],
-		// 	['PRINT ( CTE_STRING wtg_helper ) ;', '$$'],
-		// ],
-
-		// condition: [
-		// 	['IF ( expression ) block ;', '$$'],
-		// 	['IF ( expression ) block ; ELSE block ;', '$$'],
-		// ],
-
-		// statute: [
-		// 	['assignment', '$$'],
-		// 	['condition', '$$'],
-		// 	['writing', '$$'],
-		// ],
-
-		// block_hlpr: [
-		// 	['statute block_hlpr', '$$'],
-		// 	['', '$$'],
-		// ],
-
-		// block: [
-		// 	['{ }', '$$'],
-		// 	['{ statute block_hlpr }', '$$'],
-		// ],
-
-		// var_cte: [
-		// 	['ID', '$$ = yytext'],
-		// 	['FLOAT_CTE', '$$ = Number(yytext)'],
-		// 	['INT_CTE', '$$ = Number(yytext)'],
-		// ],
-
-		// cte_string: [['CTE_STRING', '$$ = yytext']],
 	},
 }
 
@@ -480,15 +386,21 @@ const test14 = parser.parse('program prog1; main() { id1 = (id1); }')
 console.log('--> ' + (test14 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Expression Multiplication Division')
-const test15 = parser.parse('program prog1; main() { id1 = id2 * (id1) / id3; }')
+const test15 = parser.parse(
+	'program prog1; main() { id1 = id2 * (id1) / id3; }'
+)
 console.log('--> ' + (test15 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Expression Addition Substraction')
-const test16 = parser.parse('program prog1; main() { id1 = id4 + id2 * (id1) / id3 - id5; }')
+const test16 = parser.parse(
+	'program prog1; main() { id1 = id4 + id2 * (id1) / id3 - id5; }'
+)
 console.log('--> ' + (test16 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Expression Relop >')
-const test17 = parser.parse('program prog1; main() { id1 = id6 > id4 + id2 * (id1) / id3 - id5; }')
+const test17 = parser.parse(
+	'program prog1; main() { id1 = id6 > id4 + id2 * (id1) / id3 - id5; }'
+)
 console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
 
 // Void Func Call
@@ -502,7 +414,9 @@ console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
 // console.log('--> ' + (test19 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Calling of a void func with parameters')
-const test20 = parser.parse('program prog1; main() { voidFunc1(2 + 2, id1, idFunc2(2*3, id4)); }') // Interesting failure, can call an id that starts with int
+const test20 = parser.parse(
+	'program prog1; main() { voidFunc1(2 + 2, id1, idFunc2(2*3, id4)); }'
+) // Interesting failure, can call an id that starts with int
 console.log('--> ' + (test20 ? 'yes :)' : 'no :('))
 
 // IO
@@ -515,7 +429,9 @@ const test21 = parser.parse('program prog1; main() { read(id1); }')
 console.log('--> ' + (test21 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Reading of multiple variables')
-const test22 = parser.parse('program prog1; main() { read(id1, id[1], id[2][3], objId.attrId); }')
+const test22 = parser.parse(
+	'program prog1; main() { read(id1, id[1], id[2][3], objId.attrId); }'
+)
 console.log('--> ' + (test22 ? 'yes :)' : 'no :('))
 
 // Print
@@ -525,7 +441,9 @@ const test23 = parser.parse('program prog1; main() { print(id1); }')
 console.log('--> ' + (test23 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Printing of a multiple expression')
-const test24 = parser.parse('program prog1; main() { print(id1, 2 + 2, id[1], id[2][3], objId.attrId); }')
+const test24 = parser.parse(
+	'program prog1; main() { print(id1, 2 + 2, id[1], id[2][3], objId.attrId); }'
+)
 console.log('--> ' + (test24 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Printing a string')
@@ -535,11 +453,15 @@ console.log('--> ' + (test25 ? 'yes :)' : 'no :('))
 // Control statements
 console.log('\n\n--------------\nControl')
 console.log('TEST - if without else')
-const test26 = parser.parse('program prog1; main() { if (id1 > id2) { print("HiMom"); } }')
+const test26 = parser.parse(
+	'program prog1; main() { if (id1 > id2) { print("HiMom"); } }'
+)
 console.log('--> ' + (test26 ? 'yes :)' : 'no :('))
 
 console.log('TEST - if with else')
-const test27 = parser.parse('program prog1; main() { if (id1 > id2) { print("HiMom"); } else { print("ByeMom"); } }')
+const test27 = parser.parse(
+	'program prog1; main() { if (id1 > id2) { print("HiMom"); } else { print("ByeMom"); } }'
+)
 console.log('--> ' + (test27 ? 'yes :)' : 'no :('))
 
 // Iteration statements
@@ -547,12 +469,16 @@ console.log('\n\n--------------\nIteration')
 
 console.log('\n--------------\nWhile Loop')
 console.log('TEST - while loop')
-const test28 = parser.parse('program prog1; main() { while (id1 > id2) { id1 = id1 + 1; } }')
+const test28 = parser.parse(
+	'program prog1; main() { while (id1 > id2) { id1 = id1 + 1; } }'
+)
 console.log('--> ' + (test28 ? 'yes :)' : 'no :('))
 
 console.log('--------------\nFor Loop')
 console.log('TEST - for loop')
-const test29 = parser.parse('program prog1; main() { for (id1 = 1 until 5) { print(id1); } }')
+const test29 = parser.parse(
+	'program prog1; main() { for (id1 = 1 until 5) { print(id1); } }'
+)
 console.log('--> ' + (test29 ? 'yes :)' : 'no :('))
 
 // Incorrect input
