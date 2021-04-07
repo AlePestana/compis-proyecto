@@ -103,7 +103,7 @@ const grammar = {
 
 		program: [
 			[
-				'PROGRAM ID ; classes vars funcs MAIN ( ) { statements } EOF',
+				'PROGRAM ID ; classes dec_vars funcs MAIN ( ) { statements } EOF',
 				'$$ = true',
 			],
 		],
@@ -114,17 +114,17 @@ const grammar = {
 			['', '$$'],
 		],
 
-		attributes: [['ATTRIBUTES <- var_list ->', '$$']],
+		attributes: [['ATTRIBUTES <- dec_var_list ->', '$$']],
 
 		methods: [['METHODS <- funcs ->', '$$']],
 
-		vars: [
-			['VAR <- type id ids ; var_list ->', '$$'],
+		dec_vars: [
+			['VAR <- type id ids ; dec_var_list ->', '$$'],
 			['', '$$'],
 		],
 
-		var_list: [
-			['type id ids ; var_list', '$$'],
+		dec_var_list: [
+			['type id ids ; dec_var_list', '$$'],
 			['', '$$'],
 		],
 
@@ -135,11 +135,9 @@ const grammar = {
 
 		id: [
 			['ID', '$$'],
-			['ID [ index ]', '$$'],
-			['ID [ index ] [ index ]', '$$'],
+			['ID [ INT_CTE ]', '$$'],
+			['ID [ INT_CTE ] [ INT_CTE ]', '$$'],
 		],
-
-		index: [['expression', '$$']],
 
 		type: [
 			['INT', '$$'],
@@ -154,11 +152,11 @@ const grammar = {
 		],
 
 		func: [
-			['FUNC ID ( params ) vars { func_statements }', '$$'],
-			['type FUNC ID ( params ) vars { func_statements }', '$$'],
+			['FUNC ID ( params ) dec_vars { func_statements }', '$$'],
+			['type FUNC ID ( params ) dec_vars { func_statements }', '$$'],
 		],
 
-		params: [['vars', '$$']],
+		params: [['dec_vars', '$$']],
 
 		func_statements: [
 			['statements', '$$'],
@@ -322,7 +320,7 @@ console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
 console.log('TEST - Vars declarations n vars with multi-dim vars')
 const test6 = parser.parse(`
 	program prog1; 
-	var <- int id1, id2[1]; float id3, id4[n][m]; -> 
+	var <- int id1, id2[1]; float id3, id4[2][3]; -> 
 	main() {}`)
 console.log('--> ' + (test6 ? 'yes :)' : 'no :('))
 
