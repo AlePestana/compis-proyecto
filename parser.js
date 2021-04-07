@@ -119,32 +119,42 @@ const grammar = {
 		methods: [['METHODS <- funcs ->', '$$']],
 
 		dec_vars: [
-			['VAR <- type id ids ; dec_var_list ->', '$$'],
+			['VAR <- type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_list ->', '$$'],
+			['VAR <- type_compound id_var_dec_compound ids_var_dec_compound ; dec_var_list ->', '$$'],
 			['', '$$'],
 		],
 
 		dec_var_list: [
-			['type id ids ; dec_var_list', '$$'],
+			['type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_list', '$$'],
+			['type_compound id_var_dec_compound ids_var_dec_compound ; dec_var_list', '$$'],
 			['', '$$'],
 		],
 
-		ids: [
-			[', id ids', '$$'],
+		ids_var_dec_simple: [
+			[', id_var_dec_simple ids_var_dec_simple', '$$'],
 			['', '$$'],
 		],
 
-		id: [
+		id_var_dec_simple: [
 			['ID', '$$'],
 			['ID [ INT_CTE ]', '$$'],
 			['ID [ INT_CTE ] [ INT_CTE ]', '$$'],
 		],
 
-		type: [
+		ids_var_dec_compound: [
+			[', id_var_dec_compound ids_var_dec_compound', '$$'],
+			['', '$$'],
+		],
+
+		id_var_dec_compound: [['ID', '$$']],
+
+		type_simple: [
 			['INT', '$$'],
 			['FLOAT', '$$'],
 			['CHAR', '$$'],
-			['ID', '$$'], // Class_name
 		],
+
+		type_compound: [['ID', '$$']], // For classes
 
 		funcs: [
 			['func funcs', '$$'],
@@ -153,10 +163,18 @@ const grammar = {
 
 		func: [
 			['FUNC ID ( params ) dec_vars { func_statements }', '$$'],
-			['type FUNC ID ( params ) dec_vars { func_statements }', '$$'],
+			['type_simple FUNC ID ( params ) dec_vars { func_statements }', '$$'],
 		],
 
-		params: [['dec_vars', '$$']],
+		params: [
+			['VAR <- type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_simple_list ->', '$$'],
+			['', '$$'],
+		],
+
+		dec_var_simple_list: [
+			['type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_simple_list', '$$'],
+			['', '$$'],
+		],
 
 		func_statements: [
 			['statements', '$$'],
@@ -221,9 +239,17 @@ const grammar = {
 		assignment: [['var_name = expression ;', '$$']],
 
 		var_name: [
-			['id', '$$'],
-			['id . id', '$$'],
+			['id_var_use_simple', '$$'],
+			['id_var_use_compound', '$$'],
 		],
+
+		id_var_use_simple: [
+			['ID', '$$'],
+			['ID [ expression ]', '$$'],
+			['ID [ expression ] [ expression ]', '$$'],
+		],
+
+		id_var_use_compound: [['ID . id_var_use_simple', '$$']], // Objects
 
 		void_func_call: [['ID ( params_call ) ;', '$$']],
 
