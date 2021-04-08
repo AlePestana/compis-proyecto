@@ -114,47 +114,57 @@ const grammar = {
 			['', '$$'],
 		],
 
-		attributes: [['ATTRIBUTES <- dec_var_list ->', '$$']],
+		attributes: [['ATTRIBUTES <- simple_var_list ->', '$$']],
 
 		methods: [['METHODS <- funcs ->', '$$']],
 
 		dec_vars: [
-			['VAR <- type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_list ->', '$$'],
-			['VAR <- type_compound id_var_dec_compound ids_var_dec_compound ; dec_var_list ->', '$$'],
+			[
+				'VAR <- simple_type simple_id simple_id_list ; simple_var_list ->',
+				'$$',
+			],
+			[
+				'VAR <- compound_type compound_id compound_id_list ; compound_var_list ->',
+				'$$',
+			],
 			['', '$$'],
 		],
 
-		dec_var_list: [
-			['type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_list', '$$'],
-			['type_compound id_var_dec_compound ids_var_dec_compound ; dec_var_list', '$$'],
+		simple_var_list: [
+			['simple_type simple_id simple_id_list ; simple_var_list', '$$'],
 			['', '$$'],
 		],
 
-		ids_var_dec_simple: [
-			[', id_var_dec_simple ids_var_dec_simple', '$$'],
+		compound_var_list: [
+			['compound_type compound_id compound_id_list ; compound_var_list', '$$'],
 			['', '$$'],
 		],
 
-		id_var_dec_simple: [
+		simple_id_list: [
+			[', simple_id simple_id_list', '$$'],
+			['', '$$'],
+		],
+
+		simple_id: [
 			['ID', '$$'],
 			['ID [ INT_CTE ]', '$$'],
 			['ID [ INT_CTE ] [ INT_CTE ]', '$$'],
 		],
 
-		ids_var_dec_compound: [
-			[', id_var_dec_compound ids_var_dec_compound', '$$'],
+		compound_id_list: [
+			[', compound_id compound_id_list', '$$'],
 			['', '$$'],
 		],
 
-		id_var_dec_compound: [['ID', '$$']],
+		compound_id: [['ID', '$$']],
 
-		type_simple: [
+		simple_type: [
 			['INT', '$$'],
 			['FLOAT', '$$'],
 			['CHAR', '$$'],
 		],
 
-		type_compound: [['ID', '$$']], // For classes
+		compound_type: [['ID', '$$']], // For classes
 
 		funcs: [
 			['func funcs', '$$'],
@@ -163,16 +173,14 @@ const grammar = {
 
 		func: [
 			['FUNC ID ( params ) dec_vars { func_statements }', '$$'],
-			['type_simple FUNC ID ( params ) dec_vars { func_statements }', '$$'],
+			['simple_type FUNC ID ( params ) dec_vars { func_statements }', '$$'],
 		],
 
 		params: [
-			['VAR <- type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_simple_list ->', '$$'],
-			['', '$$'],
-		],
-
-		dec_var_simple_list: [
-			['type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_simple_list', '$$'],
+			[
+				'VAR <- simple_type simple_id simple_id_list ; simple_var_list ->',
+				'$$',
+			],
 			['', '$$'],
 		],
 
