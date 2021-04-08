@@ -242,6 +242,7 @@ const grammar = {
 			['INT_CTE', '$$'],
 			['FLOAT_CTE', '$$'],
 			['ID ( params_call )', '$$'], // calling a function with return type
+			['ID . ID ( params_call )', '$$'], // calling a method from a class with return type
 		],
 
 		params_call: [
@@ -265,7 +266,10 @@ const grammar = {
 
 		compound_id: [['ID . simple_id', '$$']], // Objects
 
-		void_func_call: [['ID ( params_call ) ;', '$$']],
+		void_func_call: [
+			['ID ( params_call ) ;', '$$'],
+			['ID . ID ( params_call ) ;', '$$'], // calling a method from a class with return type
+		],
 
 		io: [
 			['read', '$$'],
@@ -446,6 +450,10 @@ console.log('\n--------------\nVoid Func Call')
 console.log('TEST - Calling of a void func without parameters')
 const test18 = parser.parse('program prog1; main() { myVoidFunc1(); }')
 console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Calling of a void method of class')
+const test18a = parser.parse('program prog1; main() { id1.myVoidFunc1(); }')
+console.log('--> ' + (test18a ? 'yes :)' : 'no :('))
 
 console.log('TEST - Calling of a void func with parameters')
 const test19 = parser.parse(
