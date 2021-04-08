@@ -30,6 +30,7 @@ const grammar = {
 			['methods', "return 'METHODS'"],
 
 			// Function reserved words
+			['void', "return 'VOID'"],
 			['func', "return 'FUNC'"],
 			['return', "return 'RETURN'"],
 
@@ -175,7 +176,7 @@ const grammar = {
 		],
 
 		func: [
-			['FUNC ID ( params ) dec_vars { func_statements }', '$$'],
+			['VOID FUNC ID ( params ) dec_vars { func_statements }', '$$'],
 			['simple_type FUNC ID ( params ) dec_vars { func_statements }', '$$'],
 		],
 
@@ -373,21 +374,21 @@ console.log('--> ' + (test7 ? 'yes :)' : 'no :('))
 console.log('TEST - Void func declaration (empty)')
 const test8 = parser.parse(`
 	program prog1; 
-	func myFunc1 () { }
+	void func myFunc1 () { }
 	main() {}`)
 console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Func declaration with parameters')
 const test9 = parser.parse(`
 	program prog1; 
-	func myFunc1 (var <- int id1; ->) { }
+	void func myFunc1 (var <- int id1; ->) { }
 	main() {}`)
 console.log('--> ' + (test9 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Func declaration with parameters and statements')
 const test10 = parser.parse(`
 	program prog1; 
-	func myFunc1 (var <- int id1; ->) { return id1; }
+	void func myFunc1 (var <- int id1; ->) { return id1; }
 	main() {}`)
 console.log('--> ' + (test10 ? 'yes :)' : 'no :('))
 
@@ -441,18 +442,18 @@ console.log('--> ' + (test17a ? 'yes :)' : 'no :('))
 // Void Func Call
 console.log('\n--------------\nVoid Func Call')
 console.log('TEST - Calling of a void func without parameters')
-const test18 = parser.parse('program prog1; main() { voidFunc1(); }')
+const test18 = parser.parse('program prog1; main() { myVoidFunc1(); }')
 console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Calling of a void func with parameters')
 const test19 = parser.parse(
-	'program prog1; main() { voidFunc1(2 + 2, id1, voidFunc2()); }'
+	'program prog1; main() { myVoidFunc1(2 + 2, id1, myVoidFunc2()); }'
 ) // Interesting failure, can call an id that starts with int
 console.log('--> ' + (test19 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Calling of a void func with parameters with another func')
 const test20 = parser.parse(
-	'program prog1; main() { voidFunc1(2 + 2, id1, idFunc2(2*3, id4)); }'
+	'program prog1; main() { myVoidFunc1(2 + 2, id1, idFunc2(2*3, id4)); }'
 ) // Interesting failure, can call an id that starts with int
 console.log('--> ' + (test20 ? 'yes :)' : 'no :('))
 
