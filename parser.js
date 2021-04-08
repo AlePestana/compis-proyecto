@@ -188,9 +188,11 @@ const grammar = {
 			['', '$$'],
 		],
 
-		func_statements: [
-			['statements', '$$'],
+		func_statements: [['statements func_statements_helper', '$$']],
+
+		func_statements_helper: [
 			['RETURN expression ; func_statements', '$$'],
+			['', '$$'],
 		],
 
 		statements: [
