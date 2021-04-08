@@ -241,8 +241,8 @@ const grammar = {
 		block: [
 			['INT_CTE', '$$'],
 			['FLOAT_CTE', '$$'],
-			['ID ( params_call )', '$$'], // calling a function with return type
-			['ID . ID ( params_call )', '$$'], // calling a method from a class with return type
+			['ID ( params_call )', '$$'], // Calling a function with return type
+			['ID . ID ( params_call )', '$$'], // Calling a method from a class with return type
 		],
 
 		params_call: [
@@ -268,7 +268,7 @@ const grammar = {
 
 		void_func_call: [
 			['ID ( params_call ) ;', '$$'],
-			['ID . ID ( params_call ) ;', '$$'], // calling a method from a class with return type
+			['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
 		],
 
 		io: [
