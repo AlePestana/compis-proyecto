@@ -209,13 +209,21 @@ const grammar = {
 		],
 
 		expression: [
+			['bool_exp', '$$'],
+			['bool_exp | expression', '$$'],
+		],
+
+		bool_exp: [
+			['general_exp', '$$'],
+			['general_exp & bool_exp', '$$'],
+		],
+
+		general_exp: [
 			['exp', '$$'],
 			['exp > exp', '$$'],
 			['exp < exp', '$$'],
 			['exp == exp', '$$'],
 			['exp != exp', '$$'],
-			['exp & exp', '$$'],
-			['exp | exp', '$$'],
 		],
 
 		exp: [
