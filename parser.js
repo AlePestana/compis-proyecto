@@ -30,6 +30,7 @@ const grammar = {
 			['methods', "return 'METHODS'"],
 
 			// Function reserved words
+			['void', "return 'VOID'"],
 			['func', "return 'FUNC'"],
 			['return', "return 'RETURN'"],
 
@@ -114,47 +115,60 @@ const grammar = {
 			['', '$$'],
 		],
 
-		attributes: [['ATTRIBUTES <- dec_var_list ->', '$$']],
+		attributes: [['ATTRIBUTES <- simple_var_list ->', '$$']],
 
 		methods: [['METHODS <- funcs ->', '$$']],
 
 		dec_vars: [
-			['VAR <- type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_list ->', '$$'],
-			['VAR <- type_compound id_var_dec_compound ids_var_dec_compound ; dec_var_list ->', '$$'],
+			[
+				'VAR <- simple_type simple_id_dec simple_id_list ; simple_var_list ->',
+				'$$',
+			],
+			[
+				'VAR <- compound_type compound_id_dec compound_id_list ; compound_var_list ->',
+				'$$',
+			],
 			['', '$$'],
 		],
 
-		dec_var_list: [
-			['type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_list', '$$'],
-			['type_compound id_var_dec_compound ids_var_dec_compound ; dec_var_list', '$$'],
+		simple_var_list: [
+			['simple_type simple_id_dec simple_id_list ; simple_var_list', '$$'],
 			['', '$$'],
 		],
 
-		ids_var_dec_simple: [
-			[', id_var_dec_simple ids_var_dec_simple', '$$'],
+		compound_var_list: [
+			[
+				'compound_type compound_id_dec compound_id_list ; compound_var_list',
+				'$$',
+			],
 			['', '$$'],
 		],
 
-		id_var_dec_simple: [
+		simple_id_list: [
+			[', simple_id_dec simple_id_list', '$$'],
+			['', '$$'],
+		],
+
+		simple_id_dec: [
 			['ID', '$$'],
 			['ID [ INT_CTE ]', '$$'],
 			['ID [ INT_CTE ] [ INT_CTE ]', '$$'],
 		],
 
-		ids_var_dec_compound: [
-			[', id_var_dec_compound ids_var_dec_compound', '$$'],
+		compound_id_list: [
+			[', compound_id_dec compound_id_list', '$$'],
 			['', '$$'],
 		],
 
-		id_var_dec_compound: [['ID', '$$']],
+		compound_id_dec: [['ID', '$$']],
 
-		type_simple: [
+		simple_type: [
 			['INT', '$$'],
 			['FLOAT', '$$'],
 			['CHAR', '$$'],
 		],
 
-		type_compound: [['ID', '$$']], // For classes
+		compound_type: [['ID', '$$']], // For classes
 
 		funcs: [
 			['func funcs', '$$'],
@@ -162,23 +176,23 @@ const grammar = {
 		],
 
 		func: [
-			['FUNC ID ( params ) dec_vars { func_statements }', '$$'],
-			['type_simple FUNC ID ( params ) dec_vars { func_statements }', '$$'],
+			['VOID FUNC ID ( params ) dec_vars { func_statements }', '$$'],
+			['simple_type FUNC ID ( params ) dec_vars { func_statements }', '$$'],
 		],
 
 		params: [
-			['VAR <- type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_simple_list ->', '$$'],
+			[
+				'VAR <- simple_type simple_id_dec simple_id_list ; simple_var_list ->',
+				'$$',
+			],
 			['', '$$'],
 		],
 
-		dec_var_simple_list: [
-			['type_simple id_var_dec_simple ids_var_dec_simple ; dec_var_simple_list', '$$'],
-			['', '$$'],
-		],
+		func_statements: [['statements return_statement', '$$']],
 
-		func_statements: [
-			['statements', '$$'],
+		return_statement: [
 			['RETURN expression ; func_statements', '$$'],
+			['', '$$'],
 		],
 
 		statements: [
@@ -195,13 +209,21 @@ const grammar = {
 		],
 
 		expression: [
+			['bool_exp', '$$'],
+			['bool_exp | expression', '$$'],
+		],
+
+		bool_exp: [
+			['general_exp', '$$'],
+			['general_exp & bool_exp', '$$'],
+		],
+
+		general_exp: [
 			['exp', '$$'],
 			['exp > exp', '$$'],
 			['exp < exp', '$$'],
 			['exp == exp', '$$'],
 			['exp != exp', '$$'],
-			['exp & exp', '$$'],
-			['exp | exp', '$$'],
 		],
 
 		exp: [
@@ -218,16 +240,11 @@ const grammar = {
 
 		factor: [
 			['( expression )', '$$'],
-			['+ block', '$$'],
-			['- block', '$$'],
-			['block', '$$'],
-			['var_name', '$$'],
-		],
-
-		block: [
 			['INT_CTE', '$$'],
 			['FLOAT_CTE', '$$'],
-			['ID ( params_call )', '$$'], // calling a function with return type
+			['var_name', '$$'],
+			['ID ( params_call )', '$$'], // Calling a function with return type
+			['ID . ID ( params_call )', '$$'], // Calling a method from a class with return type
 		],
 
 		params_call: [
@@ -239,19 +256,22 @@ const grammar = {
 		assignment: [['var_name = expression ;', '$$']],
 
 		var_name: [
-			['id_var_use_simple', '$$'],
-			['id_var_use_compound', '$$'],
+			['simple_id', '$$'],
+			['compound_id', '$$'],
 		],
 
-		id_var_use_simple: [
+		simple_id: [
 			['ID', '$$'],
 			['ID [ expression ]', '$$'],
 			['ID [ expression ] [ expression ]', '$$'],
 		],
 
-		id_var_use_compound: [['ID . id_var_use_simple', '$$']], // Objects
+		compound_id: [['ID . simple_id', '$$']], // Objects
 
-		void_func_call: [['ID ( params_call ) ;', '$$']],
+		void_func_call: [
+			['ID ( params_call ) ;', '$$'],
+			['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
+		],
 
 		io: [
 			['read', '$$'],
@@ -362,21 +382,21 @@ console.log('--> ' + (test7 ? 'yes :)' : 'no :('))
 console.log('TEST - Void func declaration (empty)')
 const test8 = parser.parse(`
 	program prog1; 
-	func myFunc1 () { }
+	void func myFunc1 () { }
 	main() {}`)
 console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Func declaration with parameters')
 const test9 = parser.parse(`
 	program prog1; 
-	func myFunc1 (var <- int id1; ->) { }
+	void func myFunc1 (var <- int id1; ->) { }
 	main() {}`)
 console.log('--> ' + (test9 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Func declaration with parameters and statements')
 const test10 = parser.parse(`
 	program prog1; 
-	func myFunc1 (var <- int id1; ->) { return id1; }
+	void func myFunc1 (var <- int id1; ->) { return id1; }
 	main() {}`)
 console.log('--> ' + (test10 ? 'yes :)' : 'no :('))
 
@@ -430,18 +450,22 @@ console.log('--> ' + (test17a ? 'yes :)' : 'no :('))
 // Void Func Call
 console.log('\n--------------\nVoid Func Call')
 console.log('TEST - Calling of a void func without parameters')
-const test18 = parser.parse('program prog1; main() { voidFunc1(); }')
+const test18 = parser.parse('program prog1; main() { myVoidFunc1(); }')
 console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Calling of a void method of class')
+const test18a = parser.parse('program prog1; main() { id1.myVoidFunc1(); }')
+console.log('--> ' + (test18a ? 'yes :)' : 'no :('))
 
 console.log('TEST - Calling of a void func with parameters')
 const test19 = parser.parse(
-	'program prog1; main() { voidFunc1(2 + 2, id1, voidFunc2()); }'
+	'program prog1; main() { myVoidFunc1(2 + 2, id1, myVoidFunc2()); }'
 ) // Interesting failure, can call an id that starts with int
 console.log('--> ' + (test19 ? 'yes :)' : 'no :('))
 
 console.log('TEST - Calling of a void func with parameters with another func')
 const test20 = parser.parse(
-	'program prog1; main() { voidFunc1(2 + 2, id1, idFunc2(2*3, id4)); }'
+	'program prog1; main() { myVoidFunc1(2 + 2, id1, idFunc2(2*3, id4)); }'
 ) // Interesting failure, can call an id that starts with int
 console.log('--> ' + (test20 ? 'yes :)' : 'no :('))
 
