@@ -240,15 +240,9 @@ const grammar = {
 
 		factor: [
 			['( expression )', '$$'],
-			['+ block', '$$'],
-			['- block', '$$'],
-			['block', '$$'],
-			['var_name', '$$'],
-		],
-
-		block: [
 			['INT_CTE', '$$'],
 			['FLOAT_CTE', '$$'],
+			['var_name', '$$'],
 			['ID ( params_call )', '$$'], // Calling a function with return type
 			['ID . ID ( params_call )', '$$'], // Calling a method from a class with return type
 		],
