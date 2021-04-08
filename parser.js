@@ -120,43 +120,46 @@ const grammar = {
 
 		dec_vars: [
 			[
-				'VAR <- simple_type simple_id simple_id_list ; simple_var_list ->',
+				'VAR <- simple_type simple_id_dec simple_id_list ; simple_var_list ->',
 				'$$',
 			],
 			[
-				'VAR <- compound_type compound_id compound_id_list ; compound_var_list ->',
+				'VAR <- compound_type compound_id_dec compound_id_list ; compound_var_list ->',
 				'$$',
 			],
 			['', '$$'],
 		],
 
 		simple_var_list: [
-			['simple_type simple_id simple_id_list ; simple_var_list', '$$'],
+			['simple_type simple_id_dec simple_id_list ; simple_var_list', '$$'],
 			['', '$$'],
 		],
 
 		compound_var_list: [
-			['compound_type compound_id compound_id_list ; compound_var_list', '$$'],
+			[
+				'compound_type compound_id_dec compound_id_list ; compound_var_list',
+				'$$',
+			],
 			['', '$$'],
 		],
 
 		simple_id_list: [
-			[', simple_id simple_id_list', '$$'],
+			[', simple_id_dec simple_id_list', '$$'],
 			['', '$$'],
 		],
 
-		simple_id: [
+		simple_id_dec: [
 			['ID', '$$'],
 			['ID [ INT_CTE ]', '$$'],
 			['ID [ INT_CTE ] [ INT_CTE ]', '$$'],
 		],
 
 		compound_id_list: [
-			[', compound_id compound_id_list', '$$'],
+			[', compound_id_dec compound_id_list', '$$'],
 			['', '$$'],
 		],
 
-		compound_id: [['ID', '$$']],
+		compound_id_dec: [['ID', '$$']],
 
 		simple_type: [
 			['INT', '$$'],
@@ -178,7 +181,7 @@ const grammar = {
 
 		params: [
 			[
-				'VAR <- simple_type simple_id simple_id_list ; simple_var_list ->',
+				'VAR <- simple_type simple_id_dec simple_id_list ; simple_var_list ->',
 				'$$',
 			],
 			['', '$$'],
@@ -247,17 +250,17 @@ const grammar = {
 		assignment: [['var_name = expression ;', '$$']],
 
 		var_name: [
-			['id_var_use_simple', '$$'],
-			['id_var_use_compound', '$$'],
+			['simple_id', '$$'],
+			['compound_id', '$$'],
 		],
 
-		id_var_use_simple: [
+		simple_id: [
 			['ID', '$$'],
 			['ID [ expression ]', '$$'],
 			['ID [ expression ] [ expression ]', '$$'],
 		],
 
-		id_var_use_compound: [['ID . id_var_use_simple', '$$']], // Objects
+		compound_id: [['ID . simple_id', '$$']], // Objects
 
 		void_func_call: [['ID ( params_call ) ;', '$$']],
 
