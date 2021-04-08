@@ -121,13 +121,19 @@ const grammar = {
 
 		dec_vars: [
 			[
-				'VAR <- simple_type simple_id_dec simple_id_list ; simple_var_list ->',
+				'VAR <- simple_type simple_id_dec simple_id_list ; dec_vars_list ->',
 				'$$',
 			],
 			[
-				'VAR <- compound_type compound_id_dec compound_id_list ; compound_var_list ->',
+				'VAR <- compound_type compound_id_dec compound_id_list ; dec_vars_list ->',
 				'$$',
 			],
+			['', '$$'],
+		],
+
+		dec_vars_list: [
+			['simple_type simple_id_dec simple_id_list ; dec_vars_list', '$$'],
+			['compound_type compound_id_dec compound_id_list ; dec_vars_list', '$$'],
 			['', '$$'],
 		],
 
