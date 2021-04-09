@@ -20,30 +20,30 @@ var <-
   Person student;
 ->
 
-int func fact(var <- int j; ->) 
+int func fact(var <- int x; ->) 
 var <-
-  int i;
+  int y;
 ->
 {
-  i = j + (p - j * 2 +  j);
-  if (j == 1) {
-    return (j);
+  y = x + (p - x * 2 +  j);
+  if (x == 1) {
+    return (x);
   }
   else {
-    return (j * fact(j - 1));
+    return (x * fact(x - 1));
   }
 }
 
-func pelos(var <- int y; ->)
+func pelos(var <- int z; ->)
 var <-
-  int x;
+  int k;
 ->
 {
   read(student.age);
-  x = y;
-  while(x < 10) {
-    print(student.one(x));
-    x = x + 1;
+  k = z;
+  while(k < 10) {
+    print(student.one(k));
+    k = k + 1;
   }
 }
 
