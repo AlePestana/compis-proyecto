@@ -1,0 +1,22 @@
+{
+  "name": "js-compiler",
+  "version": "1.0.0",
+  "description": "To infinity and beyond # compis-proyecto",
+  "main": "parser.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aroquev00/compis-proyecto.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aroquev00/compis-proyecto/issues"
+  },
+  "homepage": "https://github.com/aroquev00/compis-proyecto#readme",
+  "dependencies": {
+    "jison": "^0.4.18"
+  }
+}
