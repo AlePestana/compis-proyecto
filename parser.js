@@ -104,14 +104,26 @@ const grammar = {
 
 		program: [
 			[
-				'PROGRAM ID ; classes dec_vars funcs MAIN ( ) { statements } EOF',
-				'$$ = true',
+				'program_keyword id_func_dec test classes dec_vars funcs MAIN ( ) { statements } EOF',
+				'delete_func_directory(); $$ = true',
 			],
 		],
 
+		test: [
+			[';', 'console.log()']
+		],
+
+		program_keyword: [
+			['PROGRAM', "create_func_directory();"]
+		],
+
+		id_func_dec: [
+			['ID', "add_id_func_dir($1);"]
+		],
+
 		classes: [
-			['CLASS ID { attributes methods }', '$$'],
-			['CLASS ID EXTENDS ID { attributes methods }', '$$'],
+			['CLASS id_func_dec { attributes methods }', '$$'],
+			['CLASS id_func_dec EXTENDS ID { attributes methods }', '$$'],
 			['', '$$'],
 		],
 
@@ -321,6 +333,29 @@ const grammar = {
 }
 
 const parser = new Parser(grammar)
+
+// -------Semantics-------
+
+// Function directory variable
+func_directory = null;
+
+create_func_directory = function() {
+	func_directory = new Map();
+} 
+
+add_id_func_dir = function(id) {
+	//func_directory.set(id, {ref: new Map(), type: 'cool'});
+	func_directory[id] = {ref: new Map(), type: 'cool'};
+	func_directory[id].ref['hola'] = {ref: new Map()};
+	console.log(func_directory);
+}
+
+delete_func_directory = function() {
+	console.log(func_directory);
+	func_directory = null;
+
+	console.log(func_directory);
+}
 
 // Correct input
 
