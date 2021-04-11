@@ -104,9 +104,13 @@ const grammar = {
 
 		program: [
 			[
-				'program_keyword id_func_dec ; classes dec_vars funcs MAIN ( ) { statements } EOF',
+				'program_keyword id_func_dec test classes dec_vars funcs MAIN ( ) { statements } EOF',
 				'delete_func_directory(); $$ = true',
 			],
+		],
+
+		test: [
+			[';', 'console.log()']
 		],
 
 		program_keyword: [
@@ -118,8 +122,8 @@ const grammar = {
 		],
 
 		classes: [
-			['CLASS ID { attributes methods }', '$$'],
-			['CLASS ID EXTENDS ID { attributes methods }', '$$'],
+			['CLASS id_func_dec { attributes methods }', '$$'],
+			['CLASS id_func_dec EXTENDS ID { attributes methods }', '$$'],
 			['', '$$'],
 		],
 
@@ -340,11 +344,17 @@ create_func_directory = function() {
 } 
 
 add_id_func_dir = function(id) {
-	func_directory.set(id, new Map());
+	//func_directory.set(id, {ref: new Map(), type: 'cool'});
+	func_directory[id] = {ref: new Map(), type: 'cool'};
+	func_directory[id].ref['hola'] = {ref: new Map()};
+	console.log(func_directory);
 }
 
 delete_func_directory = function() {
+	console.log(func_directory);
 	func_directory = null;
+
+	console.log(func_directory);
 }
 
 // Correct input
