@@ -104,26 +104,18 @@ const grammar = {
 
 		program: [
 			[
-				'program_keyword id_func_dec test classes dec_vars funcs MAIN ( ) { statements } EOF',
+				'program_keyword program_id_keyword ; classes dec_vars funcs MAIN ( ) { statements } EOF',
 				'delete_func_directory(); $$ = true',
 			],
 		],
 
-		test: [
-			[';', 'console.log()']
-		],
+		program_keyword: [['PROGRAM', 'create_func_directory()']],
 
-		program_keyword: [
-			['PROGRAM', "create_func_directory();"]
-		],
-
-		id_func_dec: [
-			['ID', "add_id_func_dir($1);"]
-		],
+		program_id_keyword: [['ID', 'add_program_id($1)']],
 
 		classes: [
-			['CLASS id_func_dec { attributes methods }', '$$'],
-			['CLASS id_func_dec EXTENDS ID { attributes methods }', '$$'],
+			['CLASS ID { attributes methods }', '$$'],
+			['CLASS ID EXTENDS ID { attributes methods }', '$$'],
 			['', '$$'],
 		],
 
@@ -168,10 +160,12 @@ const grammar = {
 		],
 
 		simple_id_dec: [
-			['ID', '$$'],
+			['var_id_keyword', '$$'],
 			['ID [ INT_CTE ]', '$$'],
 			['ID [ INT_CTE ] [ INT_CTE ]', '$$'],
 		],
+
+		var_id_keyword: [['ID', 'add_id($1)']],
 
 		compound_id_list: [
 			[', compound_id_dec compound_id_list', '$$'],
@@ -336,25 +330,35 @@ const parser = new Parser(grammar)
 
 // -------Semantics-------
 
-// Function directory variable
-func_directory = null;
+// Declare function directory variable
+func_directory = null
 
-create_func_directory = function() {
-	func_directory = new Map();
-} 
-
-add_id_func_dir = function(id) {
-	//func_directory.set(id, {ref: new Map(), type: 'cool'});
-	func_directory[id] = {ref: new Map(), type: 'cool'};
-	func_directory[id].ref['hola'] = {ref: new Map()};
-	console.log(func_directory);
+create_func_directory = function () {
+	func_directory = new Map()
 }
 
-delete_func_directory = function() {
-	console.log(func_directory);
-	func_directory = null;
+add_program_id = (program_id) => {
+	currentFunc = program_id
+	func_directory[program_id] = { type: 'program', ref: new Map() }
+}
 
-	console.log(func_directory);
+// Example to add id
+// add_id_func_dir = function (id) {
+//func_directory.set(id, {ref: new Map(), type: 'cool'});
+// func_directory[id] = { ref: new Map(), type: 'cool' }
+// func_directory[id].ref['hola'] = { ref: new Map() }
+// console.log(func_directory)
+// console.log(func_directory[id].ref)
+// }
+
+add_id = (id) => {
+	func_directory[currentFunc].ref[id] = { type: 'currentType' }
+	console.log(func_directory)
+	console.log(func_directory[currentFunc].ref)
+}
+
+delete_func_directory = function () {
+	func_directory = null
 }
 
 // Correct input
@@ -389,6 +393,9 @@ const test3a = parser.parse(`
 console.log('--> ' + (test3a ? 'yes :)' : 'no :('))
 
 // Variables
+console.log(
+	'---------------------------------------------------------------------------------------------------------'
+)
 console.log('\n--------------\nVariables')
 console.log('TEST - Vars declarations 1 var')
 const test4 = parser.parse(`
@@ -396,6 +403,9 @@ const test4 = parser.parse(`
 	var <- int id1; -> 
 	main() {}`)
 console.log('--> ' + (test4 ? 'yes :)' : 'no :('))
+console.log(
+	'------------------------------------------------------------------------------------------'
+)
 
 console.log('TEST - Vars declarations n vars')
 const test5 = parser.parse(`
