@@ -30,26 +30,26 @@ add_id = (id) => {
 	// Check if id already exists
 	// CHECK WHY HAS MARKS FALSE
 	// ADD SAME LOGIC TO FUNC AND CLASS
-	console.log(func_directory.get(currentFunc).ref.has(id))
+	//console.log(func_directory.get(currentFunc).ref.has(id))
 	if (func_directory.get(currentFunc).ref.has(id)) {
 		console.log('ERROR - Variable already exists')
 	}
-	console.log(func_directory[currentFunc].has('set'))
-	func_directory[currentFunc].ref.set(id, { type: currentType })
+	//console.log(func_directory.get(currentFunc).has('set'))
+	func_directory.get(currentFunc).ref.set(id, { type: currentType })
 	console.log(func_directory)
-	console.log(func_directory[currentFunc].ref)
+	console.log(func_directory.get(currentFunc).ref)
 }
 
 add_id_array = (id, size) => {
-	func_directory[currentFunc].ref[id] = { type: `${currentType}[${size}]` }
+	func_directory.get(currentFunc).ref.set(id, { type: `${currentType}[${size}]` })
 	// console.log('received array with id = ' + id + ' and size of = ' + size)
-	console.log(func_directory[currentFunc].ref)
+	console.log(func_directory.get(currentFunc).ref)
 }
 
 add_id_matrix = (id, sizeR, sizeC) => {
-	func_directory[currentFunc].ref[id] = {
+	func_directory.get(currentFunc).ref.set(id, {
 		type: `${currentType}[${sizeR}][${sizeC}]`,
-	}
+	}) 
 	// console.log(
 	// 	'received matrix with id = ' +
 	// 		id +
@@ -58,7 +58,7 @@ add_id_matrix = (id, sizeR, sizeC) => {
 	// 		' and sizeC of = ' +
 	// 		sizeC
 	// )
-	console.log(func_directory[currentFunc].ref)
+	console.log(func_directory.get(currentFunc).ref)
 }
 
 delete_func_directory = function () {
