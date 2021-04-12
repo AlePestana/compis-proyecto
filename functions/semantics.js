@@ -9,17 +9,17 @@ create_func_directory = function () {
 
 add_program_id = (program_id) => {
 	currentFunc = program_id
-	func_directory[program_id] = { type: 'program', ref: new Map() }
+	func_directory.set(program_id, { type: 'program', ref: new Map() })
 }
 
 add_class_id = (class_id) => {
 	currentFunc = class_id
-	func_directory[class_id] = { type: 'class', ref: new Map() }
+	func_directory.set(class_id,  { type: 'class', ref: new Map() })
 }
 
 add_func_id = (func_id) => {
 	currentFunc = func_id
-	func_directory[func_id] = { type: currentType, ref: new Map() }
+	func_directory.set(func_id, { type: currentType, ref: new Map() })
 }
 
 set_current_type = (type) => {
@@ -30,11 +30,12 @@ add_id = (id) => {
 	// Check if id already exists
 	// CHECK WHY HAS MARKS FALSE
 	// ADD SAME LOGIC TO FUNC AND CLASS
-	// console.log(func_directory[currentFunc].ref.has(id))
-	// if (func_directory[currentFunc].ref.has(id)) {
-	// 	console.log('ERROR - Variable already exists')
-	// }
-	func_directory[currentFunc].ref[id] = { type: currentType }
+	console.log(func_directory.get(currentFunc).ref.has(id))
+	if (func_directory.get(currentFunc).ref.has(id)) {
+		console.log('ERROR - Variable already exists')
+	}
+	console.log(func_directory[currentFunc].has('set'))
+	func_directory[currentFunc].ref.set(id, { type: currentType })
 	console.log(func_directory)
 	console.log(func_directory[currentFunc].ref)
 }
