@@ -33,11 +33,14 @@ add_id = (id) => {
 	//console.log(func_directory.get(currentFunc).ref.has(id))
 	if (func_directory.get(currentFunc).ref.has(id)) {
 		console.log('ERROR - Variable already exists')
+		throw 'ERROR - Variable already exists'
+	} else {
+		func_directory.get(currentFunc).ref.set(id, { type: currentType })
+		console.log(func_directory)
+		console.log(func_directory.get(currentFunc).ref)
 	}
 	//console.log(func_directory.get(currentFunc).has('set'))
-	func_directory.get(currentFunc).ref.set(id, { type: currentType })
-	console.log(func_directory)
-	console.log(func_directory.get(currentFunc).ref)
+	
 }
 
 add_id_array = (id, size) => {
@@ -62,6 +65,8 @@ add_id_matrix = (id, sizeR, sizeC) => {
 }
 
 delete_func_directory = function () {
+	console.log("---Final state of func_directory---")
+	console.log(func_directory)
 	func_directory = null
 }
 
