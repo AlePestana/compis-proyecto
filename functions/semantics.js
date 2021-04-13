@@ -28,7 +28,6 @@ set_current_type = (type) => {
 
 add_id = (id) => {
 	// Check if id already exists
-	// CHECK WHY HAS MARKS FALSE
 	// ADD SAME LOGIC TO FUNC AND CLASS
 	//console.log(func_directory.get(currentFunc).ref.has(id))
 	if (func_directory.get(currentFunc).ref.has(id)) {
