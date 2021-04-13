@@ -19,7 +19,13 @@ add_class_id = (class_id) => {
 
 add_func_id = (func_id) => {
 	currentFunc = func_id
-	func_directory.set(func_id, { type: currentType, ref: new Map() })
+
+	if (func_directory.has(func_id)) {
+		console.log('ERROR - Function already exists')
+		throw 'ERROR - Function already exists'
+	} else {
+		func_directory.set(func_id, { type: currentType, ref: new Map() })
+	}	
 }
 
 set_current_type = (type) => {
