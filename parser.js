@@ -115,10 +115,12 @@ const grammar = {
 		program_id_keyword: [['ID', 'add_program_id($1)']],
 
 		classes: [
-			['CLASS ID { attributes methods }', '$$'],
-			['CLASS ID EXTENDS ID { attributes methods }', '$$'],
+			['CLASS class_id_keyword { attributes methods }', '$$'],
+			['CLASS class_id_keyword EXTENDS ID { attributes methods }', '$$'],
 			['', '$$'],
 		],
+
+		class_id_keyword: [['ID', 'add_class_id($1)']],
 
 		attributes: [['ATTRIBUTES <- simple_var_list ->', '$$']],
 
@@ -161,27 +163,31 @@ const grammar = {
 		],
 
 		simple_id_dec: [
-			['var_id_keyword', '$$'],
-			['ID [ INT_CTE ]', '$$'],
-			['ID [ INT_CTE ] [ INT_CTE ]', '$$'],
+			['var_id', '$$'],
+			['var_id_array', '$$'],
+			['var_matrix', '$$'],
 		],
 
-		var_id_keyword: [['ID', 'add_id($1)']],
+		var_id: [['ID', 'add_id($1)']],
+
+		var_id_array: [['ID [ INT_CTE ]', 'add_id_array($1, $3)']],
+
+		var_matrix: [['ID [ INT_CTE ] [ INT_CTE ]', 'add_id_matrix($1, $3, $6)']],
 
 		compound_id_list: [
 			[', compound_id_dec compound_id_list', '$$'],
 			['', '$$'],
 		],
 
-		compound_id_dec: [['ID', '$$']],
+		compound_id_dec: [['var_id4', '$$']],
 
 		simple_type: [
-			['INT', '$$'],
-			['FLOAT', '$$'],
-			['CHAR', '$$'],
+			['INT', 'set_current_type($1)'],
+			['FLOAT', 'set_current_type($1)'],
+			['CHAR', 'set_current_type($1)'],
 		],
 
-		compound_type: [['ID', '$$']], // For classes
+		compound_type: [['ID', 'set_current_type($1)']], // For classes
 
 		funcs: [
 			['func funcs', '$$'],
@@ -189,9 +195,19 @@ const grammar = {
 		],
 
 		func: [
-			['VOID FUNC ID ( params ) dec_vars { func_statements }', '$$'],
-			['simple_type FUNC ID ( params ) dec_vars { func_statements }', '$$'],
+			[
+				'void_keyword FUNC func_id_keyword ( params ) dec_vars { func_statements }',
+				'$$',
+			],
+			[
+				'simple_type FUNC func_id_keyword ( params ) dec_vars { func_statements }',
+				'$$',
+			],
 		],
+
+		void_keyword: [['VOID', 'set_current_type($1)']],
+
+		func_id_keyword: [['ID', 'add_func_id($1)']],
 
 		params: [
 			[
