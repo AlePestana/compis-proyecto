@@ -9,17 +9,23 @@ create_func_directory = function () {
 
 add_program_id = (program_id) => {
 	currentFunc = program_id
-	func_directory[program_id] = { type: 'program', ref: new Map() }
+	func_directory.set(program_id, { type: 'program', ref: new Map() })
 }
 
 add_class_id = (class_id) => {
 	currentFunc = class_id
-	func_directory[class_id] = { type: 'class', ref: new Map() }
+	func_directory.set(class_id,  { type: 'class', ref: new Map() })
 }
 
 add_func_id = (func_id) => {
 	currentFunc = func_id
-	func_directory[func_id] = { type: currentType, ref: new Map() }
+
+	if (func_directory.has(func_id)) {
+		console.log('ERROR - Function already exists')
+		throw 'ERROR - Function already exists'
+	} else {
+		func_directory.set(func_id, { type: currentType, ref: new Map() })
+	}	
 }
 
 set_current_type = (type) => {
@@ -28,27 +34,30 @@ set_current_type = (type) => {
 
 add_id = (id) => {
 	// Check if id already exists
-	// CHECK WHY HAS MARKS FALSE
 	// ADD SAME LOGIC TO FUNC AND CLASS
-	// console.log(func_directory[currentFunc].ref.has(id))
-	// if (func_directory[currentFunc].ref.has(id)) {
-	// 	console.log('ERROR - Variable already exists')
-	// }
-	func_directory[currentFunc].ref[id] = { type: currentType }
-	console.log(func_directory)
-	console.log(func_directory[currentFunc].ref)
+	//console.log(func_directory.get(currentFunc).ref.has(id))
+	if (func_directory.get(currentFunc).ref.has(id)) {
+		console.log('ERROR - Variable already exists')
+		throw 'ERROR - Variable already exists'
+	} else {
+		func_directory.get(currentFunc).ref.set(id, { type: currentType })
+		console.log(func_directory)
+		console.log(func_directory.get(currentFunc).ref)
+	}
+	//console.log(func_directory.get(currentFunc).has('set'))
+	
 }
 
 add_id_array = (id, size) => {
-	func_directory[currentFunc].ref[id] = { type: `${currentType}[${size}]` }
+	func_directory.get(currentFunc).ref.set(id, { type: `${currentType}[${size}]` })
 	// console.log('received array with id = ' + id + ' and size of = ' + size)
-	console.log(func_directory[currentFunc].ref)
+	console.log(func_directory.get(currentFunc).ref)
 }
 
 add_id_matrix = (id, sizeR, sizeC) => {
-	func_directory[currentFunc].ref[id] = {
+	func_directory.get(currentFunc).ref.set(id, {
 		type: `${currentType}[${sizeR}][${sizeC}]`,
-	}
+	}) 
 	// console.log(
 	// 	'received matrix with id = ' +
 	// 		id +
@@ -57,10 +66,12 @@ add_id_matrix = (id, sizeR, sizeC) => {
 	// 		' and sizeC of = ' +
 	// 		sizeC
 	// )
-	console.log(func_directory[currentFunc].ref)
+	console.log(func_directory.get(currentFunc).ref)
 }
 
 delete_func_directory = function () {
+	console.log("---Final state of func_directory---")
+	console.log(func_directory)
 	func_directory = null
 }
 
