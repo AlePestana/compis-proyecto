@@ -19,8 +19,6 @@ const isIdDuplicated = (id) => {
 				}
 			}
 		}
-
-		
 	} else {
 		// We are in a func var/param or global var declaration
 		// Check if id already exists
@@ -52,7 +50,11 @@ add_program_id = (program_id) => {
 add_class_id = (class_id) => {
 	currentClass = class_id
 
-	class_directory.set(class_id, { type: 'class', attr_directory: new Map(), method_directory: new Map() })
+	class_directory.set(class_id, {
+		type: 'class',
+		attr_directory: new Map(),
+		method_directory: new Map(),
+	})
 
 	//func_directory.set(class_id, { type: 'class', var_directory: new Map() })
 }
@@ -66,14 +68,17 @@ add_func_id = (func_id) => {
 			console.log('ERROR - Method already exists')
 			throw 'ERROR - Method already exists'
 		}
-		class_directory.get(currentClass).method_directory.set(func_id, { type: currentType, var_directory: new Map() })
+		class_directory.get(currentClass).method_directory.set(func_id, {
+			type: currentType,
+			var_directory: new Map(),
+		})
 	} else {
 		if (func_directory.has(func_id)) {
 			console.log('ERROR - Function already exists')
 			throw 'ERROR - Function already exists'
 		}
 		func_directory.set(func_id, { type: currentType, var_directory: new Map() })
-	}	
+	}
 }
 
 set_current_type = (type) => {
@@ -85,16 +90,20 @@ add_id = (id) => {
 	if (currentClass != null) {
 		// Adding var in class
 		if (is_attr_dec) {
-			class_directory.get(currentClass).attr_directory.set(id, { type: currentType })
+			class_directory
+				.get(currentClass)
+				.attr_directory.set(id, { type: currentType })
 		} else {
 			// Is method declaration
-			class_directory.get(currentClass).method_directory.get(currentFunc).var_directory.set(id, { type: currentType })
+			class_directory
+				.get(currentClass)
+				.method_directory.get(currentFunc)
+				.var_directory.set(id, { type: currentType })
 		}
 	} else {
 		// Adding var in func / global var
 		func_directory.get(currentFunc).var_directory.set(id, { type: currentType })
 	}
-	
 }
 
 add_id_array = (id, size) => {
@@ -102,10 +111,15 @@ add_id_array = (id, size) => {
 	if (currentClass != null) {
 		// Adding var in class
 		if (is_attr_dec) {
-			class_directory.get(currentClass).attr_directory.set(id, { type: `${currentType}[${size}]` })
+			class_directory
+				.get(currentClass)
+				.attr_directory.set(id, { type: `${currentType}[${size}]` })
 		} else {
 			// Is method declaration
-			class_directory.get(currentClass).method_directory.get(currentFunc).var_directory.set(id, { type: `${currentType}[${size}]` })
+			class_directory
+				.get(currentClass)
+				.method_directory.get(currentFunc)
+				.var_directory.set(id, { type: `${currentType}[${size}]` })
 		}
 	} else {
 		func_directory
@@ -114,7 +128,6 @@ add_id_array = (id, size) => {
 		// console.log('received array with id = ' + id + ' and size of = ' + size)
 		// console.log(func_directory.get(currentFunc).var_directory)
 	}
-	
 }
 
 add_id_matrix = (id, sizeR, sizeC) => {
@@ -122,10 +135,15 @@ add_id_matrix = (id, sizeR, sizeC) => {
 	if (currentClass != null) {
 		// Adding var in class
 		if (is_attr_dec) {
-			class_directory.get(currentClass).attr_directory.set(id, { type: `${currentType}[${sizeR}][${sizeC}]` })
+			class_directory
+				.get(currentClass)
+				.attr_directory.set(id, { type: `${currentType}[${sizeR}][${sizeC}]` })
 		} else {
 			// Is method declaration
-			class_directory.get(currentClass).method_directory.get(currentFunc).var_directory.set(id, { type: `${currentType}[${sizeR}][${sizeC}]` })
+			class_directory
+				.get(currentClass)
+				.method_directory.get(currentFunc)
+				.var_directory.set(id, { type: `${currentType}[${sizeR}][${sizeC}]` })
 		}
 	} else {
 		func_directory.get(currentFunc).var_directory.set(id, {
@@ -182,5 +200,3 @@ delete_class_directory = () => {
 	console.log(class_directory)
 	class_directory = null
 }
-
-
