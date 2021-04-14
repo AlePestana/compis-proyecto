@@ -163,6 +163,7 @@ delete_func_directory = function () {
 
 create_class_directory = () => {
 	class_directory = new Map()
+	currentClass = null
 }
 
 start_attributes_dec = () => {

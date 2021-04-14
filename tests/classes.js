@@ -26,6 +26,24 @@ const test2 = parser.parse(`
 
   class Person {
     attributes <- int x; ->
+    methods <- ->
+  }
+
+  var <- float y[2]; ->
+
+  void func myFunc1 (var <- int x; ->)
+  var <- float y; ->
+  { }
+
+  main() {}`)
+console.log('--> ' + (test2 ? 'yes :)' : 'no :('))
+
+console.log('TEST - Class with attributes and methods declaration')
+const test3 = parser.parse(`
+  program prog1; 
+
+  class Person {
+    attributes <- int x; ->
     methods <- 
       int func one(var <- int x; ->)
       {
@@ -41,4 +59,4 @@ const test2 = parser.parse(`
   { }
 
   main() {}`)
-console.log('--> ' + (test2 ? 'yes :)' : 'no :('))
+console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
