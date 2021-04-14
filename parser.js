@@ -106,23 +106,27 @@ const grammar = {
 		program: [
 			[
 				'program_keyword program_id_keyword ; classes dec_vars funcs MAIN ( ) { statements } EOF',
-				'delete_func_directory(); $$ = true',
+				'delete_func_directory(); delete_class_directory(); $$ = true',
 			],
 		],
 
-		program_keyword: [['PROGRAM', 'create_func_directory()']],
+		program_keyword: [['PROGRAM', 'create_func_directory(); create_class_directory();']],
 
 		program_id_keyword: [['ID', 'add_program_id($1)']],
 
 		classes: [
-			['CLASS class_id_keyword { attributes methods }', '$$'],
-			['CLASS class_id_keyword EXTENDS ID { attributes methods }', '$$'],
+			['CLASS class_id_keyword { attributes methods }', 'finish_class_dec(); $$'],
+			['CLASS class_id_keyword EXTENDS ID { attributes methods }', 'finish_class_dec(); $$'],
 			['', '$$'],
 		],
 
 		class_id_keyword: [['ID', 'add_class_id($1)']],
 
-		attributes: [['ATTRIBUTES <- simple_var_list ->', '$$']],
+		attributes: [['attributes_keyword <- simple_var_list ->', 'finish_attr_dec();']],
+
+		attributes_keyword: [
+			['ATTRIBUTES', 'start_attributes_dec();']
+		],
 
 		methods: [['METHODS <- funcs ->', '$$']],
 
@@ -197,11 +201,11 @@ const grammar = {
 		func: [
 			[
 				'void_keyword FUNC func_id_keyword ( params ) dec_vars { func_statements }',
-				'$$',
+				'finish_func_dec(); $$',
 			],
 			[
 				'simple_type FUNC func_id_keyword ( params ) dec_vars { func_statements }',
-				'$$',
+				'finish_func_dec(); $$',
 			],
 		],
 
