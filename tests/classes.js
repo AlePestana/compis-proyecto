@@ -110,3 +110,4 @@ var <- float y; ->
 main() {}`
 // const test5 = parser.parse(program5)
 // console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
+// Syntax catches this error
