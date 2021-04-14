@@ -33,7 +33,9 @@ const test3 = parser.parse(`
 	main() {}`)
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
-console.log('\n\nTEST - Func declaration with duplicated parameters and vars')
+console.log(
+	'\n\nERROR TEST - Func declaration with duplicated parameters and vars'
+)
 const test4 = parser.parse(`
 	program prog1; 
     var <- float y[2]; ->
@@ -43,11 +45,11 @@ const test4 = parser.parse(`
 	main() {}`)
 console.log('--> ' + (test4 ? 'yes :)' : 'no :('))
 
-console.log('\n\nTEST - Duplicated func declaration and vars')
+console.log('\n\nERROR TEST - Duplicated func declaration and vars')
 const test5 = parser.parse(`
-	program prog1; 
+	program prog1;
     var <- float y[2]; ->
-	
+
     void func myFunc1 (var <- int x; ->)
     var <- float y; ->
     { }
