@@ -52,7 +52,7 @@ const test3 = parser.parse(`
     ->
   }
 
-  var <- float y[2]; ->
+  var <- float y[2]; Person person1; ->
 
   void func myFunc1 (var <- int x; ->)
   var <- float y; ->

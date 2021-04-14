@@ -110,23 +110,31 @@ const grammar = {
 			],
 		],
 
-		program_keyword: [['PROGRAM', 'create_func_directory(); create_class_directory();']],
+		program_keyword: [
+			['PROGRAM', 'create_func_directory(); create_class_directory();'],
+		],
 
 		program_id_keyword: [['ID', 'add_program_id($1)']],
 
 		classes: [
-			['CLASS class_id_keyword { attributes methods }', 'finish_class_dec(); $$'],
-			['CLASS class_id_keyword EXTENDS ID { attributes methods }', 'finish_class_dec(); $$'],
+			[
+				'CLASS class_id_keyword { attributes methods }',
+				'finish_class_dec(); $$',
+			],
+			[
+				'CLASS class_id_keyword EXTENDS ID { attributes methods }',
+				'finish_class_dec(); $$',
+			],
 			['', '$$'],
 		],
 
 		class_id_keyword: [['ID', 'add_class_id($1)']],
 
-		attributes: [['attributes_keyword <- simple_var_list ->', 'finish_attr_dec();']],
-
-		attributes_keyword: [
-			['ATTRIBUTES', 'start_attributes_dec();']
+		attributes: [
+			['attributes_keyword <- simple_var_list ->', 'finish_attr_dec();'],
 		],
+
+		attributes_keyword: [['ATTRIBUTES', 'start_attributes_dec();']],
 
 		methods: [['METHODS <- funcs ->', '$$']],
 
@@ -183,7 +191,7 @@ const grammar = {
 			['', '$$'],
 		],
 
-		compound_id_dec: [['var_id4', '$$']],
+		compound_id_dec: [['var_id', '$$']],
 
 		simple_type: [
 			['INT', 'set_current_type($1)'],
