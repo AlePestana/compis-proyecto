@@ -34,7 +34,7 @@ var <-
   }
 }
 
-func pelos(var <- int z; ->)
+void func pelos(var <- int z; ->)
 var <-
   int k;
 ->
