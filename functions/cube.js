@@ -42,7 +42,40 @@ cube = {
   float: {
     int: {
       '+': 'float',
+      '-': 'float',
+      '*': 'float',
+      '/': 'float',
+      '>': 'int',
+      '<': 'int',
+      '==': 'int',
+      '!=': 'int',
+      '&': 'error',
+      '|': 'error',
     },
+    float: {
+      '+': 'float',
+      '-': 'float',
+      '*': 'float',
+      '/': 'float',
+      '>': 'int',
+      '<': 'int',
+      '==': 'int',
+      '!=': 'int',
+      '&': 'error',
+      '|': 'error',
+    },
+    char: {
+      '+': 'error',
+      '-': 'error',
+      '*': 'error',
+      '/': 'error',
+      '>': 'error',
+      '<': 'error',
+      '==': 'error',
+      '!=': 'error',
+      '&': 'error',
+      '|': 'error',
+    }
   },
   char: {
     int: {
