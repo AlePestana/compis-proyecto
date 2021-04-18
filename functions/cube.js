@@ -80,7 +80,40 @@ cube = {
   char: {
     int: {
       '+': 'error',
+      '-': 'error',
+      '*': 'error',
+      '/': 'error',
+      '>': 'error',
+      '<': 'error',
+      '==': 'error',
+      '!=': 'error',
+      '&': 'error',
+      '|': 'error',
     },
+    float: {
+      '+': 'error',
+      '-': 'error',
+      '*': 'error',
+      '/': 'error',
+      '>': 'error',
+      '<': 'error',
+      '==': 'error',
+      '!=': 'error',
+      '&': 'error',
+      '|': 'error',
+    },
+    char: {
+      '+': 'error',
+      '-': 'error',
+      '*': 'error',
+      '/': 'error',
+      '>': 'error',
+      '<': 'error',
+      '==': 'int',
+      '!=': 'int',
+      '&': 'error',
+      '|': 'error',
+    }
   }
 }
 
