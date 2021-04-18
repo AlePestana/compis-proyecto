@@ -250,43 +250,52 @@ const grammar = {
 		],
 
 		expression: [
-			['bool_exp', '$$'],
-			['bool_exp | expression', '$$'],
+			['bool_exp', 'add_or_operation()'],
+			['bool_exp | expression', 'add_operator($1)'],
 		],
 
 		bool_exp: [
-			['general_exp', '$$'],
-			['general_exp & bool_exp', '$$'],
+			['general_exp', 'add_and_operation()'],
+			['general_exp & bool_exp', 'add_operator($1)'],
 		],
 
 		general_exp: [
 			['exp', '$$'],
-			['exp > exp', '$$'],
-			['exp < exp', '$$'],
-			['exp == exp', '$$'],
-			['exp != exp', '$$'],
+			['general_exp_compound', '$$'],
+		],
+
+		general_exp_compound: [
+			['exp', 'add_rel_operation()'],
+			['exp > general_exp_compound', 'add_operator($1)'],
+			['exp < general_exp_compound', 'add_operator($1)'],
+			['exp == general_exp_compound', 'add_operator($1)'],
+			['exp != general_exp_compound', 'add_operator($1)'],
 		],
 
 		exp: [
-			['term', '$$'],
-			['term + exp', '$$'],
-			['term - exp', '$$'],
+			['term', 'add_sum_sub_operation()'],
+			['term + exp', 'add_operator($1)'],
+			['term - exp', 'add_operator($1)'],
 		],
 
 		term: [
-			['factor', '$$'],
-			['factor * term', '$$'],
-			['factor / term', '$$'],
+			['factor', 'add_mult_div_operation()'],
+			['factor * term', 'add_operator($1)'],
+			['factor / term', 'add_operator($1)'],
 		],
 
 		factor: [
-			['( expression )', '$$'],
-			['INT_CTE', '$$'],
-			['FLOAT_CTE', '$$'],
-			['var_name', '$$'],
+			['left_parenthesis expression right_parenthesis', '$$'],
+			['INT_CTE', 'add_operand($1)'],
+			['FLOAT_CTE', 'add_operand($1)'],
+			['var_name', 'add_operand($1)'],
 			['ID ( params_call )', '$$'], // Calling a function with return type
 			['ID . ID ( params_call )', '$$'], // Calling a method from a class with return type
 		],
+
+		left_parenthesis: [['(', 'start_subexpression()']],
+
+		right_parenthesis: [[')', 'end_subexpression()']],
 
 		params_call: [
 			['expression', '$$'],
