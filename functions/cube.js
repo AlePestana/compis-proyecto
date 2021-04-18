@@ -5,12 +5,39 @@ cube = {
     int: {
       '+': 'int',
       '-': 'int',
-      // and so on
+      '*': 'int',
+      '/': 'float',
+      '>': 'int',
+      '<': 'int',
+      '==': 'int',
+      '!=': 'int',
+      '&': 'error',
+      '|': 'error',
     },
     float: {
-      '+': 'int',
+      '+': 'float',
       '-': 'float',
+      '*': 'float',
+      '/': 'float',
+      '>': 'int',
+      '<': 'int',
+      '==': 'int',
+      '!=': 'int',
+      '&': 'error',
+      '|': 'error',
     },
+    char: {
+      '+': 'error',
+      '-': 'error',
+      '*': 'error',
+      '/': 'error',
+      '>': 'error',
+      '<': 'error',
+      '==': 'error',
+      '!=': 'error',
+      '&': 'error',
+      '|': 'error',
+    }
   },
   float: {
     int: {
