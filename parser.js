@@ -265,12 +265,19 @@ const grammar = {
 		],
 
 		general_exp_compound: [
-			['exp', 'add_rel_operation()'],
-			['exp > general_exp_compound', 'add_operator($1)'],
-			['exp < general_exp_compound', 'add_operator($1)'],
-			['exp == general_exp_compound', 'add_operator($1)'],
-			['exp != general_exp_compound', 'add_operator($1)'],
+			['exp gt_operator exp', 'add_rel_operation()'],
+			['exp lt_operator exp', 'add_rel_operation()'],
+			['exp equals_operator exp', 'add_rel_operation()'],
+			['exp not_equals_operator exp', 'add_rel_operation()'],
 		],
+
+		gt_operator: [['>', 'add_operator($1)']],
+
+		lt_operator: [['<', 'add_operator($1)']],
+
+		equals_operator: [['==', 'add_operator($1)']],
+
+		not_equals_operator: [['!=', 'add_operator($1)']],
 
 		exp: [
 			['term', 'add_sum_sub_operation()'],
