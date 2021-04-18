@@ -1,5 +1,8 @@
 // Semantics
 
+// Semantic cube
+const oracle = require('./cube')
+
 // Helper functions
 const isIdDuplicated = (id) => {
 	if (currentClass != null) {
