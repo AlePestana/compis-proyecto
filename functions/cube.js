@@ -117,3 +117,8 @@ cube = {
   }
 }
 
+operationSem = (operand1, operand2, operator) => {
+  return cube[operand1][operand2][operator]
+}
+
+//console.log(operationSem('int', 'float', '+'));
