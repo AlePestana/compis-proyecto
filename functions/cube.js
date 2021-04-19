@@ -11,8 +11,8 @@ cube = {
 			'<': 'int',
 			'==': 'int',
 			'!=': 'int',
-			'&': 'error',
-			'|': 'error',
+			'&': 'int',
+			'|': 'int',
 		},
 		float: {
 			'+': 'float',
@@ -23,8 +23,8 @@ cube = {
 			'<': 'int',
 			'==': 'int',
 			'!=': 'int',
-			'&': 'error',
-			'|': 'error',
+			'&': 'int',
+			'|': 'int',
 		},
 		char: {
 			'+': 'error',
@@ -49,8 +49,8 @@ cube = {
 			'<': 'int',
 			'==': 'int',
 			'!=': 'int',
-			'&': 'error',
-			'|': 'error',
+			'&': 'int',
+			'|': 'int',
 		},
 		float: {
 			'+': 'float',
@@ -61,8 +61,8 @@ cube = {
 			'<': 'int',
 			'==': 'int',
 			'!=': 'int',
-			'&': 'error',
-			'|': 'error',
+			'&': 'int',
+			'|': 'int',
 		},
 		char: {
 			'+': 'error',

@@ -249,16 +249,34 @@ const grammar = {
 			['iteration', '$$'],
 		],
 
+		// expression
 		expression: [
-			['bool_exp', 'add_or_operation()'],
-			['bool_exp | expression', 'add_operator($2)'],
+			['bool_exp or_operation', 'add_or_operation()'],
+			// ['bool_exp | expression', 'add_operator($2)'],
 		],
 
-		bool_exp: [
-			['general_exp', 'add_and_operation()'],
-			['general_exp & bool_exp', 'add_operator($2)'],
+		or_operation: [
+			['or_operator right_bool_exp or_operation', '$$'],
+			['', 'add_or_operation()'],
 		],
 
+		right_bool_exp: [['bool_exp', 'add_or_operation()']],
+
+		or_operator: [['|', 'add_operator($1)']],
+
+		// bool_exp
+		bool_exp: [['general_exp and_operation', '$$']],
+
+		and_operation: [
+			['and_operator right_general_exp and_operation', '$$'],
+			['', 'add_and_operation()'],
+		],
+
+		right_general_exp: [['general_exp', 'add_and_operation()']],
+
+		and_operator: [['&', 'add_operator($1)']],
+
+		// general_exp
 		general_exp: [
 			['exp', '$$'],
 			['general_exp_compound', '$$'],

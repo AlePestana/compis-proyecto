@@ -82,9 +82,44 @@ console.log(
 // console.log('--> ' + (test11 ? 'yes :)' : 'no :('))
 // Caught by syntax
 
-// Expressions inside classes
-console.log('\nTEST 15 - Multiplication expression inside class method')
+console.log('\nTEST 12 - Mixed AND expression')
+const test12 = parser.parse(`
+	program prog1;
+	var <- int x; ->
+	main() { x = 10 - 5 & 2 + 8; }`)
+console.log('--> ' + (test12 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 13 - Mixed OR expression')
+const test13 = parser.parse(`
+	program prog1;
+	var <- int x; ->
+	main() { x = 10 - 5 | 2 + 8; }`)
+console.log('--> ' + (test13 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 14 - Mixed AND OR expression')
+const test14 = parser.parse(`
+	program prog1;
+	var <- int x; ->
+	main() { x = 10 - 5 & 12 | 2 + 8; }`)
+console.log('--> ' + (test14 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 15 - Simple AND OR expression with parenthesis')
 const test15 = parser.parse(`
+	program prog1;
+	var <- int x; ->
+	main() { x = 5 & 12 | 8; }`)
+console.log('--> ' + (test15 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 16 - Mixed AND OR expression with parenthesis')
+const test16 = parser.parse(`
+	program prog1;
+	var <- int x; ->
+	main() { x = 5 & (12 | 8); }`)
+console.log('--> ' + (test16 ? 'yes :)' : 'no :('))
+
+// Expressions inside classes
+console.log('\nTEST 17 - Multiplication expression inside class method')
+const test17 = parser.parse(`
   program prog1;
 
   class Person {
@@ -97,14 +132,14 @@ const test15 = parser.parse(`
     ->
   }
 
-  var <- float y[2]; Person person1; ->
+  var <- float y; Person person1; ->
 
   main() {}`)
-console.log('--> ' + (test15 ? 'yes :)' : 'no :('))
+console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
 
 // Expressions inside funcs
-console.log('\nTEST 16 - Multiplication expression inside func')
-const test16 = parser.parse(`
+console.log('\nTEST 18 - Multiplication expression inside func')
+const test18 = parser.parse(`
 	program prog1; 
     var <- float z; ->
 	void func myFunc1 (var <- int x; ->)
@@ -112,4 +147,4 @@ const test16 = parser.parse(`
     { return x / y; }
 
 	main() {}`)
-console.log('--> ' + (test16 ? 'yes :)' : 'no :('))
+console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
