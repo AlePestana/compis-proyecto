@@ -44,6 +44,20 @@ const test6 = parser.parse(`
 	main() { x = 7 - 5 * 1 + 8; }`)
 console.log('--> ' + (test6 ? 'yes :)' : 'no :('))
 
+console.log('\nTEST 7 - Mixed expression with parenthesis')
+const test7 = parser.parse(`
+	program prog1;
+	var <- int x; ->
+	main() { x = (7 - 5) * 1 + 8; }`)
+console.log('--> ' + (test7 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 8 - Mixed expression with multiple parenthesis')
+const test8 = parser.parse(`
+	program prog1;
+	var <- int x; ->
+	main() { x = (10 - 5) * (2 + 8); }`)
+console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
+
 // Expressions inside classes
 console.log('\nTEST 10 - Multiplication expression inside class method')
 const test10 = parser.parse(`

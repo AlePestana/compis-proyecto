@@ -210,6 +210,8 @@ finish_class_dec = () => {
 delete_class_directory = () => {
 	console.log(class_directory)
 	class_directory = null
+	console.log('quads before exit')
+	console.log(quads)
 	quads = new Queue()
 	operators = new Stack()
 	operands = new Stack()
@@ -293,10 +295,12 @@ add_sum_sub_operation = () => {
 
 start_subexpression = () => {
 	console.log('inside start_subexpression')
+	operators.push('(')
 }
 
 end_subexpression = () => {
 	console.log('inside end_subexpression')
+	operators.pop()
 }
 
 add_rel_operation = () => {
