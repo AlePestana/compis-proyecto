@@ -245,12 +245,6 @@ add_operator = (operator) => {
 }
 
 add_mult_div_operation = () => {
-	console.log('=======')
-	console.log('operators')
-	console.log(operators)
-	console.log('operands')
-	console.log(operands)
-	console.log('top operator ' + operators.top())
 	if (operators.top() === '*' || operators.top() === '/') {
 		console.log('inside ')
 		const right = operands.pop()
@@ -262,12 +256,9 @@ add_mult_div_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			console.log('inside result')
 			const result = `temp${res_count++}`
 			quads.push({ operator, left_operand, right_operand, result })
 			operands.push({ operand: result, type: result_type })
-			console.log('quads')
-			console.log(quads)
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
