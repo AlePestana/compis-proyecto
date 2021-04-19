@@ -293,9 +293,9 @@ const grammar = {
 
 		factor: [
 			['left_parenthesis expression right_parenthesis', '$$'],
-			['INT_CTE', 'add_operand($1)'],
-			['FLOAT_CTE', 'add_operand($1)'],
-			['var_name', 'add_operand($1)'],
+			['INT_CTE', `add_operand($1, 'int')`],
+			['FLOAT_CTE', `add_operand($1, 'float')`],
+			['var_name', `add_operand($1, 'var')`],
 			['ID ( params_call )', '$$'], // Calling a function with return type
 			['ID . ID ( params_call )', '$$'], // Calling a method from a class with return type
 		],

@@ -47,7 +47,7 @@ const test3 = parser.parse(`
     methods <- 
       int func one(var <- int x; ->)
       {
-        return (age - x);
+        return (x - 1);
       }
     ->
   }

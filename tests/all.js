@@ -1,7 +1,7 @@
 // Run all tests
 console.log('\n\n--------------------------------------------------------')
 console.log('Syntax Tests')
-require('./syntax')
+// require('./syntax')
 
 console.log('\n\n--------------------------------------------------------')
 console.log('Global Vars Tests')
@@ -14,3 +14,7 @@ require('./funcs')
 console.log('\n\n--------------------------------------------------------')
 console.log('Classes Tests')
 require('./classes')
+
+console.log('\n\n--------------------------------------------------------')
+console.log('Expressions Tests')
+require('./expressions')

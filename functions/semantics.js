@@ -204,4 +204,79 @@ delete_class_directory = () => {
 	class_directory = null
 }
 
-require('./expressions')
+// Intermediate generation code for expressions
+
+// Stack
+class Stack {
+	constructor() {
+		this.data = []
+		this.top = 0
+	}
+
+	push(element) {
+		this.data.push(element)
+		this.top++
+	}
+
+	pop() {
+		if (this.top != 0) {
+			// check if there's actually an element
+			this.top--
+			return this.data.pop()
+		}
+	}
+}
+
+// Declare quadruples
+quads = []
+operators = new Stack()
+operands = new Stack()
+
+add_operand = (operand, type) => {
+	if (type === 'var') {
+		if (currentClass != null) {
+			type = class_directory
+				.get(currentClass)
+				.method_directory.get(currentFunc)
+				.var_directory.get(operand).type
+		} else {
+			type = func_directory.get(currentFunc).var_directory.get(operand)
+				? func_directory.get(currentFunc).var_directory.get(operand).type
+				: 'undefined'
+		}
+	}
+	operands.push({ operand, type })
+}
+
+add_operator = (operator) => {
+	console.log('inside add_operator')
+	console.log('received -- ' + operator)
+}
+
+add_mult_div_operation = () => {
+	console.log('inside add_mult_div_operation')
+}
+
+add_sum_sub_operation = () => {
+	console.log('inside add_sum_sub_operation')
+}
+
+start_subexpression = () => {
+	console.log('inside start_subexpression')
+}
+
+end_subexpression = () => {
+	console.log('inside end_subexpression')
+}
+
+add_rel_operation = () => {
+	console.log('inside add_rel_operation')
+}
+
+add_and_operation = () => {
+	console.log('inside add_and_operation')
+}
+
+add_or_operation = () => {
+	console.log('inside add_or_operation')
+}
