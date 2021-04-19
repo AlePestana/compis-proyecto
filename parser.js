@@ -251,12 +251,12 @@ const grammar = {
 
 		expression: [
 			['bool_exp', 'add_or_operation()'],
-			['bool_exp | expression', 'add_operator($1)'],
+			['bool_exp | expression', 'add_operator($2)'],
 		],
 
 		bool_exp: [
 			['general_exp', 'add_and_operation()'],
-			['general_exp & bool_exp', 'add_operator($1)'],
+			['general_exp & bool_exp', 'add_operator($2)'],
 		],
 
 		general_exp: [
@@ -281,15 +281,27 @@ const grammar = {
 
 		exp: [
 			['term', 'add_sum_sub_operation()'],
-			['term + exp', 'add_operator($1)'],
-			['term - exp', 'add_operator($1)'],
+			['term add_operator exp', '$$'],
+			['term sub_operator exp', '$$'],
 		],
 
-		term: [
-			['factor', 'add_mult_div_operation()'],
-			['factor * term', 'add_operator($1)'],
-			['factor / term', 'add_operator($1)'],
+		add_operator: [['+', 'add_operator($1)']],
+
+		sub_operator: [['-', 'add_operator($1)']],
+
+		term: [['factor operation', '$$']],
+
+		operation: [
+			['mult_operator right_factor operation', '$$'],
+			['div_operator right_factor operation', '$$'],
+			['', 'add_mult_div_operation()'],
 		],
+
+		mult_operator: [['*', 'add_operator($1)']],
+
+		div_operator: [['/', 'add_operator($1)']],
+
+		right_factor: [['factor', 'add_mult_div_operation()']],
 
 		factor: [
 			['left_parenthesis expression right_parenthesis', '$$'],

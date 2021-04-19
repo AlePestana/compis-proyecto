@@ -210,20 +210,24 @@ delete_class_directory = () => {
 class Stack {
 	constructor() {
 		this.data = []
-		this.top = 0
+		this.size = 0
 	}
 
 	push(element) {
 		this.data.push(element)
-		this.top++
+		this.size++
 	}
 
 	pop() {
-		if (this.top != 0) {
+		if (this.size != 0) {
 			// check if there's actually an element
-			this.top--
+			this.size--
 			return this.data.pop()
 		}
+	}
+
+	top() {
+		return this.data[this.size - 1]
 	}
 }
 
@@ -249,12 +253,32 @@ add_operand = (operand, type) => {
 }
 
 add_operator = (operator) => {
-	console.log('inside add_operator')
-	console.log('received -- ' + operator)
+	console.log('adding operator = ' + operator)
+	operators.push(operator)
 }
 
 add_mult_div_operation = () => {
-	console.log('inside add_mult_div_operation')
+	if (operators.top() == '*' || operators.top() == '/') {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result =
+				operator == '*'
+					? (left_operand * right_operand).toString()
+					: (left_operand / right_operand).toString()
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
 }
 
 add_sum_sub_operation = () => {
