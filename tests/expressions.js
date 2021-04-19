@@ -17,11 +17,11 @@ console.log('\nTEST 2 - Add expression')
 // console.log('--> ' + (test2 ? 'yes :)' : 'no :('))
 
 console.log('\nTEST 3 - Multiplication and division expression')
-// const test3 = parser.parse(`
-// 	program prog1;
-// 	var <- int x; ->
-// 	main() { x = 10 / 5 * 1; }`)
-// console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
+const test3 = parser.parse(`
+	program prog1;
+	var <- int x; ->
+	main() { x = 10 / 5 * 1; }`)
+console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
 console.log('\nERROR TEST 4 - Multiplication expression with type mismatch')
 // const test4 = parser.parse(`
@@ -32,23 +32,23 @@ console.log('\nERROR TEST 4 - Multiplication expression with type mismatch')
 
 // Expressions inside classes
 console.log('\nTEST 5 - Multiplication expression inside class method')
-// const test5 = parser.parse(`
-//   program prog1;
+const test5 = parser.parse(`
+  program prog1;
 
-//   class Person {
-//     attributes <- float x; ->
-//     methods <-
-//       int func mult(var <- int y; ->)
-//       {
-//         return x * y;
-//       }
-//     ->
-//   }
+  class Person {
+    attributes <- float x; ->
+    methods <-
+      int func mult(var <- int y; ->)
+      {
+        return x * y;
+      }
+    ->
+  }
 
-//   var <- float y[2]; Person person1; ->
+  var <- float y[2]; Person person1; ->
 
-//   main() {}`)
-// console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
+  main() {}`)
+console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
 
 // Expressions inside funcs
 console.log('\nTEST 6 - Multiplication expression inside func')

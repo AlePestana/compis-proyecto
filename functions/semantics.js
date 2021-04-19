@@ -2,6 +2,14 @@
 
 // Semantic cube
 const oracle = require('./cube')
+const Stack = require('./helpers/stack.js')
+const Queue = require('./helpers/queue.js')
+
+// Declare quadruples
+let quads = new Queue()
+let operators = new Stack()
+let operands = new Stack()
+let res_count = 0
 
 // Helper functions
 const isIdDuplicated = (id) => {
@@ -202,18 +210,13 @@ finish_class_dec = () => {
 delete_class_directory = () => {
 	console.log(class_directory)
 	class_directory = null
+	quads = new Queue()
+	operators = new Stack()
+	operands = new Stack()
+	res_count = 0
 }
 
-// Intermediate generation code for expressions
-
-const Stack = require('./helpers/stack.js')
-const Queue = require('./helpers/queue.js')
-
-// Declare quadruples
-const quads = new Queue()
-const operators = new Stack()
-const operands = new Stack()
-let res_count = 0
+// Intermediate generation code
 
 add_operand = (operand, type) => {
 	if (type === 'var') {
@@ -246,7 +249,6 @@ add_operator = (operator) => {
 
 add_mult_div_operation = () => {
 	if (operators.top() === '*' || operators.top() === '/') {
-		console.log('inside ')
 		const right = operands.pop()
 		const right_operand = right.operand
 		const left = operands.pop()
@@ -259,6 +261,8 @@ add_mult_div_operation = () => {
 			const result = `temp${res_count++}`
 			quads.push({ operator, left_operand, right_operand, result })
 			operands.push({ operand: result, type: result_type })
+			console.log('quaaaads')
+			console.log(quads)
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
