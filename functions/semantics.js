@@ -235,6 +235,7 @@ class Stack {
 quads = []
 operators = new Stack()
 operands = new Stack()
+res_count = 0
 
 add_operand = (operand, type) => {
 	if (type === 'var') {
@@ -258,6 +259,11 @@ add_operator = (operator) => {
 }
 
 add_mult_div_operation = () => {
+	console.log('=======')
+	console.log('operators')
+	console.log(operators)
+	console.log('operands')
+	console.log(operands)
 	if (operators.top() == '*' || operators.top() == '/') {
 		const right = operands.pop()
 		const right_operand = right.operand
@@ -268,12 +274,11 @@ add_mult_div_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			const result =
-				operator == '*'
-					? (left_operand * right_operand).toString()
-					: (left_operand / right_operand).toString()
+			const result = `temp${res_count++}`
 			quads.push({ operator, left_operand, right_operand, result })
 			operands.push({ operand: result, type: result_type })
+			console.log('quads')
+			console.log(quads)
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
