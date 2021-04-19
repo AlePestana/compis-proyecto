@@ -58,9 +58,33 @@ const test8 = parser.parse(`
 	main() { x = (10 - 5) * (2 + 8); }`)
 console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
 
-// Expressions inside classes
-console.log('\nTEST 10 - Multiplication expression inside class method')
+console.log('\nTEST 9 - Mixed relational expression')
+const test9 = parser.parse(`
+	program prog1;
+	var <- int x; ->
+	main() { x = 10 - 5 > 2 + 8; }`)
+console.log('--> ' + (test9 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 10 - Mixed relational expression with parenthesis')
 const test10 = parser.parse(`
+	program prog1;
+	var <- int x; ->
+	main() { x = (10 - 5) * 2 != 2 + 8 / 4; }`)
+console.log('--> ' + (test10 ? 'yes :)' : 'no :('))
+
+console.log(
+	'\nERROR TEST 11 - Mixed relational expression with multiple rel symbols'
+)
+// const test11 = parser.parse(`
+// 	program prog1;
+// 	var <- int x; ->
+// 	main() { x = (11 - 5) < 2 != 2 + 8 > 4; }`)
+// console.log('--> ' + (test11 ? 'yes :)' : 'no :('))
+// Caught by syntax
+
+// Expressions inside classes
+console.log('\nTEST 15 - Multiplication expression inside class method')
+const test15 = parser.parse(`
   program prog1;
 
   class Person {
@@ -76,11 +100,11 @@ const test10 = parser.parse(`
   var <- float y[2]; Person person1; ->
 
   main() {}`)
-console.log('--> ' + (test10 ? 'yes :)' : 'no :('))
+console.log('--> ' + (test15 ? 'yes :)' : 'no :('))
 
 // Expressions inside funcs
-console.log('\nTEST 12 - Multiplication expression inside func')
-const test12 = parser.parse(`
+console.log('\nTEST 16 - Multiplication expression inside func')
+const test16 = parser.parse(`
 	program prog1; 
     var <- float z; ->
 	void func myFunc1 (var <- int x; ->)
@@ -88,4 +112,4 @@ const test12 = parser.parse(`
     { return x / y; }
 
 	main() {}`)
-console.log('--> ' + (test12 ? 'yes :)' : 'no :('))
+console.log('--> ' + (test16 ? 'yes :)' : 'no :('))

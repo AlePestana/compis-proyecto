@@ -305,6 +305,29 @@ end_subexpression = () => {
 
 add_rel_operation = () => {
 	console.log('inside add_rel_operation')
+	if (
+		operators.top() === '>' ||
+		operators.top() === '<' ||
+		operators.top() === '==' ||
+		operators.top() === '!='
+	) {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
 }
 
 add_and_operation = () => {
