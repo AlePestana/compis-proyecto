@@ -210,18 +210,26 @@ const Stack = require('./helpers/stack.js')
 const Queue = require('./helpers/queue.js')
 
 // Declare quadruples
-quads = new Queue()
-operators = new Stack()
-operands = new Stack()
-res_count = 0
+const quads = new Queue()
+const operators = new Stack()
+const operands = new Stack()
+let res_count = 0
 
 add_operand = (operand, type) => {
 	if (type === 'var') {
 		if (currentClass != null) {
-			type = class_directory
-				.get(currentClass)
-				.method_directory.get(currentFunc)
-				.var_directory.get(operand).type
+			const is_inside_method =
+				class_directory
+					.get(currentClass)
+					.method_directory.get(currentFunc)
+					.var_directory.get(operand) != null
+			// If variable is not inside the function variables, then it must be part of the class' attributes
+			type = is_inside_method
+				? class_directory
+						.get(currentClass)
+						.method_directory.get(currentFunc)
+						.var_directory.get(operand).type
+				: class_directory.get(currentClass).attr_directory.get(operand).type
 		} else {
 			type = func_directory.get(currentFunc).var_directory.get(operand)
 				? func_directory.get(currentFunc).var_directory.get(operand).type
@@ -242,7 +250,9 @@ add_mult_div_operation = () => {
 	console.log(operators)
 	console.log('operands')
 	console.log(operands)
-	if (operators.top() == '*' || operators.top() == '/') {
+	console.log('top operator ' + operators.top())
+	if (operators.top() === '*' || operators.top() === '/') {
+		console.log('inside ')
 		const right = operands.pop()
 		const right_operand = right.operand
 		const left = operands.pop()
@@ -252,6 +262,7 @@ add_mult_div_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
+			console.log('inside result')
 			const result = `temp${res_count++}`
 			quads.push({ operator, left_operand, right_operand, result })
 			operands.push({ operand: result, type: result_type })
