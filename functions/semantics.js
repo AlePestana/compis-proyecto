@@ -248,6 +248,7 @@ add_operator = (operator) => {
 }
 
 add_mult_div_operation = () => {
+	console.log('inside add_mult_div_operation')
 	if (operators.top() === '*' || operators.top() === '/') {
 		const right = operands.pop()
 		const right_operand = right.operand
@@ -261,8 +262,6 @@ add_mult_div_operation = () => {
 			const result = `temp${res_count++}`
 			quads.push({ operator, left_operand, right_operand, result })
 			operands.push({ operand: result, type: result_type })
-			console.log('quaaaads')
-			console.log(quads)
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
@@ -272,6 +271,24 @@ add_mult_div_operation = () => {
 
 add_sum_sub_operation = () => {
 	console.log('inside add_sum_sub_operation')
+	if (operators.top() === '+' || operators.top() === '-') {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
 }
 
 start_subexpression = () => {

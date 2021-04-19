@@ -279,29 +279,35 @@ const grammar = {
 
 		not_equals_operator: [['!=', 'add_operator($1)']],
 
-		exp: [
-			['term', 'add_sum_sub_operation()'],
-			['term add_operator exp', '$$'],
-			['term sub_operator exp', '$$'],
+		// exp
+		exp: [['term add_sub_operation', '$$']],
+
+		add_sub_operation: [
+			['add_operator right_term add_sub_operation', '$$'],
+			['sub_operator right_term add_sub_operation', '$$'],
+			['', 'add_sum_sub_operation()'],
 		],
+
+		right_term: [['term', 'add_sum_sub_operation()']],
 
 		add_operator: [['+', 'add_operator($1)']],
 
 		sub_operator: [['-', 'add_operator($1)']],
 
-		term: [['factor operation', '$$']],
+		// term
+		term: [['factor mult_div_operation', '$$']],
 
-		operation: [
-			['mult_operator right_factor operation', '$$'],
-			['div_operator right_factor operation', '$$'],
+		mult_div_operation: [
+			['mult_operator right_factor mult_div_operation', '$$'],
+			['div_operator right_factor mult_div_operation', '$$'],
 			['', 'add_mult_div_operation()'],
 		],
+
+		right_factor: [['factor', 'add_mult_div_operation()']],
 
 		mult_operator: [['*', 'add_operator($1)']],
 
 		div_operator: [['/', 'add_operator($1)']],
-
-		right_factor: [['factor', 'add_mult_div_operation()']],
 
 		factor: [
 			['left_parenthesis expression right_parenthesis', '$$'],
