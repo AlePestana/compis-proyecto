@@ -206,33 +206,11 @@ delete_class_directory = () => {
 
 // Intermediate generation code for expressions
 
-// Stack
-class Stack {
-	constructor() {
-		this.data = []
-		this.size = 0
-	}
-
-	push(element) {
-		this.data.push(element)
-		this.size++
-	}
-
-	pop() {
-		if (this.size != 0) {
-			// check if there's actually an element
-			this.size--
-			return this.data.pop()
-		}
-	}
-
-	top() {
-		return this.data[this.size - 1]
-	}
-}
+const Stack = require('./helpers/stack.js')
+const Queue = require('./helpers/queue.js')
 
 // Declare quadruples
-quads = []
+quads = new Queue()
 operators = new Stack()
 operands = new Stack()
 res_count = 0
