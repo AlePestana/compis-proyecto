@@ -373,3 +373,19 @@ add_or_operation = () => {
 		}
 	}
 }
+
+// Print semantic actions
+add_print_operation = () => {
+	console.log('inside add_print_operation')
+	if (operators.top() === 'print') {
+		const left = operands.pop()
+		const left_operand = left.operand
+		const right_operand = null
+		const operator = operators.pop()
+
+		const result = null
+
+		quads.push({ operator, left_operand, right_operand, result })
+	}
+
+}
