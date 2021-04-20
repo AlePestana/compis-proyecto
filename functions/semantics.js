@@ -1,5 +1,16 @@
 // Semantics
 
+// Semantic cube
+const oracle = require('./cube')
+const Stack = require('./helpers/stack.js')
+const Queue = require('./helpers/queue.js')
+
+// Declare quadruples
+let quads = new Queue()
+let operators = new Stack()
+let operands = new Stack()
+let res_count = 0
+
 // Helper functions
 const isIdDuplicated = (id) => {
 	if (currentClass != null) {
@@ -199,4 +210,166 @@ finish_class_dec = () => {
 delete_class_directory = () => {
 	console.log(class_directory)
 	class_directory = null
+	console.log('quads before exit')
+	console.log(quads)
+	quads = new Queue()
+	operators = new Stack()
+	operands = new Stack()
+	res_count = 0
+}
+
+// Intermediate generation code
+
+add_operand = (operand, type) => {
+	if (type === 'var') {
+		if (currentClass != null) {
+			const is_inside_method =
+				class_directory
+					.get(currentClass)
+					.method_directory.get(currentFunc)
+					.var_directory.get(operand) != null
+			// If variable is not inside the function variables, then it must be part of the class' attributes
+			type = is_inside_method
+				? class_directory
+						.get(currentClass)
+						.method_directory.get(currentFunc)
+						.var_directory.get(operand).type
+				: class_directory.get(currentClass).attr_directory.get(operand).type
+		} else {
+			type = func_directory.get(currentFunc).var_directory.get(operand)
+				? func_directory.get(currentFunc).var_directory.get(operand).type
+				: 'undefined'
+		}
+	}
+	operands.push({ operand, type })
+}
+
+add_operator = (operator) => {
+	console.log('adding operator = ' + operator)
+	operators.push(operator)
+}
+
+add_mult_div_operation = () => {
+	console.log('inside add_mult_div_operation')
+	if (operators.top() === '*' || operators.top() === '/') {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
+}
+
+add_sum_sub_operation = () => {
+	console.log('inside add_sum_sub_operation')
+	if (operators.top() === '+' || operators.top() === '-') {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
+}
+
+start_subexpression = () => {
+	console.log('inside start_subexpression')
+	operators.push('(')
+}
+
+end_subexpression = () => {
+	console.log('inside end_subexpression')
+	operators.pop()
+}
+
+add_rel_operation = () => {
+	console.log('inside add_rel_operation')
+	if (
+		operators.top() === '>' ||
+		operators.top() === '<' ||
+		operators.top() === '==' ||
+		operators.top() === '!='
+	) {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
+}
+
+add_and_operation = () => {
+	console.log('inside add_and_operation')
+	if (operators.top() === '&') {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
+}
+
+add_or_operation = () => {
+	console.log('inside add_or_operation')
+	if (operators.top() === '|') {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
 }
