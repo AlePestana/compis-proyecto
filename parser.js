@@ -383,8 +383,8 @@ const grammar = {
 		print_params: [
 			['print_init expression print_end , print_params', '$$'],
 			['print_init expression print_end', '$$'],
-			['STRING_CTE , print_params', '$$'],
-			['STRING_CTE', '$$'],
+			['print_init string_cte_keyword print_end , print_params', '$$'],
+			['print_init string_cte_keyword print_end', '$$'],
 		],
 
 		print_init: [
@@ -393,6 +393,10 @@ const grammar = {
 
 		print_end: [
 			['', 'add_print_operation()'],
+		],
+
+		string_cte_keyword: [
+			['STRING_CTE', "add_operand($1, 'string')"]
 		],
 
 		control: [['IF ( expression ) { statements } else', '$$']],
