@@ -374,8 +374,12 @@ const grammar = {
 		read: [['READ ( var_names ) ;', '$$']],
 
 		var_names: [
-			['var_name , var_names', '$$'],
-			['var_name', '$$'],
+			['var_name_read_keyword , var_names', '$$'],
+			['var_name_read_keyword', '$$'],
+		],
+
+		var_name_read_keyword: [
+			['var_name', 'read_var($1)'],
 		],
 
 		print: [['PRINT ( print_params ) ;', '$$']],
