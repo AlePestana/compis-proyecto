@@ -346,7 +346,15 @@ const grammar = {
 			['', '$$'],
 		],
 
-		assignment: [['var_name = expression ;', '$$']],
+		assignment: [['var_name_assignment_keyword assignment_keyword expression ;', 'assign_exp()']],
+
+		var_name_assignment_keyword: [
+			['var_name', "add_operand($1, 'var')"],
+		],
+
+		assignment_keyword: [
+			['=', 'add_operator($1)'],
+		],
 
 		var_name: [
 			['simple_id', '$$'],

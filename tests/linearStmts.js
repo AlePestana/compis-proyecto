@@ -199,3 +199,84 @@ console.log('ERROR TEST 15 - Read to a variable not within scope in class method
 
 //   main() {}`)
 // console.log('--> ' + (test15 ? 'yes :)' : 'no :('))
+
+// Assignments
+
+console.log('TEST 15 - Assign to a global variable in main')
+const test15 = parser.parse(`
+program prog1; 
+var <- float y; int x; ->
+
+main() {
+  x = 2 + 3;
+}`)
+console.log('--> ' + (test15 ? 'yes :)' : 'no :('))
+
+console.log('TEST 16 - Assign to a local variable in function')
+const test16 = parser.parse(`
+program prog1; 
+  var <- float y; int x; ->
+
+  void func myFunc1 (var <- int i; ->)
+  var <- float j; ->
+  { 
+    j = i * 3.3;
+  }
+
+	main() {
+  }`)
+console.log('--> ' + (test16 ? 'yes :)' : 'no :('))
+
+console.log('TEST 17 - Assign to a global variable in function') // This one should work but doesn't because var_directory doesnt check in global scope
+// const test17 = parser.parse(`
+// program prog1; 
+//   var <- float y; int x; ->
+
+//   void func myFunc1 (var <- int i; ->)
+//   var <- float j; ->
+//   { 
+//     y = j * 3.3;
+//   }
+
+// 	main() {
+//   }`)
+// console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
+
+console.log('TEST 18 - Assign to a local variable in class method')
+const test18 = parser.parse(`
+  program prog1; 
+
+  class Person {
+    attributes <- int x; ->
+    methods <- 
+      int func one(var <- int y; ->)
+      {
+        y = 2 * 3;
+      }
+    ->
+  }
+
+  var <- Person person1; ->
+
+  main() {}`)
+console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
+
+console.log('TEST 19 - Assign to a local variable and attribute in class method')
+const test19 = parser.parse(`
+  program prog1; 
+
+  class Person {
+    attributes <- int x; ->
+    methods <- 
+      int func one(var <- int y; ->)
+      {
+        y = 2 * 3;
+        x = y + 1;
+      }
+    ->
+  }
+
+  var <- Person person1; ->
+
+  main() {}`)
+console.log('--> ' + (test19 ? 'yes :)' : 'no :('))
