@@ -381,22 +381,18 @@ const grammar = {
 		print: [['PRINT ( print_params ) ;', '$$']],
 
 		print_params: [
-			['print_init expression print_end , print_params', '$$'],
-			['print_init expression print_end', '$$'],
-			['print_init string_cte_keyword print_end , print_params', '$$'],
-			['print_init string_cte_keyword print_end', '$$'],
+			['expression_print_keyword , print_params', '$$'],
+			['expression_print_keyword', '$$'],
+			['string_cte_print_keyword , print_params', '$$'],
+			['string_cte_print_keyword', '$$'],
 		],
 
-		print_init: [
-			['', "add_operator('print')"]
+		expression_print_keyword: [
+			['expression', "print_expression()"]
 		],
 
-		print_end: [
-			['', 'add_print_operation()'],
-		],
-
-		string_cte_keyword: [
-			['STRING_CTE', "add_operand($1, 'string')"]
+		string_cte_print_keyword: [
+			['STRING_CTE', "print_string($1)"]
 		],
 
 		control: [['IF ( expression ) { statements } else', '$$']],

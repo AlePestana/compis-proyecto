@@ -375,17 +375,27 @@ add_or_operation = () => {
 }
 
 // Print semantic actions
-add_print_operation = () => {
-	console.log('inside add_print_operation')
-	if (operators.top() === 'print') {
-		const left = operands.pop()
-		const left_operand = left.operand
-		const right_operand = null
-		const operator = operators.pop()
+print_expression = () => {
+	console.log('inside print_expression')
+	
+	const operator = 'print'
+	const res = operands.pop()
+	const result = res.operand;
 
-		const result = null
+	const left_operand = null
+	const right_operand = null
 
-		quads.push({ operator, left_operand, right_operand, result })
-	}
+	quads.push({ operator, left_operand, right_operand, result })
+}
 
+print_string = (string) => {
+	console.log('inside print_string')
+
+	const operator = 'print'
+	const result = string
+
+	const left_operand = null
+	const right_operand = null
+
+	quads.push({ operator, left_operand, right_operand, result })
 }
