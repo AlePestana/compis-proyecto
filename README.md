@@ -54,3 +54,4 @@ AS_Syntax_Diagrams in https://lucid.app/lucidchart/89702a55-72f8-44ad-88f8-5bdcc
 | tests/all.js               |                                 Import new tests |
 | AS_Semantic_Rules          |  Update ArrowScript semantic rules for int logic |
 | AS_Syntax_Diagrams         |               Update ArrowScript syntax diagrams |
+| AS_Documentation           |         Started ArrowScript formal documentation |
