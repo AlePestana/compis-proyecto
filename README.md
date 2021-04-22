@@ -13,6 +13,8 @@ Compiler's class final project
 
 AS_Syntax_Diagrams in https://lucid.app/lucidchart/89702a55-72f8-44ad-88f8-5bdccaf2084a/view?page=0_0#
 
+AS_Documentation in https://docs.google.com/document/d/1jp9XdFYVZX3s2JJBVLnCjyrrhKkWSDo-thGA6Bn1scY/edit?usp=sharing
+
 ##### 1st delivery
 
 | Files changed          |                           Functionalities delivered |
