@@ -19,7 +19,7 @@ console.log('\nTEST 2 - Add expression')
 console.log('\nTEST 3 - Multiplication and division expression')
 const test3 = parser.parse(`
 	program prog1;
-	var <- int x; ->
+	var <- float x; ->
 	main() { x = 10 / 5 * 1; }`)
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
