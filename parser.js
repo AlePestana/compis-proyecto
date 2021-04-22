@@ -346,7 +346,15 @@ const grammar = {
 			['', '$$'],
 		],
 
-		assignment: [['var_name = expression ;', '$$']],
+		assignment: [['var_name_assignment_keyword assignment_keyword expression ;', 'assign_exp()']],
+
+		var_name_assignment_keyword: [
+			['var_name', "add_operand($1, 'var')"],
+		],
+
+		assignment_keyword: [
+			['=', 'add_operator($1)'],
+		],
 
 		var_name: [
 			['simple_id', '$$'],
@@ -374,17 +382,29 @@ const grammar = {
 		read: [['READ ( var_names ) ;', '$$']],
 
 		var_names: [
-			['var_name , var_names', '$$'],
-			['var_name', '$$'],
+			['var_name_read_keyword , var_names', '$$'],
+			['var_name_read_keyword', '$$'],
+		],
+
+		var_name_read_keyword: [
+			['var_name', 'read_var($1)'],
 		],
 
 		print: [['PRINT ( print_params ) ;', '$$']],
 
 		print_params: [
-			['expression , print_params', '$$'],
-			['expression', '$$'],
-			['STRING_CTE , print_params', '$$'],
-			['STRING_CTE', '$$'],
+			['expression_print_keyword , print_params', '$$'],
+			['expression_print_keyword', '$$'],
+			['string_cte_print_keyword , print_params', '$$'],
+			['string_cte_print_keyword', '$$'],
+		],
+
+		expression_print_keyword: [
+			['expression', "print_expression()"]
+		],
+
+		string_cte_print_keyword: [
+			['STRING_CTE', "print_string($1)"]
 		],
 
 		control: [['IF ( expression ) { statements } else', '$$']],

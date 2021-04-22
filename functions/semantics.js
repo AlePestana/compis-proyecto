@@ -373,3 +373,95 @@ add_or_operation = () => {
 		}
 	}
 }
+
+// Print semantic actions
+print_expression = () => {
+	console.log('inside print_expression')
+	
+	const operator = 'print'
+	const res = operands.pop()
+	const result = res.operand;
+
+	const left_operand = null
+	const right_operand = null
+
+	quads.push({ operator, left_operand, right_operand, result })
+}
+
+print_string = (string) => {
+	console.log('inside print_string')
+
+	const operator = 'print'
+	const result = string
+
+	const left_operand = null
+	const right_operand = null
+
+	quads.push({ operator, left_operand, right_operand, result })
+}
+
+// Read semantic actions
+read_var = (variable) => {
+	console.log('inside read_var')
+	
+	// if variable is within scope
+	if (isVarInScope(variable)) {
+		const operator = 'read'
+		const result = variable
+
+		const left_operand = null
+		const right_operand = null
+
+		quads.push({ operator, left_operand, right_operand, result })
+	} else {
+		console.log(`ERROR - "${variable}" not found within scope`)
+		throw `ERROR - "${variable}" not found within scope`
+	}
+}
+
+isVarInScope = (variable) => {
+	if (currentClass != null) {
+		// Search within class
+		if (
+			class_directory
+				.get(currentClass)
+				.method_directory.get(currentFunc)
+				.var_directory.has(variable)
+		) {
+			return true
+		} else {
+			return class_directory.get(currentClass).attr_directory.has(variable)
+		}
+	} else {
+		// Search in var_directory
+		if (
+			func_directory.get(currentFunc).var_directory.has(variable)
+		) {
+			return true
+		} else {
+			return func_directory.get(global_func).var_directory.has(variable)
+		}
+	}
+}
+
+assign_exp = () => {
+	console.log('inside assign_exp')
+	
+	const res = operands.pop()
+	const result = res.operand;
+
+	const right_operand = null
+	
+	const left = operands.pop()
+	const left_operand = left.operand
+
+	const operator = operators.pop()
+
+	console.log(res, left)
+	if (res.type === left.type) {
+		quads.push({ operator, left_operand: result, right_operand, result: left_operand })
+	} else {
+		console.log('ERROR - Type mismatch')
+		throw 'ERROR - Type mismatch'
+	}
+}
