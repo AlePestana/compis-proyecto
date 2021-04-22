@@ -142,9 +142,22 @@ console.log('\nTEST 18 - Multiplication expression inside func')
 const test18 = parser.parse(`
 	program prog1; 
     var <- float z; ->
+
 	void func myFunc1 (var <- int x; ->)
     var <- float y; ->
     { return x / y; }
 
 	main() {}`)
 console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 19 - Multiplication expression inside func with global var')
+const test19 = parser.parse(`
+	program prog1; 
+    var <- float z; ->
+	
+	void func myFunc1 (var <- int x; ->)
+    var <- float y; ->
+    { return z / y * x; }
+
+	main() {}`)
+console.log('--> ' + (test19 ? 'yes :)' : 'no :('))

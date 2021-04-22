@@ -90,7 +90,7 @@ console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
 
 console.log('ERROR TEST 9 - Read to a variable not within scope in main')
 // const test9 = parser.parse(`
-// 	program prog1; 
+// 	program prog1;
 //   var <- float y; int x; ->
 
 // 	main() {
@@ -130,12 +130,12 @@ console.log('--> ' + (test11 ? 'yes :)' : 'no :('))
 
 console.log('ERROR TEST 12 - Read to a variable not within scope in function')
 // const test12 = parser.parse(`
-// 	program prog1; 
+// 	program prog1;
 //   var <- float y; int x; ->
 
 //   void func myFunc1 (var <- int i; ->)
 //   var <- float j; ->
-//   { 
+//   {
 //     read(j, i, z);
 //   }
 
@@ -181,13 +181,15 @@ const test14 = parser.parse(`
   main() {}`)
 console.log('--> ' + (test14 ? 'yes :)' : 'no :('))
 
-console.log('ERROR TEST 15 - Read to a variable not within scope in class method')
+console.log(
+	'ERROR TEST 15 - Read to a variable not within scope in class method'
+)
 // const test15 = parser.parse(`
-//   program prog1; 
+//   program prog1;
 
 //   class Person {
 //     attributes <- int x; ->
-//     methods <- 
+//     methods <-
 //       int func one(var <- int y; ->)
 //       {
 //         read(x, y, z);
@@ -227,20 +229,20 @@ program prog1;
   }`)
 console.log('--> ' + (test16 ? 'yes :)' : 'no :('))
 
-console.log('TEST 17 - Assign to a global variable in function') // This one should work but doesn't because var_directory doesnt check in global scope
-// const test17 = parser.parse(`
-// program prog1; 
-//   var <- float y; int x; ->
+console.log('TEST 17 - Assign to a global variable in function')
+const test17 = parser.parse(`
+program prog1; 
+  var <- float y; int x; ->
 
-//   void func myFunc1 (var <- int i; ->)
-//   var <- float j; ->
-//   { 
-//     y = j * 3.3;
-//   }
+  void func myFunc1 (var <- int i; ->)
+  var <- float j; ->
+  { 
+    y = j * 3.3;
+  }
 
-// 	main() {
-//   }`)
-// console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
+	main() {
+  }`)
+console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
 
 console.log('TEST 18 - Assign to a local variable in class method')
 const test18 = parser.parse(`
@@ -261,7 +263,9 @@ const test18 = parser.parse(`
   main() {}`)
 console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
 
-console.log('TEST 19 - Assign to a local variable and attribute in class method')
+console.log(
+	'TEST 19 - Assign to a local variable and attribute in class method'
+)
 const test19 = parser.parse(`
   program prog1; 
 
