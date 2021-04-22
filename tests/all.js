@@ -18,3 +18,7 @@ require('./classes')
 console.log('\n\n--------------------------------------------------------')
 console.log('Expressions Tests')
 require('./expressions')
+
+console.log('\n\n--------------------------------------------------------')
+console.log('Linear Statements Tests')
+require('./linearStmts')
