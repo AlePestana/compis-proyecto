@@ -1,5 +1,16 @@
 // Semantics
 
+// Semantic cube
+const oracle = require('./cube')
+const Stack = require('./helpers/stack.js')
+const Queue = require('./helpers/queue.js')
+
+// Declare quadruples
+let quads = new Queue()
+let operators = new Stack()
+let operands = new Stack()
+let res_count = 0
+
 // Helper functions
 const isIdDuplicated = (id) => {
 	if (currentClass != null) {
@@ -13,7 +24,7 @@ const isIdDuplicated = (id) => {
 		} else {
 			// Is in method declaration
 			if (class_directory.get(currentClass).method_directory.has(id)) {
-				if (func_directory.get(currentFunc).var_directory.has(id)) {
+				if (func_directory.get(current_func).var_directory.has(id)) {
 					console.log('ERROR - Variable already exists in method')
 					throw 'ERROR - Variable already exists in method'
 				}
@@ -22,7 +33,7 @@ const isIdDuplicated = (id) => {
 	} else {
 		// We are in a func var/param or global var declaration
 		// Check if id already exists
-		if (func_directory.get(currentFunc).var_directory.has(id)) {
+		if (func_directory.get(current_func).var_directory.has(id)) {
 			console.log('ERROR - Variable already exists')
 			throw 'ERROR - Variable already exists'
 		}
@@ -43,7 +54,7 @@ create_func_directory = function () {
 
 add_program_id = (program_id) => {
 	global_func = program_id
-	currentFunc = program_id
+	current_func = program_id
 	func_directory.set(program_id, { type: 'program', var_directory: new Map() })
 }
 
@@ -60,7 +71,7 @@ add_class_id = (class_id) => {
 }
 
 add_func_id = (func_id) => {
-	currentFunc = func_id
+	current_func = func_id
 
 	if (currentClass != null) {
 		// We are in a method declaration
@@ -97,12 +108,14 @@ add_id = (id) => {
 			// Is method declaration
 			class_directory
 				.get(currentClass)
-				.method_directory.get(currentFunc)
+				.method_directory.get(current_func)
 				.var_directory.set(id, { type: currentType })
 		}
 	} else {
 		// Adding var in func / global var
-		func_directory.get(currentFunc).var_directory.set(id, { type: currentType })
+		func_directory
+			.get(current_func)
+			.var_directory.set(id, { type: currentType })
 	}
 }
 
@@ -118,15 +131,15 @@ add_id_array = (id, size) => {
 			// Is method declaration
 			class_directory
 				.get(currentClass)
-				.method_directory.get(currentFunc)
+				.method_directory.get(current_func)
 				.var_directory.set(id, { type: `${currentType}[${size}]` })
 		}
 	} else {
 		func_directory
-			.get(currentFunc)
+			.get(current_func)
 			.var_directory.set(id, { type: `${currentType}[${size}]` })
 		// console.log('received array with id = ' + id + ' and size of = ' + size)
-		// console.log(func_directory.get(currentFunc).var_directory)
+		// console.log(func_directory.get(current_func).var_directory)
 	}
 }
 
@@ -142,11 +155,11 @@ add_id_matrix = (id, sizeR, sizeC) => {
 			// Is method declaration
 			class_directory
 				.get(currentClass)
-				.method_directory.get(currentFunc)
+				.method_directory.get(current_func)
 				.var_directory.set(id, { type: `${currentType}[${sizeR}][${sizeC}]` })
 		}
 	} else {
-		func_directory.get(currentFunc).var_directory.set(id, {
+		func_directory.get(current_func).var_directory.set(id, {
 			type: `${currentType}[${sizeR}][${sizeC}]`,
 		})
 		// console.log(
@@ -157,12 +170,12 @@ add_id_matrix = (id, sizeR, sizeC) => {
 		// 		' and sizeC of = ' +
 		// 		sizeC
 		// )
-		// console.log(func_directory.get(currentFunc).var_directory)
+		// console.log(func_directory.get(current_func).var_directory)
 	}
 }
 
 finish_func_dec = () => {
-	currentFunc = global_func
+	current_func = global_func
 }
 
 delete_func_directory = function () {
@@ -199,4 +212,273 @@ finish_class_dec = () => {
 delete_class_directory = () => {
 	console.log(class_directory)
 	class_directory = null
+	console.log('quads before exit')
+	console.log(quads)
+	quads = new Queue()
+	operators = new Stack()
+	operands = new Stack()
+	res_count = 0
+}
+
+// Intermediate generation code
+
+add_operand = (operand, type) => {
+	if (type === 'var') {
+		if (currentClass != null) {
+			const is_inside_class_method =
+				class_directory
+					.get(currentClass)
+					.method_directory.get(current_func)
+					.var_directory.get(operand) != null
+			// If variable is not inside the function variables, then it must be part of the class' attributes
+			type = is_inside_class_method
+				? class_directory
+						.get(currentClass)
+						.method_directory.get(current_func)
+						.var_directory.get(operand).type
+				: class_directory.get(currentClass).attr_directory.get(operand).type
+		} else {
+			// Search in current var_directory
+			const is_inside_current_func =
+				func_directory.get(current_func).var_directory.get(operand) != null
+
+			// If not found, search in global scope
+			const is_inside_global_scope =
+				func_directory.get(global_func).var_directory.get(operand) != null
+
+			if (is_inside_current_func) {
+				type = func_directory.get(current_func).var_directory.get(operand).type
+			} else if (is_inside_global_scope) {
+				type = func_directory.get(global_func).var_directory.get(operand).type
+			} else {
+				type = 'undefined'
+			}
+		}
+	}
+	operands.push({ operand, type })
+}
+
+add_operator = (operator) => {
+	console.log('adding operator = ' + operator)
+	operators.push(operator)
+}
+
+add_mult_div_operation = () => {
+	console.log('inside add_mult_div_operation')
+	if (operators.top() === '*' || operators.top() === '/') {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
+}
+
+add_sum_sub_operation = () => {
+	console.log('inside add_sum_sub_operation')
+	if (operators.top() === '+' || operators.top() === '-') {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
+}
+
+start_subexpression = () => {
+	console.log('inside start_subexpression')
+	operators.push('(')
+}
+
+end_subexpression = () => {
+	console.log('inside end_subexpression')
+	operators.pop()
+}
+
+add_rel_operation = () => {
+	console.log('inside add_rel_operation')
+	if (
+		operators.top() === '>' ||
+		operators.top() === '<' ||
+		operators.top() === '==' ||
+		operators.top() === '!='
+	) {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
+}
+
+add_and_operation = () => {
+	console.log('inside add_and_operation')
+	if (operators.top() === '&') {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
+}
+
+add_or_operation = () => {
+	console.log('inside add_or_operation')
+	if (operators.top() === '|') {
+		const right = operands.pop()
+		const right_operand = right.operand
+		const left = operands.pop()
+		const left_operand = left.operand
+		const operator = operators.pop()
+
+		const result_type = oracle(left.type, right.type, operator)
+
+		if (result_type !== 'error') {
+			const result = `temp${res_count++}`
+			quads.push({ operator, left_operand, right_operand, result })
+			operands.push({ operand: result, type: result_type })
+		} else {
+			console.log('ERROR - Type mismatch')
+			throw 'ERROR - Type mismatch'
+		}
+	}
+}
+
+// Print semantic actions
+print_expression = () => {
+	console.log('inside print_expression')
+
+	const operator = 'print'
+	const res = operands.pop()
+	const result = res.operand
+
+	const left_operand = null
+	const right_operand = null
+
+	quads.push({ operator, left_operand, right_operand, result })
+}
+
+print_string = (string) => {
+	console.log('inside print_string')
+
+	const operator = 'print'
+	const result = string
+
+	const left_operand = null
+	const right_operand = null
+
+	quads.push({ operator, left_operand, right_operand, result })
+}
+
+// Read semantic actions
+read_var = (variable) => {
+	console.log('inside read_var')
+
+	// if variable is within scope
+	if (is_var_in_scope(variable)) {
+		const operator = 'read'
+		const result = variable
+
+		const left_operand = null
+		const right_operand = null
+
+		quads.push({ operator, left_operand, right_operand, result })
+	} else {
+		console.log(`ERROR - "${variable}" not found within scope`)
+		throw `ERROR - "${variable}" not found within scope`
+	}
+}
+
+is_var_in_scope = (variable) => {
+	if (currentClass != null) {
+		// Search within class
+		if (
+			class_directory
+				.get(currentClass)
+				.method_directory.get(current_func)
+				.var_directory.has(variable)
+		) {
+			return true
+		} else {
+			return class_directory.get(currentClass).attr_directory.has(variable)
+		}
+	} else {
+		// Search in var_directory
+		if (func_directory.get(current_func).var_directory.has(variable)) {
+			return true
+		} else {
+			return func_directory.get(global_func).var_directory.has(variable)
+		}
+	}
+}
+
+assign_exp = () => {
+	console.log('inside assign_exp')
+
+	const res = operands.pop()
+	const result = res.operand
+
+	const right_operand = null
+
+	const left = operands.pop()
+	const left_operand = left.operand
+
+	const operator = operators.pop()
+
+	console.log(res, left)
+	if (res.type === left.type) {
+		quads.push({
+			operator,
+			left_operand: result,
+			right_operand,
+			result: left_operand,
+		})
+	} else {
+		console.log('ERROR - Type mismatch')
+		throw 'ERROR - Type mismatch'
+	}
 }

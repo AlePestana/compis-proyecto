@@ -249,44 +249,96 @@ const grammar = {
 			['iteration', '$$'],
 		],
 
+		// expression
 		expression: [
-			['bool_exp', '$$'],
-			['bool_exp | expression', '$$'],
+			['bool_exp or_operation', 'add_or_operation()'],
+			// ['bool_exp | expression', 'add_operator($2)'],
 		],
 
-		bool_exp: [
-			['general_exp', '$$'],
-			['general_exp & bool_exp', '$$'],
+		or_operation: [
+			['or_operator right_bool_exp or_operation', '$$'],
+			['', 'add_or_operation()'],
 		],
 
+		right_bool_exp: [['bool_exp', 'add_or_operation()']],
+
+		or_operator: [['|', 'add_operator($1)']],
+
+		// bool_exp
+		bool_exp: [['general_exp and_operation', '$$']],
+
+		and_operation: [
+			['and_operator right_general_exp and_operation', '$$'],
+			['', 'add_and_operation()'],
+		],
+
+		right_general_exp: [['general_exp', 'add_and_operation()']],
+
+		and_operator: [['&', 'add_operator($1)']],
+
+		// general_exp
 		general_exp: [
 			['exp', '$$'],
-			['exp > exp', '$$'],
-			['exp < exp', '$$'],
-			['exp == exp', '$$'],
-			['exp != exp', '$$'],
+			['general_exp_compound', '$$'],
 		],
 
-		exp: [
-			['term', '$$'],
-			['term + exp', '$$'],
-			['term - exp', '$$'],
+		general_exp_compound: [
+			['exp gt_operator exp', 'add_rel_operation()'],
+			['exp lt_operator exp', 'add_rel_operation()'],
+			['exp equals_operator exp', 'add_rel_operation()'],
+			['exp not_equals_operator exp', 'add_rel_operation()'],
 		],
 
-		term: [
-			['factor', '$$'],
-			['factor * term', '$$'],
-			['factor / term', '$$'],
+		gt_operator: [['>', 'add_operator($1)']],
+
+		lt_operator: [['<', 'add_operator($1)']],
+
+		equals_operator: [['==', 'add_operator($1)']],
+
+		not_equals_operator: [['!=', 'add_operator($1)']],
+
+		// exp
+		exp: [['term add_sub_operation', '$$']],
+
+		add_sub_operation: [
+			['add_operator right_term add_sub_operation', '$$'],
+			['sub_operator right_term add_sub_operation', '$$'],
+			['', 'add_sum_sub_operation()'],
 		],
+
+		right_term: [['term', 'add_sum_sub_operation()']],
+
+		add_operator: [['+', 'add_operator($1)']],
+
+		sub_operator: [['-', 'add_operator($1)']],
+
+		// term
+		term: [['factor mult_div_operation', '$$']],
+
+		mult_div_operation: [
+			['mult_operator right_factor mult_div_operation', '$$'],
+			['div_operator right_factor mult_div_operation', '$$'],
+			['', 'add_mult_div_operation()'],
+		],
+
+		right_factor: [['factor', 'add_mult_div_operation()']],
+
+		mult_operator: [['*', 'add_operator($1)']],
+
+		div_operator: [['/', 'add_operator($1)']],
 
 		factor: [
-			['( expression )', '$$'],
-			['INT_CTE', '$$'],
-			['FLOAT_CTE', '$$'],
-			['var_name', '$$'],
+			['left_parenthesis expression right_parenthesis', '$$'],
+			['INT_CTE', `add_operand($1, 'int')`],
+			['FLOAT_CTE', `add_operand($1, 'float')`],
+			['var_name', `add_operand($1, 'var')`],
 			['ID ( params_call )', '$$'], // Calling a function with return type
 			['ID . ID ( params_call )', '$$'], // Calling a method from a class with return type
 		],
+
+		left_parenthesis: [['(', 'start_subexpression()']],
+
+		right_parenthesis: [[')', 'end_subexpression()']],
 
 		params_call: [
 			['expression', '$$'],
@@ -294,7 +346,16 @@ const grammar = {
 			['', '$$'],
 		],
 
-		assignment: [['var_name = expression ;', '$$']],
+		assignment: [
+			[
+				'var_name_assignment_keyword assignment_operator expression ;',
+				'assign_exp()',
+			],
+		],
+
+		var_name_assignment_keyword: [['var_name', "add_operand($1, 'var')"]],
+
+		assignment_operator: [['=', 'add_operator($1)']],
 
 		var_name: [
 			['simple_id', '$$'],
@@ -322,18 +383,24 @@ const grammar = {
 		read: [['READ ( var_names ) ;', '$$']],
 
 		var_names: [
-			['var_name , var_names', '$$'],
-			['var_name', '$$'],
+			['var_name_read_keyword , var_names', '$$'],
+			['var_name_read_keyword', '$$'],
 		],
+
+		var_name_read_keyword: [['var_name', 'read_var($1)']],
 
 		print: [['PRINT ( print_params ) ;', '$$']],
 
 		print_params: [
-			['expression , print_params', '$$'],
-			['expression', '$$'],
-			['STRING_CTE , print_params', '$$'],
-			['STRING_CTE', '$$'],
+			['expression_print_keyword , print_params', '$$'],
+			['expression_print_keyword', '$$'],
+			['string_cte_print_keyword , print_params', '$$'],
+			['string_cte_print_keyword', '$$'],
 		],
+
+		expression_print_keyword: [['expression', 'print_expression()']],
+
+		string_cte_print_keyword: [['STRING_CTE', 'print_string($1)']],
 
 		control: [['IF ( expression ) { statements } else', '$$']],
 
