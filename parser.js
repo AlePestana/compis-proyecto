@@ -59,7 +59,7 @@ const grammar = {
 			// Literals
 			['{digits}\\.{digits}', "return 'FLOAT_CTE'"],
 			['{digits}', "return 'INT_CTE'"],
-			['\\"({letters}|{digits})+\\"', "return 'STRING_CTE'"],
+			['\\"({letters}|{digits}|{blank})+\\"', "return 'STRING_CTE'"],
 
 			['\\<-', "return '<-'"],
 			['\\->', "return '->'"],
@@ -402,19 +402,34 @@ const grammar = {
 
 		string_cte_print_keyword: [['STRING_CTE', 'print_string($1)']],
 
-		control: [['IF ( expression ) { statements } else', '$$']],
+		control: [
+			['IF ( expression closing_if_parenthesis { statements } else', '$$'],
+		],
+
+		closing_if_parenthesis: [[')', 'mark_if_condition()']],
 
 		else: [
-			['ELSE { statements }', '$$'],
-			['', '$$'],
+			['else_keyword { statements }', 'mark_if_end()'],
+			['', 'mark_if_end()'],
 		],
+
+		else_keyword: [['ELSE', 'mark_else()']],
 
 		iteration: [
 			['while', '$$'],
 			['for', '$$'],
 		],
 
-		while: [['WHILE ( expression ) { statements }', '$$']],
+		while: [
+			[
+				'while_keyword ( expression closing_while_parenthesis { statements }',
+				'mark_while_end()',
+			],
+		],
+
+		while_keyword: [['WHILE', 'mark_while_start()']],
+
+		closing_while_parenthesis: [[')', 'mark_while_condition()']],
 
 		for: [
 			['FOR ( var_name = expression UNTIL expression ) { statements }', '$$'],

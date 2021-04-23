@@ -9,6 +9,7 @@ const Queue = require('./helpers/queue.js')
 let quads = new Queue()
 let operators = new Stack()
 let operands = new Stack()
+let jumps = new Stack()
 let res_count = 0
 
 // Helper functions
@@ -217,6 +218,7 @@ delete_class_directory = () => {
 	quads = new Queue()
 	operators = new Stack()
 	operands = new Stack()
+	jumps = new Stack()
 	res_count = 0
 }
 
@@ -481,4 +483,28 @@ assign_exp = () => {
 		console.log('ERROR - Type mismatch')
 		throw 'ERROR - Type mismatch'
 	}
+}
+
+mark_if_condition = () => {
+	console.log('inside mark_if_condition')
+}
+
+mark_if_end = () => {
+	console.log('inside mark_if_end')
+}
+
+mark_else = () => {
+	console.log('inside mark_else')
+}
+
+mark_while_start = () => {
+	console.log('inside mark_while_start')
+}
+
+mark_while_condition = () => {
+	console.log('inside mark_while_condition')
+}
+
+mark_while_end = () => {
+	console.log('inside mark_while_end')
 }
