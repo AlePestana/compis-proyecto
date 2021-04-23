@@ -22,3 +22,11 @@ require('./expressions')
 console.log('\n\n--------------------------------------------------------')
 console.log('Linear Statements Tests')
 require('./linearStmts')
+
+console.log('\n\n--------------------------------------------------------')
+console.log('Control Tests')
+require('./control')
+
+console.log('\n\n--------------------------------------------------------')
+console.log('Iteration Tests')
+require('./iteration')

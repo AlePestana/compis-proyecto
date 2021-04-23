@@ -17,7 +17,7 @@ const test1 = parser.parse(`
     }`)
 console.log('--> ' + (test1 ? 'yes :)' : 'no :('))
 
-console.log('TEST 2 - Simple if (true) with print')
+console.log('\nTEST 2 - Simple if (true) with print')
 const test2 = parser.parse(`
 	program prog1; 
     var <- float y; int x; ->
@@ -32,7 +32,7 @@ const test2 = parser.parse(`
     }`)
 console.log('--> ' + (test2 ? 'yes :)' : 'no :('))
 
-console.log('TEST 3 - Simple if (false) with print')
+console.log('\nTEST 3 - Simple if (false) with print')
 const test3 = parser.parse(`
 	program prog1; 
     var <- float y; int x; ->
@@ -47,7 +47,7 @@ const test3 = parser.parse(`
     }`)
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
-console.log('TEST 4 - Simple if else (true) with print')
+console.log('\nTEST 4 - Simple if else (true) with print')
 const test4 = parser.parse(`
 	program prog1; 
     var <- float y; int x; ->
@@ -64,7 +64,7 @@ const test4 = parser.parse(`
     }`)
 console.log('--> ' + (test4 ? 'yes :)' : 'no :('))
 
-console.log('TEST 5 - Simple if else (false) with print')
+console.log('\nTEST 5 - Simple if else (false) with print')
 const test5 = parser.parse(`
 	program prog1; 
     var <- float y; int x; ->
