@@ -499,11 +499,16 @@ mark_if_condition = () => {
 		const right_operand = null
 		const result = 'pending'
 		quads.push({ operator, left_operand, right_operand, result })
+		jumps.push(quads.count - 1)
+		//console.log(jumps)
 	}
 }
 
 mark_if_end = () => {
 	console.log('inside mark_if_end')
+
+	const end = jumps.pop()
+	quads.data[end].result = quads.count
 }
 
 mark_else = () => {
@@ -525,12 +530,12 @@ mark_while_end = () => {
 print_quads = (quads) => {
 	quads.data.forEach(
 		(value, index) => {
-			console.log(`${index} - { ${print_single_quad(value)} }`)
+			console.log(`${index} - { ${get_single_quad_string(value)} }`)
 		}
 	)
 }
 
-print_single_quad = (quad) => {
+get_single_quad_string = (quad) => {
 	let string = ""
 	for (let [key, value] of Object.entries(quad)) {
 		string += `${key}: ${value}     `
