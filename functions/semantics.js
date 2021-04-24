@@ -554,12 +554,12 @@ mark_while_end = () => {
 	console.log('inside mark_while_end')
 
 	const false_jump = jumps.pop()
-	const ret = jumps.pop()
+	const return_jump = jumps.pop()
 
 	const operator = 'goto'
 	const left_operand = null
 	const right_operand = null
-	const result = ret
+	const result = return_jump
 	quads.push({ operator, left_operand, right_operand, result })
 
 	quads.data[false_jump].result = quads.count
