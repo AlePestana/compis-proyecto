@@ -214,7 +214,8 @@ delete_class_directory = () => {
 	console.log(class_directory)
 	class_directory = null
 	console.log('quads before exit')
-	console.log(quads)
+	//console.log(quads)
+	print_quads(quads)
 	quads = new Queue()
 	operators = new Stack()
 	operands = new Stack()
@@ -507,4 +508,12 @@ mark_while_condition = () => {
 
 mark_while_end = () => {
 	console.log('inside mark_while_end')
+}
+
+print_quads = (quads) => {
+	quads.data.forEach(
+		(value, index) => {
+			console.log(`${index} - ${JSON.stringify(value)}`)
+		}
+	)
 }
