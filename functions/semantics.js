@@ -488,6 +488,18 @@ assign_exp = () => {
 
 mark_if_condition = () => {
 	console.log('inside mark_if_condition')
+
+	const cond = operands.pop()
+	if (cond.type !== 'int') {
+		console.log('ERROR - Type mismatch')
+		throw 'ERROR - Type mismatch'
+	} else {
+		const operator = 'gotoF'
+		const left_operand = cond.operand
+		const right_operand = null
+		const result = 'pending'
+		quads.push({ operator, left_operand, right_operand, result })
+	}
 }
 
 mark_if_end = () => {
@@ -513,7 +525,15 @@ mark_while_end = () => {
 print_quads = (quads) => {
 	quads.data.forEach(
 		(value, index) => {
-			console.log(`${index} - ${JSON.stringify(value)}`)
+			console.log(`${index} - { ${print_single_quad(value)} }`)
 		}
 	)
+}
+
+print_single_quad = (quad) => {
+	let string = ""
+	for (let [key, value] of Object.entries(quad)) {
+		string += `${key}: ${value}     `
+	}
+	return string
 }
