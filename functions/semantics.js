@@ -529,14 +529,40 @@ mark_else = () => {
 
 mark_while_start = () => {
 	console.log('inside mark_while_start')
+
+	jumps.push(quads.count)
 }
 
 mark_while_condition = () => {
 	console.log('inside mark_while_condition')
+
+	const cond = operands.pop()
+	if (cond.type !== 'int') {
+		console.log('ERROR - Type mismatch')
+		throw 'ERROR - Type mismatch'
+	} else  {
+		const operator = 'gotoF'
+		const left_operand = cond.operand
+		const right_operand = null
+		const result = 'pending'
+		quads.push({ operator, left_operand, right_operand, result })
+		jumps.push(quads.count - 1)
+	}
 }
 
 mark_while_end = () => {
 	console.log('inside mark_while_end')
+
+	const false_jump = jumps.pop()
+	const ret = jumps.pop()
+
+	const operator = 'goto'
+	const left_operand = null
+	const right_operand = null
+	const result = ret
+	quads.push({ operator, left_operand, right_operand, result })
+
+	quads.data[false_jump].result = quads.count
 }
 
 print_quads = (quads) => {
