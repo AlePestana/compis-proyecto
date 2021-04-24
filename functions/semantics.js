@@ -513,6 +513,18 @@ mark_if_end = () => {
 
 mark_else = () => {
 	console.log('inside mark_else')
+
+	const false_jump = jumps.pop()
+	
+	const operator = 'goto'
+	const left_operand = null
+	const right_operand = null
+	const result = 'pending'
+	quads.push({ operator, left_operand, right_operand, result })
+
+	jumps.push(quads.count - 1)
+
+	quads.data[false_jump].result = quads.count
 }
 
 mark_while_start = () => {
