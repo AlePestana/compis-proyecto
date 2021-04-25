@@ -214,7 +214,8 @@ delete_class_directory = () => {
 	console.log(class_directory)
 	class_directory = null
 	console.log('quads before exit')
-	console.log(quads)
+	//console.log(quads)
+	print_quads(quads)
 	quads = new Queue()
 	operators = new Stack()
 	operands = new Stack()
@@ -487,14 +488,43 @@ assign_exp = () => {
 
 mark_if_condition = () => {
 	console.log('inside mark_if_condition')
+
+	const cond = operands.pop()
+	if (cond.type !== 'int') {
+		console.log('ERROR - Type mismatch')
+		throw 'ERROR - Type mismatch'
+	} else {
+		const operator = 'gotoF'
+		const left_operand = cond.operand
+		const right_operand = null
+		const result = 'pending'
+		quads.push({ operator, left_operand, right_operand, result })
+		jumps.push(quads.count - 1)
+		//console.log(jumps)
+	}
 }
 
 mark_if_end = () => {
 	console.log('inside mark_if_end')
+
+	const end = jumps.pop()
+	quads.data[end].result = quads.count
 }
 
 mark_else = () => {
 	console.log('inside mark_else')
+
+	const false_jump = jumps.pop()
+	
+	const operator = 'goto'
+	const left_operand = null
+	const right_operand = null
+	const result = 'pending'
+	quads.push({ operator, left_operand, right_operand, result })
+
+	jumps.push(quads.count - 1)
+
+	quads.data[false_jump].result = quads.count
 }
 
 mark_while_start = () => {
@@ -507,4 +537,20 @@ mark_while_condition = () => {
 
 mark_while_end = () => {
 	console.log('inside mark_while_end')
+}
+
+print_quads = (quads) => {
+	quads.data.forEach(
+		(value, index) => {
+			console.log(`${index} - { ${get_single_quad_string(value)} }`)
+		}
+	)
+}
+
+get_single_quad_string = (quad) => {
+	let string = ""
+	for (let [key, value] of Object.entries(quad)) {
+		string += `${key}: ${value}     `
+	}
+	return string
 }
