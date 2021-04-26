@@ -67,8 +67,8 @@ const grammar = {
 			// Relational Operators
 			['\\<', "return '<'"],
 			['\\>', "return '>'"],
-			['\\=', "return '='"],
 			['\\==', "return '=='"],
+			['\\=', "return '='"],
 			['\\!=', "return '!='"],
 			['&', "return '&'"],
 			['\\|', "return '|'"],
