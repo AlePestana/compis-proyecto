@@ -49,3 +49,71 @@ const test3 = parser.parse(`
         print("outside while");
     }`)
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 4 - Nested while (true)')
+const test4 = parser.parse(`
+	program prog1; 
+    var <- int x, y; ->
+
+	main() {
+        x = 5;
+        y = 6;
+        while(y > x) {
+            print("inside while");
+            y = 5;
+            while(y == x) {
+                print("inside second while");
+            }
+            print("outside second while");
+        }
+        print("outside while");
+    }`)
+console.log('--> ' + (test4 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 5 - Nested if else inside while (true)')
+const test5 = parser.parse(`
+	program prog1; 
+    var <- int x, y; ->
+
+	main() {
+        x = 5;
+        y = 6;
+        while(y > x) {
+            print("inside while");
+            y = 5;
+            if(x == y) {
+                print("inside if");
+            } else {
+                print("inside else");
+            }
+            print("outside if else");
+        }
+        print("outside while");
+    }`)
+console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 6 - Nested if else inside while (true)')
+const test6 = parser.parse(`
+	program prog1; 
+    var <- int x, y; ->
+
+	main() {
+        x = 5;
+        y = 6;
+        while(y > x) {
+            print("inside while");
+            y = 5;
+            if(x == y) {
+                print("inside if");
+                while(y == x) {
+                    print("inside second while");
+                    y = 7;
+                }
+            } else {
+                print("inside else");
+            }
+            print("outside if else");
+        }
+        print("outside while");
+    }`)
+console.log('--> ' + (test6 ? 'yes :)' : 'no :('))
