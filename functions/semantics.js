@@ -10,6 +10,7 @@ let quads = new Queue()
 let operators = new Stack()
 let operands = new Stack()
 let jumps = new Stack()
+let forStack = new Stack()
 let res_count = 0
 
 // Helper functions
@@ -220,6 +221,7 @@ delete_class_directory = () => {
 	operators = new Stack()
 	operands = new Stack()
 	jumps = new Stack()
+	forStack = new Stack()
 	res_count = 0
 }
 
@@ -579,4 +581,55 @@ get_single_quad_string = (quad) => {
 		string += `${key}: ${value}     `
 	}
 	return string
+}
+
+// For loop
+for_start_exp = () => {
+	forStack.push(quads.data[quads.count - 1].result)
+}
+
+mark_until = () => {
+	//console.log('HERE')
+	jumps.push(quads.count)
+	add_operand(forStack.top(), 'var')
+	add_operator('<') // Should be <= ?
+	start_subexpression()
+}
+
+mark_for_condition = () => {
+	end_subexpression()
+	//console.log(operands)
+	add_rel_operation()
+
+	const cond = operands.pop()
+	// No need to check cond type, HAS to be boolean
+	const operator = 'gotoF'
+	const left_operand = cond.operand
+	const right_operand = null
+	const result = 'pending'
+	quads.push({ operator, left_operand, right_operand, result })
+	jumps.push(quads.count - 1)
+}
+
+mark_for_end = () => {
+	const varFor = forStack.pop()
+
+	// generate varFor = varFor + 1
+	add_operand(varFor, 'var')
+	add_operator('=')
+	add_operand(varFor, 'var')
+	add_operator('+')
+	add_operand('1', 'int')
+	add_sum_sub_operation()
+	assign_exp()
+
+	const false_jump = jumps.pop()
+	const return_jump = jumps.pop()
+
+	const operator = 'goto'
+	const left_operand = null
+	const right_operand = null
+	const result = return_jump
+	quads.push({ operator, left_operand, right_operand, result })
+	quads.data[false_jump].result = quads.count
 }

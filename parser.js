@@ -432,8 +432,21 @@ const grammar = {
 		closing_while_parenthesis: [[')', 'mark_while_condition()']],
 
 		for: [
-			['FOR ( var_name = expression UNTIL expression ) { statements }', '$$'],
+			['FOR ( for_assignment until_keyword expression closing_for_parenthesis { statements }', 'mark_for_end()'],
 		],
+
+		for_assignment: [
+			[
+				'var_name_assignment_keyword assignment_operator expression',
+				'assign_exp(); for_start_exp()',
+			],
+		],
+
+		until_keyword: [
+			['UNTIL', 'mark_until()'],
+		],
+	
+		closing_for_parenthesis: [[')', 'mark_for_condition()']],
 	},
 }
 

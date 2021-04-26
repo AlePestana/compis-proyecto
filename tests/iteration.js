@@ -49,3 +49,33 @@ const test3 = parser.parse(`
         print("outside while");
     }`)
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 4 - Simple for loop')
+const test4 = parser.parse(`
+	program prog1; 
+    var <- int i; ->
+
+	main() {
+        for (i = 1 until 10) {
+            print("inside for");
+        }
+        print("outside for");
+    }`)
+console.log('--> ' + (test4 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 5 - Nested for loop')
+const test5 = parser.parse(`
+	program prog1; 
+    var <- int i, j; ->
+
+	main() {
+        for (i = 1 until 10) {
+            print("inside first for");
+            for (j = 1 until  10)  {
+                print("inside second for");
+            }
+            print("outside second for");
+        }
+        print("outside first for");
+    }`)
+console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
