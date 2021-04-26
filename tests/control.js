@@ -80,3 +80,45 @@ const test5 = parser.parse(`
         print("outside if");
     }`)
 console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 6 - Nested if else (true) with print')
+const test6 = parser.parse(`
+	program prog1; 
+    var <- float y; int x; ->
+
+	main() {
+        y = 2.5;
+        x = 5;
+        if(x > y) {
+            print("inside if");
+            if(x == 5) {
+                print("inside second if");
+            }
+            print("outside if");
+        } else {
+            print("inside else");
+        }
+        print("outside");
+    }`)
+console.log('--> ' + (test6 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 7 - Nested if else (false) with print')
+const test7 = parser.parse(`
+	program prog1; 
+    var <- float y; int x; ->
+
+	main() {
+        y = 2.5;
+        x = 5;
+        if(x < y) {
+            print("inside if");
+        } else {
+            print("inside else");
+            if(x == 5) {
+                print("inside second if");
+            }
+            print("outside else if");
+        }
+        print("outside");
+    }`)
+console.log('--> ' + (test7 ? 'yes :)' : 'no :('))
