@@ -71,7 +71,7 @@ const test5 = parser.parse(`
 	main() {
         for (i = 1 until 10) {
             print("inside first for");
-            for (j = 1 until  10)  {
+            for (j = 1 until 10)  {
                 print("inside second for");
             }
             print("outside second for");
@@ -79,6 +79,7 @@ const test5 = parser.parse(`
         print("outside first for");
     }`)
 console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
+
 console.log('\nTEST 6 - Nested while (true)')
 const test6 = parser.parse(`
 	program prog1; 

@@ -517,7 +517,7 @@ mark_else = () => {
 	console.log('inside mark_else')
 
 	const false_jump = jumps.pop()
-	
+
 	const operator = 'goto'
 	const left_operand = null
 	const right_operand = null
@@ -542,7 +542,7 @@ mark_while_condition = () => {
 	if (cond.type !== 'int') {
 		console.log('ERROR - Type mismatch')
 		throw 'ERROR - Type mismatch'
-	} else  {
+	} else {
 		const operator = 'gotoF'
 		const left_operand = cond.operand
 		const right_operand = null
@@ -567,38 +567,20 @@ mark_while_end = () => {
 	quads.data[false_jump].result = quads.count
 }
 
-print_quads = (quads) => {
-	quads.data.forEach(
-		(value, index) => {
-			console.log(`${index} - { ${get_single_quad_string(value)} }`)
-		}
-	)
-}
-
-get_single_quad_string = (quad) => {
-	let string = ""
-	for (let [key, value] of Object.entries(quad)) {
-		string += `${key}: ${value}     `
-	}
-	return string
-}
-
 // For loop
 for_start_exp = () => {
 	forStack.push(quads.data[quads.count - 1].result)
 }
 
 mark_until = () => {
-	//console.log('HERE')
 	jumps.push(quads.count)
 	add_operand(forStack.top(), 'var')
-	add_operator('<') // Should be <= ?
+	add_operator('<')
 	start_subexpression()
 }
 
 mark_for_condition = () => {
 	end_subexpression()
-	//console.log(operands)
 	add_rel_operation()
 
 	const cond = operands.pop()
@@ -614,7 +596,7 @@ mark_for_condition = () => {
 mark_for_end = () => {
 	const varFor = forStack.pop()
 
-	// generate varFor = varFor + 1
+	// generate quad --> { varFor = varFor + 1 }
 	add_operand(varFor, 'var')
 	add_operator('=')
 	add_operand(varFor, 'var')
@@ -632,4 +614,18 @@ mark_for_end = () => {
 	const result = return_jump
 	quads.push({ operator, left_operand, right_operand, result })
 	quads.data[false_jump].result = quads.count
+}
+
+print_quads = (quads) => {
+	quads.data.forEach((value, index) => {
+		console.log(`${index} - { ${get_single_quad_string(value)} }`)
+	})
+}
+
+get_single_quad_string = (quad) => {
+	let string = ''
+	for (let [key, value] of Object.entries(quad)) {
+		string += `${key}: ${value}     `
+	}
+	return string
 }
