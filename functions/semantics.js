@@ -1,4 +1,8 @@
 // Semantics
+// Includes all semantic actions to be included in the parser
+// Inputs: receives the oracle (semantic cube), the Stack and Queue data structures
+// Output: does not return something since all actions are global
+// Used by: parser.js (since it specifies the actions to be executed by it)
 
 // Semantic cube
 const oracle = require('./cube')

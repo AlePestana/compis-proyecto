@@ -1,4 +1,8 @@
 // Parser
+// Lexer and parser that specifies the rules, tokens, and grammar
+// Inputs: does not receive parameters
+// Output: parser to be check user inputs (used by test files)
+// Used by: all test files (inside tests folder)
 const Parser = require('jison').Parser
 
 const grammar = {
@@ -432,7 +436,10 @@ const grammar = {
 		closing_while_parenthesis: [[')', 'mark_while_condition()']],
 
 		for: [
-			['FOR ( for_assignment until_keyword expression closing_for_parenthesis { statements }', 'mark_for_end()'],
+			[
+				'FOR ( for_assignment until_keyword expression closing_for_parenthesis { statements }',
+				'mark_for_end()',
+			],
 		],
 
 		for_assignment: [
@@ -442,10 +449,8 @@ const grammar = {
 			],
 		],
 
-		until_keyword: [
-			['UNTIL', 'mark_until()'],
-		],
-	
+		until_keyword: [['UNTIL', 'mark_until()']],
+
 		closing_for_parenthesis: [[')', 'mark_for_condition()']],
 	},
 }

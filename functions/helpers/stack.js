@@ -1,4 +1,9 @@
-// Stack data structure
+// Stack
+// Stack data structure declaration
+// Inputs: does not receive parameters
+// Output: the Stack data structure
+// Used by: semantics.js
+
 class Stack {
 	constructor() {
 		this.data = []
