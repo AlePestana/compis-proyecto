@@ -11,13 +11,20 @@ const Queue = require('./helpers/queue.js')
 
 // Declare quadruples
 let quads = new Queue()
+
+// Declare all helper stacks
 let operators = new Stack()
 let operands = new Stack()
 let jumps = new Stack()
 let forStack = new Stack()
+
+// Declare all helper counters
 let res_count = 0
 
 // Helper functions
+// Function that checks if a variable name is already declared in the program
+// Receives the id to check
+// Does not return anything since it only throws if the name is duplicated
 const isIdDuplicated = (id) => {
 	if (currentClass != null) {
 		// We are in a class var declaration
@@ -45,6 +52,7 @@ const isIdDuplicated = (id) => {
 		}
 	}
 }
+
 // Declare function directory variable
 func_directory = null
 
@@ -54,16 +62,25 @@ class_directory = null
 // Variable to keep reference to global scope
 global_func = null
 
+// Semantic action that creates a new empty instance of the global function directory
+// Does not receive any parameters
+// Does not return anything
 create_func_directory = function () {
 	func_directory = new Map()
 }
 
+// Semantic action that adds the program name to the function directory and sets both the global and current function variables
+// Receives the program name
+// Does not return anything
 add_program_id = (program_id) => {
 	global_func = program_id
 	current_func = program_id
 	func_directory.set(program_id, { type: 'program', var_directory: new Map() })
 }
 
+// Semantic action that adds a class name to the class directory, sets the current class variable and creates new instances of both attribute and methods directory for the object
+// Receives the class name
+// Does not return anything
 add_class_id = (class_id) => {
 	currentClass = class_id
 
@@ -72,10 +89,11 @@ add_class_id = (class_id) => {
 		attr_directory: new Map(),
 		method_directory: new Map(),
 	})
-
-	//func_directory.set(class_id, { type: 'class', var_directory: new Map() })
 }
 
+// Semantic action that adds a function name to the global function directory, sets the current function variable and creates a new instance of a variable directory for the object
+// Receives the function name
+// Does not return anything
 add_func_id = (func_id) => {
 	current_func = func_id
 
@@ -98,10 +116,16 @@ add_func_id = (func_id) => {
 	}
 }
 
+// Semantic action that sets the current type variable (for later use to add variable names)
+// Receives the type
+// Does not return anything
 set_current_type = (type) => {
 	currentType = type
 }
 
+// Semantic action that adds a variable name to the class or global function directory (depending on the previously set variables) and verifies it is not duplicated
+// Receives the variable name
+// Does not return anything
 add_id = (id) => {
 	isIdDuplicated(id)
 	if (currentClass != null) {
@@ -125,6 +149,9 @@ add_id = (id) => {
 	}
 }
 
+// Semantic action that adds an array variable name to the class or global function directory (depending on the previously set variables) and verifies it is not duplicated
+// Receives the variable name and size of the array
+// Does not return anything
 add_id_array = (id, size) => {
 	isIdDuplicated(id)
 	if (currentClass != null) {
@@ -149,6 +176,9 @@ add_id_array = (id, size) => {
 	}
 }
 
+// Semantic action that adds a matrix variable name to the class or global function directory (depending on the previously set variables) and verifies it is not duplicated
+// Receives the variable name and size of the matrix (number of rows and columns)
+// Does not return anything
 add_id_matrix = (id, sizeR, sizeC) => {
 	isIdDuplicated(id)
 	if (currentClass != null) {
@@ -180,23 +210,20 @@ add_id_matrix = (id, sizeR, sizeC) => {
 	}
 }
 
+// Semantic action that marks the end of a function by setting the current function variable to the global function variable (the program's name)
+// Does not receive any parameters
+// Does not return anything
 finish_func_dec = () => {
 	current_func = global_func
 }
 
+// Semantic action that deletes the function directory after the program finishes
+// Does not receive anything
+// Does not return anything
 delete_func_directory = function () {
 	console.log(func_directory)
 	func_directory = null
 }
-
-// Example to add id
-// add_id_func_dir = function (id) {
-//func_directory.set(id, {var_directory: new Map(), type: 'cool'});
-// func_directory[id] = { var_directory: new Map(), type: 'cool' }
-// func_directory[id].var_directory['hola'] = { var_directory: new Map() }
-// console.log(func_directory)
-// console.log(func_directory[id].var_directory)
-// }
 
 create_class_directory = () => {
 	class_directory = new Map()
