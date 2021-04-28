@@ -1,3 +1,9 @@
+// Global variables tests
+// All tests to verify the declarations of global variables
+// Inputs: receives the parser
+// Output: does not return anything (only displays on console the results of the tests)
+// Used by: all.js (calls all the test files)
+
 const parser = require('../parser')
 
 console.log('TEST 1 - Global vars')

@@ -1,4 +1,8 @@
 // Syntax tests
+// All syntax tests (first tests to verify the parser's correct functionality)
+// Inputs: receives the parser
+// Output: does not return anything (only displays on console the results of the tests)
+// Used by: all.js (calls all the test files)
 
 const parser = require('../parser')
 

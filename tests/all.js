@@ -1,4 +1,9 @@
 // Run all tests
+// Calls all tests files that makes it handy to check that new functionalities don't break the existing tests
+// Inputs: receives all tests files
+// Output: does not return anything (only displays on console the results of the tests)
+// Used by: -
+
 console.log('\n\n--------------------------------------------------------')
 console.log('Syntax Tests')
 // require('./syntax')
