@@ -3,6 +3,7 @@
 // Inputs: does not receive parameters
 // Output: parser to be check user inputs (used by test files)
 // Used by: all test files (inside tests folder)
+
 const Parser = require('jison').Parser
 
 const grammar = {
