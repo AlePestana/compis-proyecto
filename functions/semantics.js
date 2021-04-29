@@ -524,6 +524,9 @@ assign_exp = () => {
 
 // -> Control semantic actions
 
+// Semantic action that generates the quadruple for the goToFalse for an if condition by popping from the operands stack or throwing a type mismatch, plus it pushes to the jumps stack to mark where an empty space must be filled
+// Does not receive any parameters
+// Does not return anything
 mark_if_condition = () => {
 	console.log('inside mark_if_condition')
 
@@ -538,10 +541,12 @@ mark_if_condition = () => {
 		const result = 'pending'
 		quads.push({ operator, left_operand, right_operand, result })
 		jumps.push(quads.count - 1)
-		//console.log(jumps)
 	}
 }
 
+// Semantic action that fills in the blank of the goToFalse quadruple for the if condition by popping the index from the jumps stack
+// Does not receive any parameters
+// Does not return anything
 mark_if_end = () => {
 	console.log('inside mark_if_end')
 
@@ -549,6 +554,9 @@ mark_if_end = () => {
 	quads.data[end].result = quads.count
 }
 
+// Semantic action that generates the quadruple for the goTo for an the else of an if condition and pushes to the jumps stack to mark where an empty space must be filled, plus it fills in the blank of the goToFalse quadruple for the if condition by popping the index from the jumps stack
+// Does not receive any parameters
+// Does not return anything
 mark_else = () => {
 	console.log('inside mark_else')
 
@@ -567,12 +575,18 @@ mark_else = () => {
 
 // -> Iteration semantic actions
 
+// Semantic action that marks the place where the goTo quadruple of the while loop should return to by pushing the current counter to the jumps stack
+// Does not receive any parameters
+// Does not return anything
 mark_while_start = () => {
 	console.log('inside mark_while_start')
 
 	jumps.push(quads.count)
 }
 
+// Semantic action that generates the quadruple for the goToFalse for a while loop by popping from the operands stack or throwing a type mismatch, plus it pushes to the jumps stack to mark where an empty space must be filled
+// Does not receive any parameters
+// Does not return anything
 mark_while_condition = () => {
 	console.log('inside mark_while_condition')
 
@@ -590,6 +604,9 @@ mark_while_condition = () => {
 	}
 }
 
+// Semantic action that generates the quadruple for the goTo for a while loop and pushes to the jumps stack to mark where an empty space must be filled
+// Does not receive any parameters
+// Does not return anything
 mark_while_end = () => {
 	console.log('inside mark_while_end')
 
@@ -605,10 +622,16 @@ mark_while_end = () => {
 	quads.data[false_jump].result = quads.count
 }
 
+// Semantic action that pushes to the for stack the last variable (the result stored in the quadruple before)
+// Does not receive any parameters
+// Does not return anything
 for_start_exp = () => {
 	forStack.push(quads.data[quads.count - 1].result)
 }
 
+// Semantic action that adds to the operands stack the top of the for stack (the last variable) and the < operator to the operators stack, plus it marks a false bottom on the operators stack
+// Does not receive any parameters
+// Does not return anything
 mark_until = () => {
 	jumps.push(quads.count)
 	add_operand(forStack.top(), 'var')
@@ -616,6 +639,9 @@ mark_until = () => {
 	start_subexpression()
 }
 
+// Semantic action that generates the quadruple for the goToFalse for a for loop by removing the false bottom and adding the relational operation, plus it pushes to the jumps stack to mark where an empty space must be filled
+// Does not receive any parameters
+// Does not return anything
 mark_for_condition = () => {
 	end_subexpression()
 	add_rel_operation()
@@ -630,6 +656,9 @@ mark_for_condition = () => {
 	jumps.push(quads.count - 1)
 }
 
+// Semantic action that generates the quadruple for the increase in 1 of the last variable for a while loop by adding the sum operation and fills in the blank for the goToFalse of the for loop
+// Does not receive any parameters
+// Does not return anything
 mark_for_end = () => {
 	const varFor = forStack.pop()
 
