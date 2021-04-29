@@ -245,6 +245,9 @@ delete_class_directory = () => {
 
 // -> Expressions semantic actions
 
+// Semantic action that adds an operand to the operands stack by checking its type from either the class or global function directory
+// Receives the operand and its type (which only specifies if it's a variable or not)
+// Does not return anything
 add_operand = (operand, type) => {
 	if (type === 'var') {
 		if (current_class != null) {
@@ -281,11 +284,17 @@ add_operand = (operand, type) => {
 	operands.push({ operand, type })
 }
 
+// Semantic action that adds an operator to the operators stack
+// Receives the operator
+// Does not return anything
 add_operator = (operator) => {
 	console.log('adding operator = ' + operator)
 	operators.push(operator)
 }
 
+// Semantic action that generates the quadruple for either a multiplication or division operation by popping from both the operands and operators stack or throws if there's a type mismatch
+// Does not receive any parameters
+// Does not return anything
 add_mult_div_operation = () => {
 	console.log('inside add_mult_div_operation')
 	if (operators.top() === '*' || operators.top() === '/') {
@@ -308,6 +317,9 @@ add_mult_div_operation = () => {
 	}
 }
 
+// Semantic action that generates the quadruple for either an addition or subtraction operation by popping from both the operands and operators stack or throws if there's a type mismatch
+// Does not receive any parameters
+// Does not return anything
 add_sum_sub_operation = () => {
 	console.log('inside add_sum_sub_operation')
 	if (operators.top() === '+' || operators.top() === '-') {
@@ -330,16 +342,25 @@ add_sum_sub_operation = () => {
 	}
 }
 
+// Semantic action that adds a false bottom (a left or starting parenthesis) to the operators stack to mark that a new subexpression has started
+// Does not receive any parameters
+// Does not return anything
 start_subexpression = () => {
 	console.log('inside start_subexpression')
 	operators.push('(')
 }
 
+// Semantic action that removes the false bottom (a left or starting parenthesis) from the operators stack to mark that the subexpression has ended
+// Does not receive any parameters
+// Does not return anything
 end_subexpression = () => {
 	console.log('inside end_subexpression')
 	operators.pop()
 }
 
+// Semantic action that generates the quadruple for all relational operations (<, >, !=, ==) by popping from both the operands and operators stack or throws if there's a type mismatch
+// Does not receive any parameters
+// Does not return anything
 add_rel_operation = () => {
 	console.log('inside add_rel_operation')
 	if (
@@ -367,6 +388,9 @@ add_rel_operation = () => {
 	}
 }
 
+// Semantic action that generates the quadruple for the AND logical operation by popping from both the operands and operators stack or throws if there's a type mismatch
+// Does not receive any parameters
+// Does not return anything
 add_and_operation = () => {
 	console.log('inside add_and_operation')
 	if (operators.top() === '&') {
@@ -389,6 +413,9 @@ add_and_operation = () => {
 	}
 }
 
+// Semantic action that generates the quadruple for the OR logical operation by popping from both the operands and operators stack or throws if there's a type mismatch
+// Does not receive any parameters
+// Does not return anything
 add_or_operation = () => {
 	console.log('inside add_or_operation')
 	if (operators.top() === '|') {
@@ -413,6 +440,9 @@ add_or_operation = () => {
 
 // -> IO semantic actions
 
+// Semantic action that generates the quadruple for the printing operation of an expression by popping the operand to print from the operands stack
+// Does not receive any parameters
+// Does not return anything
 print_expression = () => {
 	console.log('inside print_expression')
 
@@ -426,6 +456,9 @@ print_expression = () => {
 	quads.push({ operator, left_operand, right_operand, result })
 }
 
+// Semantic action that generates the quadruple for the printing operation of a constant string
+// Receives the string to print
+// Does not return anything
 print_string = (string) => {
 	console.log('inside print_string')
 
@@ -438,6 +471,9 @@ print_string = (string) => {
 	quads.push({ operator, left_operand, right_operand, result })
 }
 
+// Semantic action that generates the quadruple for the reading operation to a variable or throws if the given variable is not found within scope
+// Receives the variable name
+// Does not return anything
 read_var = (variable) => {
 	console.log('inside read_var')
 
@@ -456,29 +492,9 @@ read_var = (variable) => {
 	}
 }
 
-is_var_in_scope = (variable) => {
-	if (current_class != null) {
-		// Search within class
-		if (
-			class_directory
-				.get(current_class)
-				.method_directory.get(current_func)
-				.var_directory.has(variable)
-		) {
-			return true
-		} else {
-			return class_directory.get(current_class).attr_directory.has(variable)
-		}
-	} else {
-		// Search in var_directory
-		if (func_directory.get(current_func).var_directory.has(variable)) {
-			return true
-		} else {
-			return func_directory.get(global_func).var_directory.has(variable)
-		}
-	}
-}
-
+// Semantic action that generates the quadruple for the assignment of a variable by popping from both the operands and operators stack or throws if there's a type mismatch
+// Does not receive any parameters
+// Does not return anything
 assign_exp = () => {
 	console.log('inside assign_exp')
 
@@ -666,6 +682,32 @@ const is_id_duplicated = (id) => {
 		if (func_directory.get(current_func).var_directory.has(id)) {
 			console.log('ERROR - Variable already exists')
 			throw 'ERROR - Variable already exists'
+		}
+	}
+}
+
+// Function that checks if a variable name is within scope (which means either the class directory in the current class or the global function directory in the current function contains it)
+// Receives the variable name to check
+// Returns true if variable is found within scope, false if not
+is_var_in_scope = (variable) => {
+	if (current_class != null) {
+		// Search within class
+		if (
+			class_directory
+				.get(current_class)
+				.method_directory.get(current_func)
+				.var_directory.has(variable)
+		) {
+			return true
+		} else {
+			return class_directory.get(current_class).attr_directory.has(variable)
+		}
+	} else {
+		// Search in var_directory
+		if (func_directory.get(current_func).var_directory.has(variable)) {
+			return true
+		} else {
+			return func_directory.get(global_func).var_directory.has(variable)
 		}
 	}
 }
