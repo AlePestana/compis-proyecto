@@ -1,5 +1,8 @@
 // Semantic cube
-
+// Specifies all the possible type matches for the parser
+// Inputs: does not receive parameters
+// Output: oracle (the function to check if two types match)
+// Used by: semantics.js
 cube = {
 	int: {
 		int: {

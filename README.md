@@ -56,4 +56,16 @@ AS_Documentation in https://docs.google.com/document/d/1jp9XdFYVZX3s2JJBVLnCjyrr
 | tests/all.js               |                                 Import new tests |
 | AS_Semantic_Rules          |  Update ArrowScript semantic rules for int logic |
 | AS_Syntax_Diagrams         |               Update ArrowScript syntax diagrams |
-| AS_Documentation           |         Started ArrowScript formal documentation |
+| AS_Documentation           |           Start ArrowScript formal documentation |
+
+##### 4th delivery
+
+| Files changed          |                                           Functionalities delivered |
+| :--------------------- | ------------------------------------------------------------------: |
+| parser.js              |             Add semantic actions for control and iteration to rules |
+| functions/semantics.js | Functions for control (if-else) and iteration (while and for loops) |
+| tests/control.js       |                              Control tests for new semantic actions |
+| tests/iteration.js     |                            Iteration tests for new semantic actions |
+| tests/all.js           |                                                    Import new tests |
+| AS_Syntax_Diagrams     |                                  Update ArrowScript syntax diagrams |
+| AS_Documentation       |                             Update ArrowScript formal documentation |
