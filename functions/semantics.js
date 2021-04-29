@@ -21,37 +21,7 @@ let forStack = new Stack()
 // Declare all helper counters
 let res_count = 0
 
-// Helper functions
-// Function that checks if a variable name is already declared in the program
-// Receives the id to check
-// Does not return anything since it only throws if the name is duplicated
-const isIdDuplicated = (id) => {
-	if (currentClass != null) {
-		// We are in a class var declaration
-		if (is_attr_dec) {
-			// We are in attributes declaration
-			if (class_directory.get(currentClass).attr_directory.has(id)) {
-				console.log('ERROR - Attribute already exists')
-				throw 'ERROR - Attribute already exists'
-			}
-		} else {
-			// Is in method declaration
-			if (class_directory.get(currentClass).method_directory.has(id)) {
-				if (func_directory.get(current_func).var_directory.has(id)) {
-					console.log('ERROR - Variable already exists in method')
-					throw 'ERROR - Variable already exists in method'
-				}
-			}
-		}
-	} else {
-		// We are in a func var/param or global var declaration
-		// Check if id already exists
-		if (func_directory.get(current_func).var_directory.has(id)) {
-			console.log('ERROR - Variable already exists')
-			throw 'ERROR - Variable already exists'
-		}
-	}
-}
+// -> Global semantic actions
 
 // Declare function directory variable
 func_directory = null
@@ -78,32 +48,19 @@ add_program_id = (program_id) => {
 	func_directory.set(program_id, { type: 'program', var_directory: new Map() })
 }
 
-// Semantic action that adds a class name to the class directory, sets the current class variable and creates new instances of both attribute and methods directory for the object
-// Receives the class name
-// Does not return anything
-add_class_id = (class_id) => {
-	currentClass = class_id
-
-	class_directory.set(class_id, {
-		type: 'class',
-		attr_directory: new Map(),
-		method_directory: new Map(),
-	})
-}
-
 // Semantic action that adds a function name to the global function directory, sets the current function variable and creates a new instance of a variable directory for the object
 // Receives the function name
 // Does not return anything
 add_func_id = (func_id) => {
 	current_func = func_id
 
-	if (currentClass != null) {
+	if (current_class != null) {
 		// We are in a method declaration
-		if (class_directory.get(currentClass).method_directory.has(func_id)) {
+		if (class_directory.get(current_class).method_directory.has(func_id)) {
 			console.log('ERROR - Method already exists')
 			throw 'ERROR - Method already exists'
 		}
-		class_directory.get(currentClass).method_directory.set(func_id, {
+		class_directory.get(current_class).method_directory.set(func_id, {
 			type: currentType,
 			var_directory: new Map(),
 		})
@@ -127,17 +84,17 @@ set_current_type = (type) => {
 // Receives the variable name
 // Does not return anything
 add_id = (id) => {
-	isIdDuplicated(id)
-	if (currentClass != null) {
+	is_id_duplicated(id)
+	if (current_class != null) {
 		// Adding var in class
 		if (is_attr_dec) {
 			class_directory
-				.get(currentClass)
+				.get(current_class)
 				.attr_directory.set(id, { type: currentType })
 		} else {
 			// Is method declaration
 			class_directory
-				.get(currentClass)
+				.get(current_class)
 				.method_directory.get(current_func)
 				.var_directory.set(id, { type: currentType })
 		}
@@ -153,17 +110,17 @@ add_id = (id) => {
 // Receives the variable name and size of the array
 // Does not return anything
 add_id_array = (id, size) => {
-	isIdDuplicated(id)
-	if (currentClass != null) {
+	is_id_duplicated(id)
+	if (current_class != null) {
 		// Adding var in class
 		if (is_attr_dec) {
 			class_directory
-				.get(currentClass)
+				.get(current_class)
 				.attr_directory.set(id, { type: `${currentType}[${size}]` })
 		} else {
 			// Is method declaration
 			class_directory
-				.get(currentClass)
+				.get(current_class)
 				.method_directory.get(current_func)
 				.var_directory.set(id, { type: `${currentType}[${size}]` })
 		}
@@ -180,17 +137,17 @@ add_id_array = (id, size) => {
 // Receives the variable name and size of the matrix (number of rows and columns)
 // Does not return anything
 add_id_matrix = (id, sizeR, sizeC) => {
-	isIdDuplicated(id)
-	if (currentClass != null) {
+	is_id_duplicated(id)
+	if (current_class != null) {
 		// Adding var in class
 		if (is_attr_dec) {
 			class_directory
-				.get(currentClass)
+				.get(current_class)
 				.attr_directory.set(id, { type: `${currentType}[${sizeR}][${sizeC}]` })
 		} else {
 			// Is method declaration
 			class_directory
-				.get(currentClass)
+				.get(current_class)
 				.method_directory.get(current_func)
 				.var_directory.set(id, { type: `${currentType}[${sizeR}][${sizeC}]` })
 		}
@@ -217,36 +174,13 @@ finish_func_dec = () => {
 	current_func = global_func
 }
 
-// Semantic action that deletes the function directory after the program finishes
-// Does not receive anything
+// Semantic action that deletes the function directory after the program finishes and resets all the additional data structures used in the actions
+// Does not receive any parameters
 // Does not return anything
 delete_func_directory = function () {
 	console.log(func_directory)
 	func_directory = null
-}
-
-create_class_directory = () => {
-	class_directory = new Map()
-	currentClass = null
-}
-
-start_attributes_dec = () => {
-	is_attr_dec = true
-}
-
-finish_attr_dec = () => {
-	is_attr_dec = false
-}
-
-finish_class_dec = () => {
-	currentClass = null
-}
-
-delete_class_directory = () => {
-	console.log(class_directory)
-	class_directory = null
-	console.log('quads before exit')
-	//console.log(quads)
+	console.log('Quads before exit')
 	print_quads(quads)
 	quads = new Queue()
 	operators = new Stack()
@@ -256,23 +190,76 @@ delete_class_directory = () => {
 	res_count = 0
 }
 
-// Intermediate generation code
+// -> Class semantic actions
+
+// Semantic action that creates a new empty instance of a global class directory
+// Does not receive any parameters
+// Does not return anything
+create_class_directory = () => {
+	class_directory = new Map()
+	current_class = null
+}
+
+// Semantic action that adds a class name to the class directory, sets the current class variable and creates new instances of both attribute and methods directory for the object
+// Receives the class name
+// Does not return anything
+add_class_id = (class_id) => {
+	current_class = class_id
+
+	class_directory.set(class_id, {
+		type: 'class',
+		attr_directory: new Map(),
+		method_directory: new Map(),
+	})
+}
+
+// Semantic action that sets the flag to mark that attribute declarations for a class has started
+// Does not receive any parameters
+// Does not return anything
+start_attributes_dec = () => {
+	is_attr_dec = true
+}
+
+// Semantic action that sets the flag to mark that attribute declarations for a class has ended
+// Does not receive any parameters
+// Does not return anything
+finish_attr_dec = () => {
+	is_attr_dec = false
+}
+
+// Semantic action that sets the flag to mark that a class declaration has ended by setting the current class variable to null
+// Does not receive any parameters
+// Does not return anything
+finish_class_dec = () => {
+	current_class = null
+}
+
+// Semantic action that deletes the class directory after the program finishes
+// Does not receive any parameters
+// Does not return anything
+delete_class_directory = () => {
+	console.log('Class directory before exit')
+	console.log(class_directory)
+	class_directory = null
+}
+
+// -> Expressions semantic actions
 
 add_operand = (operand, type) => {
 	if (type === 'var') {
-		if (currentClass != null) {
+		if (current_class != null) {
 			const is_inside_class_method =
 				class_directory
-					.get(currentClass)
+					.get(current_class)
 					.method_directory.get(current_func)
 					.var_directory.get(operand) != null
 			// If variable is not inside the function variables, then it must be part of the class' attributes
 			type = is_inside_class_method
 				? class_directory
-						.get(currentClass)
+						.get(current_class)
 						.method_directory.get(current_func)
 						.var_directory.get(operand).type
-				: class_directory.get(currentClass).attr_directory.get(operand).type
+				: class_directory.get(current_class).attr_directory.get(operand).type
 		} else {
 			// Search in current var_directory
 			const is_inside_current_func =
@@ -424,7 +411,8 @@ add_or_operation = () => {
 	}
 }
 
-// Print semantic actions
+// -> IO semantic actions
+
 print_expression = () => {
 	console.log('inside print_expression')
 
@@ -450,7 +438,6 @@ print_string = (string) => {
 	quads.push({ operator, left_operand, right_operand, result })
 }
 
-// Read semantic actions
 read_var = (variable) => {
 	console.log('inside read_var')
 
@@ -470,17 +457,17 @@ read_var = (variable) => {
 }
 
 is_var_in_scope = (variable) => {
-	if (currentClass != null) {
+	if (current_class != null) {
 		// Search within class
 		if (
 			class_directory
-				.get(currentClass)
+				.get(current_class)
 				.method_directory.get(current_func)
 				.var_directory.has(variable)
 		) {
 			return true
 		} else {
-			return class_directory.get(currentClass).attr_directory.has(variable)
+			return class_directory.get(current_class).attr_directory.has(variable)
 		}
 	} else {
 		// Search in var_directory
@@ -518,6 +505,8 @@ assign_exp = () => {
 		throw 'ERROR - Type mismatch'
 	}
 }
+
+// -> Control semantic actions
 
 mark_if_condition = () => {
 	console.log('inside mark_if_condition')
@@ -560,6 +549,8 @@ mark_else = () => {
 	quads.data[false_jump].result = quads.count
 }
 
+// -> Iteration semantic actions
+
 mark_while_start = () => {
 	console.log('inside mark_while_start')
 
@@ -598,7 +589,6 @@ mark_while_end = () => {
 	quads.data[false_jump].result = quads.count
 }
 
-// For loop
 for_start_exp = () => {
 	forStack.push(quads.data[quads.count - 1].result)
 }
@@ -647,12 +637,51 @@ mark_for_end = () => {
 	quads.data[false_jump].result = quads.count
 }
 
+// -> Helper functions
+
+// Function that checks if a variable name is already declared in the program
+// Receives the id to check
+// Does not return anything since it only throws if the name is duplicated
+const is_id_duplicated = (id) => {
+	if (current_class != null) {
+		// We are in a class var declaration
+		if (is_attr_dec) {
+			// We are in attributes declaration
+			if (class_directory.get(current_class).attr_directory.has(id)) {
+				console.log('ERROR - Attribute already exists')
+				throw 'ERROR - Attribute already exists'
+			}
+		} else {
+			// Is in method declaration
+			if (class_directory.get(current_class).method_directory.has(id)) {
+				if (func_directory.get(current_func).var_directory.has(id)) {
+					console.log('ERROR - Variable already exists in method')
+					throw 'ERROR - Variable already exists in method'
+				}
+			}
+		}
+	} else {
+		// We are in a func var/param or global var declaration
+		// Check if id already exists
+		if (func_directory.get(current_func).var_directory.has(id)) {
+			console.log('ERROR - Variable already exists')
+			throw 'ERROR - Variable already exists'
+		}
+	}
+}
+
+// Function that prints the quadruples to the console
+// Receives the quadruples
+// Does not return anything since it only throws if the name is duplicated
 print_quads = (quads) => {
 	quads.data.forEach((value, index) => {
 		console.log(`${index} - { ${get_single_quad_string(value)} }`)
 	})
 }
 
+// Function that generates a user friendly string with the information inside a quadruple
+// Receives the quadruple
+// Returns the string
 get_single_quad_string = (quad) => {
 	let string = ''
 	for (let [key, value] of Object.entries(quad)) {
