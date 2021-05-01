@@ -6,9 +6,16 @@
 
 // Semantic cube
 const oracle = require('./cube')
+
+// Opcodes
 const get_opcode = require('./opcodes')
+
+// Helper structures
 const Stack = require('./helpers/stack.js')
 const Queue = require('./helpers/queue.js')
+
+// Debug helper functions
+const get_string_opcode = require('./debug/reverse_opcodes')
 
 // Declare quadruples
 let quads = new Queue()
@@ -757,6 +764,9 @@ print_quads = (quads) => {
 get_single_quad_string = (quad) => {
 	let string = ''
 	for (let [key, value] of Object.entries(quad)) {
+		if (key == 'operator') {
+			value = get_string_opcode(value)
+		}
 		string += `${key}: ${value}     `
 	}
 	return string

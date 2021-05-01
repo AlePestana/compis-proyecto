@@ -21,8 +21,9 @@ operations = {
   'gotoF': 15,
   'goto': 16,
 }
-get_opcode = (operation) => {
-  return operations[operation]
+
+get_opcode = (string_opcode) => {
+  return operations[string_opcode]
 }
 
 module.exports = get_opcode
