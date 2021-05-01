@@ -1,4 +1,9 @@
 // Parser
+// Lexer and parser that specifies the rules, tokens, and grammar
+// Inputs: does not receive parameters
+// Output: parser to be check user inputs (used by test files)
+// Used by: all test files (inside tests folder)
+
 const Parser = require('jison').Parser
 
 const grammar = {
@@ -59,7 +64,7 @@ const grammar = {
 			// Literals
 			['{digits}\\.{digits}', "return 'FLOAT_CTE'"],
 			['{digits}', "return 'INT_CTE'"],
-			['\\"({letters}|{digits})+\\"', "return 'STRING_CTE'"],
+			['\\"({letters}|{digits}|{blank})+\\"', "return 'STRING_CTE'"],
 
 			['\\<-', "return '<-'"],
 			['\\->', "return '->'"],
@@ -67,8 +72,8 @@ const grammar = {
 			// Relational Operators
 			['\\<', "return '<'"],
 			['\\>', "return '>'"],
-			['\\=', "return '='"],
 			['\\==', "return '=='"],
+			['\\=', "return '='"],
 			['\\!=', "return '!='"],
 			['&', "return '&'"],
 			['\\|', "return '|'"],
@@ -402,23 +407,52 @@ const grammar = {
 
 		string_cte_print_keyword: [['STRING_CTE', 'print_string($1)']],
 
-		control: [['IF ( expression ) { statements } else', '$$']],
+		control: [
+			['IF ( expression closing_if_parenthesis { statements } else', '$$'],
+		],
+
+		closing_if_parenthesis: [[')', 'mark_if_condition()']],
 
 		else: [
-			['ELSE { statements }', '$$'],
-			['', '$$'],
+			['else_keyword { statements }', 'mark_if_end()'],
+			['', 'mark_if_end()'],
 		],
+
+		else_keyword: [['ELSE', 'mark_else()']],
 
 		iteration: [
 			['while', '$$'],
 			['for', '$$'],
 		],
 
-		while: [['WHILE ( expression ) { statements }', '$$']],
+		while: [
+			[
+				'while_keyword ( expression closing_while_parenthesis { statements }',
+				'mark_while_end()',
+			],
+		],
+
+		while_keyword: [['WHILE', 'mark_while_start()']],
+
+		closing_while_parenthesis: [[')', 'mark_while_condition()']],
 
 		for: [
-			['FOR ( var_name = expression UNTIL expression ) { statements }', '$$'],
+			[
+				'FOR ( for_assignment until_keyword expression closing_for_parenthesis { statements }',
+				'mark_for_end()',
+			],
 		],
+
+		for_assignment: [
+			[
+				'var_name_assignment_keyword assignment_operator expression',
+				'assign_exp(); for_start_exp()',
+			],
+		],
+
+		until_keyword: [['UNTIL', 'mark_until()']],
+
+		closing_for_parenthesis: [[')', 'mark_for_condition()']],
 	},
 }
 

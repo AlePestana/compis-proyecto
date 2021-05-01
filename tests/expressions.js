@@ -1,4 +1,8 @@
 // Expressions tests
+// All tests to verify the declaration of expressions
+// Inputs: receives the parser
+// Output: does not return anything (only displays on console the results of the tests)
+// Used by: all.js (calls all the test files)
 
 const parser = require('../parser')
 
@@ -161,3 +165,11 @@ const test19 = parser.parse(`
 
 	main() {}`)
 console.log('--> ' + (test19 ? 'yes :)' : 'no :('))
+
+console.log('\nERROR TEST 20 - Relational expression with double symbols')
+// const test20 = parser.parse(`
+// 	program prog1;
+// 	var <- int x, y; ->
+// 	main() { x = 10 > y > x; }`)
+// console.log('--> ' + (test20 ? 'yes :)' : 'no :('))
+// Caught by syntax

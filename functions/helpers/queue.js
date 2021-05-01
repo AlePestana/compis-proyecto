@@ -1,4 +1,9 @@
-// Queue data structure
+// Queue
+// Queue data structure declaration
+// Inputs: does not receive parameters
+// Output: the Queue data structure
+// Used by: semantics.js
+
 class Queue {
 	constructor() {
 		this.data = []

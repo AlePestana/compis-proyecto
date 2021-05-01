@@ -1,4 +1,8 @@
 // Func tests
+// All tests to verify the declaration of functions
+// Inputs: receives the parser
+// Output: does not return anything (only displays on console the results of the tests)
+// Used by: all.js (calls all the test files)
 
 const parser = require('../parser')
 
