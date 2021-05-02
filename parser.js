@@ -345,16 +345,29 @@ const grammar = {
 			['INT_CTE', `add_operand($1, 'int')`],
 			['FLOAT_CTE', `add_operand($1, 'float')`],
 			['var_name', `add_operand($1, 'var')`],
-			['ID ( params_call )', '$$'], // Calling a function with return type
-			['ID . ID ( params_call )', '$$'], // Calling a method from a class with return type
+			['func_call', '$$'],
 		],
 
 		left_parenthesis: [['(', 'start_subexpression()']],
 
 		right_parenthesis: [[')', 'end_subexpression()']],
 
+		func_call: [
+			[
+				'func_call_id_keyword starting_call_params_parenthesis params_call closing_call_params_parenthesis',
+				'mark_func_call_end()',
+			], // Calling a function with return type
+			['ID . ID ( params_call )', '$$'], // Calling a method from a class with return type],
+		],
+
+		func_call_id_keyword: [['ID', 'mark_func_call_start()']],
+
+		starting_call_params_parenthesis: [['(', 'mark_call_params_start()']],
+
+		closing_call_params_parenthesis: [[')', 'verify_call_params_size()']],
+
 		params_call: [
-			['expression', '$$'],
+			['expression', 'add_call_param(); mark_next_call_param()'],
 			['expression , params_call', '$$'],
 			['', '$$'],
 		],

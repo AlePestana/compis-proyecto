@@ -766,7 +766,7 @@ mark_for_end = () => {
 	quads.data[false_jump].result = quads.count
 }
 
-// -> Funcs semantic actions
+// -> Funcs declaration semantic actions
 
 // Semantic action that creates the params_directory for a func and adds all its params with their corresponding types (by copying the current var_directory of the current_func)
 // Does not receive any parameters
@@ -872,6 +872,50 @@ mark_func_end = () => {
 	})
 
 	func_size_directory.set('temps_size', temps_size)
+}
+
+// -> Funcs call semantic actions
+
+// Semantic action that
+// Does not receive any parameters
+// Does not return anything
+mark_func_call_start = () => {
+	console.log('inside mark_func_call_start')
+}
+
+// Semantic action that
+// Does not receive any parameters
+// Does not return anything
+mark_call_params_start = () => {
+	console.log('inside mark_call_params_start')
+}
+
+// Semantic action that
+// Does not receive any parameters
+// Does not return anything
+add_call_param = () => {
+	console.log('inside add_call_param')
+}
+
+// Semantic action that
+// Does not receive any parameters
+// Does not return anything
+mark_next_call_param = () => {
+	console.log('inside mark_next_call_param')
+}
+
+// Semantic action that
+// Does not receive any parameters
+// Does not return anything
+verify_call_params_size = () => {
+	console.log('inside verify_call_params_size')
+}
+
+// Semantic action that
+// Does not receive any parameters
+// Does not return anything
+mark_func_call_end = () => {
+	console.log('inside mark_func_call_end')
 }
 
 // -> Helper functions
