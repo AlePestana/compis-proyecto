@@ -90,6 +90,38 @@ for (const scope in virutal_memory_addresses) {
 
 // console.log(JSON.stringify(virutal_memory_addresses)) // debug
 
-get_virtual_mem_address = (scope, type, temporary) => {
-  
+// Ask for a virtual memory address
+get_address = (scope, type, duration) => {
+  let count
+  let limit
+  if (scope != 'constant') {
+    count = virutal_memory_addresses[scope][type][duration].count
+    limit = virutal_memory_addresses[scope][type][duration].limit
+    virutal_memory_addresses[scope][type][duration].count++ // Prepare for next var
+  } else {
+    count = virutal_memory_addresses[scope][type].count
+    limit = virutal_memory_addresses[scope][type].limit
+    virutal_memory_addresses[scope][type].count++ // Prepare for next var
+  }
+  if (count <= limit) {
+    return count
+  } else {
+    throw `ERROR - Too many variables of SCOPE: ${scope}, TYPE: ${type}, DURATION: ${duration}`
+  }
 }
+
+// Erase local scope virtual memory
+reset_local_addresses = () => {
+  for (const type in virutal_memory_addresses.local) {
+    for (const duration in virutal_memory_addresses.local[type]) {
+      virutal_memory_addresses.local[type][duration].count = virutal_memory_addresses.local[type][duration].start
+    }
+  }
+}
+
+// console.log(get_address('global', 'int', 'perm'))
+// console.log(get_address('global', 'int', 'perm'))
+// console.log(get_address('local', 'int', 'perm'))
+// console.log(get_address('local', 'int', 'perm'))
+// reset_local_addresses()
+// console.log(get_address('local', 'int', 'perm'))
