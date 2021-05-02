@@ -123,3 +123,37 @@ const test8 = parser.parse(`
         print("end program");
     }`)
 console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
+
+console.log('\n\nTEST 9 - Two void funcs with parameters and variables')
+const test9 = parser.parse(`
+	program prog1; 
+    var <- int x, y; ->
+
+    void func surprise (var <- int z; ->)
+    var <- int k; ->
+    {
+        print("inside void function");
+        print("setting global y var");
+        y = y * 2;
+        print("setting local k var");
+        k = z + y + 3;
+        print("end surprise");
+    }
+
+    void func surprise2 (var <- float z; ->)
+    var <- float k; ->
+    {
+        print("inside void function 2");
+        print("setting local k var");
+        k = z + 4;
+        print("end surprise 2");
+    }
+
+	main() {
+        x = 5;
+        y = 6;
+        surprise(x);
+        surprise2(y);
+        print("end program");
+    }`)
+console.log('--> ' + (test9 ? 'yes :)' : 'no :('))
