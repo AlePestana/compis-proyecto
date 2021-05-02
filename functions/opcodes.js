@@ -17,7 +17,7 @@ operations = {
   '=': 11,
   'print': 12,
   'read': 13,
-  'gotoV': 14,
+  'gotoT': 14,
   'gotoF': 15,
   'goto': 16,
 }
