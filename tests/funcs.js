@@ -11,7 +11,7 @@ const test1 = parser.parse(`
 	program prog1; 
 	void func myFunc1 (var <- int id1; ->) { }
 	main() {}`)
-console.log('--> ' + (test1 ? 'yes :)' : 'no :('))
+// console.log('--> ' + (test1 ? 'yes :)' : 'no :('))
 
 console.log('\n\nTEST 2 - Func declaration with parameters and vars')
 const test2 = parser.parse(`
@@ -21,7 +21,7 @@ const test2 = parser.parse(`
     var <- float y; ->
     { }
 	main() {}`)
-console.log('--> ' + (test2 ? 'yes :)' : 'no :('))
+// console.log('--> ' + (test2 ? 'yes :)' : 'no :('))
 
 console.log('\n\nTEST 3 - Func declarations with parameters and vars')
 const test3 = parser.parse(`
@@ -35,7 +35,7 @@ const test3 = parser.parse(`
     var <- char k; ->
     { }
 	main() {}`)
-console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
+// console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
 console.log(
 	'\n\nERROR TEST 4 - Func declaration with duplicated parameters and vars'
@@ -99,3 +99,27 @@ const program7 = `
 // const test7 = parser.parse(program7)
 // console.log('--> ' + (test7 ? 'yes :)' : 'no :('))
 // Syntax catches this error
+
+console.log('\n\nTEST 8 - Void func with parameters and variables')
+const test8 = parser.parse(`
+	program prog1; 
+    var <- int x, y; ->
+
+    void func surprise (var <- int z; ->)
+    var <- int k; ->
+    {
+        print("inside void function");
+        print("setting global y var");
+        y = y * 2;
+        print("setting local k var");
+        k = z + y + 3;
+        print("end surprise");
+    }
+
+	main() {
+        x = 5;
+        y = 6;
+        surprise(x);
+        print("end program");
+    }`)
+console.log('--> ' + (test8 ? 'yes :)' : 'no :('))

@@ -213,11 +213,11 @@ const grammar = {
 
 		func: [
 			[
-				'void_keyword FUNC func_id_keyword ( params ) dec_vars { func_statements }',
+				'void_keyword FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace func_statements closing_func_brace',
 				'finish_func_dec(); $$',
 			],
 			[
-				'simple_type FUNC func_id_keyword ( params ) dec_vars { func_statements }',
+				'simple_type FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace func_statements closing_func_brace',
 				'finish_func_dec(); $$',
 			],
 		],
@@ -233,6 +233,14 @@ const grammar = {
 			],
 			['', '$$'],
 		],
+
+		closing_params_parenthesis: [
+			[')', 'create_params_directory(); mark_params_size()'],
+		],
+
+		starting_func_brace: [['{', 'mark_local_vars_size(); mark_func_start()']],
+
+		closing_func_brace: [['}', 'mark_func_end()']],
 
 		func_statements: [['statements return_statement', '$$']],
 

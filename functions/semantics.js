@@ -316,7 +316,12 @@ add_mult_div_operation = () => {
 
 		if (result_type !== 'error') {
 			const result = `temp${res_count++}`
-			quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
 			operands.push({ operand: result, type: result_type })
 		} else {
 			console.log('ERROR - Type mismatch')
@@ -341,7 +346,12 @@ add_sum_sub_operation = () => {
 
 		if (result_type !== 'error') {
 			const result = `temp${res_count++}`
-			quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
 			operands.push({ operand: result, type: result_type })
 		} else {
 			console.log('ERROR - Type mismatch')
@@ -387,7 +397,12 @@ add_rel_operation = () => {
 
 		if (result_type !== 'error') {
 			const result = `temp${res_count++}`
-			quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
 			operands.push({ operand: result, type: result_type })
 		} else {
 			console.log('ERROR - Type mismatch')
@@ -412,7 +427,12 @@ add_and_operation = () => {
 
 		if (result_type !== 'error') {
 			const result = `temp${res_count++}`
-			quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
 			operands.push({ operand: result, type: result_type })
 		} else {
 			console.log('ERROR - Type mismatch')
@@ -437,7 +457,12 @@ add_or_operation = () => {
 
 		if (result_type !== 'error') {
 			const result = `temp${res_count++}`
-			quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
 			operands.push({ operand: result, type: result_type })
 		} else {
 			console.log('ERROR - Type mismatch')
@@ -461,7 +486,12 @@ print_expression = () => {
 	const left_operand = null
 	const right_operand = null
 
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 }
 
 // Semantic action that generates the quadruple for the printing operation of a constant string
@@ -476,7 +506,12 @@ print_string = (string) => {
 	const left_operand = null
 	const right_operand = null
 
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 }
 
 // Semantic action that generates the quadruple for the reading operation to a variable or throws if the given variable is not found within scope
@@ -493,7 +528,12 @@ read_var = (variable) => {
 		const left_operand = null
 		const right_operand = null
 
-		quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand,
+			right_operand,
+			result,
+		})
 	} else {
 		console.log(`ERROR - "${variable}" not found within scope`)
 		throw `ERROR - "${variable}" not found within scope`
@@ -547,7 +587,12 @@ mark_if_condition = () => {
 		const left_operand = cond.operand
 		const right_operand = null
 		const result = 'pending'
-		quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand,
+			right_operand,
+			result,
+		})
 		jumps.push(quads.count - 1)
 	}
 }
@@ -574,7 +619,12 @@ mark_else = () => {
 	const left_operand = null
 	const right_operand = null
 	const result = 'pending'
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 
 	jumps.push(quads.count - 1)
 
@@ -607,7 +657,12 @@ mark_while_condition = () => {
 		const left_operand = cond.operand
 		const right_operand = null
 		const result = 'pending'
-		quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand,
+			right_operand,
+			result,
+		})
 		jumps.push(quads.count - 1)
 	}
 }
@@ -625,7 +680,12 @@ mark_while_end = () => {
 	const left_operand = null
 	const right_operand = null
 	const result = return_jump
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 
 	quads.data[false_jump].result = quads.count
 }
@@ -660,7 +720,12 @@ mark_for_condition = () => {
 	const left_operand = cond.operand
 	const right_operand = null
 	const result = 'pending'
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 	jumps.push(quads.count - 1)
 }
 
@@ -686,8 +751,50 @@ mark_for_end = () => {
 	const left_operand = null
 	const right_operand = null
 	const result = return_jump
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 	quads.data[false_jump].result = quads.count
+}
+
+// -> Funcs semantic actions
+
+// Semantic action that creates the params_directory for a func and adds all its params with their corresponding types
+// Does not receive any parameters
+// Does not return anything
+create_params_directory = () => {
+	console.log('inside create_params_directory')
+}
+
+// Semantic action that marks the number of params of a function in the size_directory
+// Does not receive any parameters
+// Does not return anything
+mark_params_size = () => {
+	console.log('inside mark_params_size')
+}
+
+// Semantic action that marks the number of local variables of a function in the size_directory
+// Does not receive any parameters
+// Does not return anything
+mark_local_vars_size = () => {
+	console.log('inside mark_local_vars_size')
+}
+
+// Semantic action that marks the start of a function
+// Does not receive any parameters
+// Does not return anything
+mark_func_start = () => {
+	console.log('inside mark_func_start')
+}
+
+// Semantic action that marks the start of a function
+// Does not receive any parameters
+// Does not return anything
+mark_func_end = () => {
+	console.log('inside mark_func_end')
 }
 
 // -> Helper functions
