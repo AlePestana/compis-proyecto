@@ -40,6 +40,12 @@ class_directory = null
 // Variable to keep reference to global scope
 global_func = null
 
+// Declare params directory variable
+params_directory = null
+
+// Declare func size directory variable
+func_size_directory = null
+
 // Semantic action that creates a new empty instance of the global function directory
 // Does not receive any parameters
 // Does not return anything
@@ -316,7 +322,12 @@ add_mult_div_operation = () => {
 
 		if (result_type !== 'error') {
 			const result = `temp${res_count++}`
-			quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
 			operands.push({ operand: result, type: result_type })
 		} else {
 			console.log('ERROR - Type mismatch')
@@ -341,7 +352,12 @@ add_sum_sub_operation = () => {
 
 		if (result_type !== 'error') {
 			const result = `temp${res_count++}`
-			quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
 			operands.push({ operand: result, type: result_type })
 		} else {
 			console.log('ERROR - Type mismatch')
@@ -387,7 +403,12 @@ add_rel_operation = () => {
 
 		if (result_type !== 'error') {
 			const result = `temp${res_count++}`
-			quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
 			operands.push({ operand: result, type: result_type })
 		} else {
 			console.log('ERROR - Type mismatch')
@@ -412,7 +433,12 @@ add_and_operation = () => {
 
 		if (result_type !== 'error') {
 			const result = `temp${res_count++}`
-			quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
 			operands.push({ operand: result, type: result_type })
 		} else {
 			console.log('ERROR - Type mismatch')
@@ -437,7 +463,12 @@ add_or_operation = () => {
 
 		if (result_type !== 'error') {
 			const result = `temp${res_count++}`
-			quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
 			operands.push({ operand: result, type: result_type })
 		} else {
 			console.log('ERROR - Type mismatch')
@@ -461,7 +492,12 @@ print_expression = () => {
 	const left_operand = null
 	const right_operand = null
 
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 }
 
 // Semantic action that generates the quadruple for the printing operation of a constant string
@@ -476,7 +512,12 @@ print_string = (string) => {
 	const left_operand = null
 	const right_operand = null
 
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 }
 
 // Semantic action that generates the quadruple for the reading operation to a variable or throws if the given variable is not found within scope
@@ -493,7 +534,12 @@ read_var = (variable) => {
 		const left_operand = null
 		const right_operand = null
 
-		quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand,
+			right_operand,
+			result,
+		})
 	} else {
 		console.log(`ERROR - "${variable}" not found within scope`)
 		throw `ERROR - "${variable}" not found within scope`
@@ -547,7 +593,12 @@ mark_if_condition = () => {
 		const left_operand = cond.operand
 		const right_operand = null
 		const result = 'pending'
-		quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand,
+			right_operand,
+			result,
+		})
 		jumps.push(quads.count - 1)
 	}
 }
@@ -574,7 +625,12 @@ mark_else = () => {
 	const left_operand = null
 	const right_operand = null
 	const result = 'pending'
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 
 	jumps.push(quads.count - 1)
 
@@ -607,7 +663,12 @@ mark_while_condition = () => {
 		const left_operand = cond.operand
 		const right_operand = null
 		const result = 'pending'
-		quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand,
+			right_operand,
+			result,
+		})
 		jumps.push(quads.count - 1)
 	}
 }
@@ -625,7 +686,12 @@ mark_while_end = () => {
 	const left_operand = null
 	const right_operand = null
 	const result = return_jump
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 
 	quads.data[false_jump].result = quads.count
 }
@@ -660,7 +726,12 @@ mark_for_condition = () => {
 	const left_operand = cond.operand
 	const right_operand = null
 	const result = 'pending'
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 	jumps.push(quads.count - 1)
 }
 
@@ -686,8 +757,121 @@ mark_for_end = () => {
 	const left_operand = null
 	const right_operand = null
 	const result = return_jump
-	quads.push({ operator: get_opcode(operator), left_operand, right_operand, result })
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
 	quads.data[false_jump].result = quads.count
+}
+
+// -> Funcs semantic actions
+
+// Semantic action that creates the params_directory for a func and adds all its params with their corresponding types (by copying the current var_directory of the current_func)
+// Does not receive any parameters
+// Does not return anything
+create_params_directory = () => {
+	console.log('inside create_params_directory')
+	params_directory = new Map(func_directory.get(current_func).var_directory)
+	func_directory.get(current_func).params_directory = params_directory
+}
+
+// Semantic action that marks the number of params of a function in its size_directory
+// Does not receive any parameters
+// Does not return anything
+mark_params_size = () => {
+	console.log('inside mark_params_size')
+
+	func_size_directory = new Map()
+	let params_size = { int: 0, float: 0, char: 0 }
+
+	for (let value of params_directory.values()) {
+		if (value.type === 'int') {
+			params_size.int += 1
+		} else if (value.type === 'float') {
+			params_size.float += 1
+		} else if (value.type === 'char') {
+			params_size.char += 1
+		}
+	}
+	func_size_directory.set('params_size', params_size)
+}
+
+// Semantic action that marks the number of local variables of a function in its size_directory
+// Does not receive any parameters
+// Does not return anything
+mark_local_vars_size = () => {
+	console.log('inside mark_local_vars_size')
+	let local_vars_size = { int: 0, float: 0, char: 0 }
+
+	// Turn current variable directory into array in order to be able to iterate over it
+	const all_vars = Array.from(func_directory.get(current_func).var_directory)
+
+	// Filter variable directory by creating a new array of variables (removing the params)
+	const local_vars = all_vars.filter(
+		(var_name) => !params_directory.has(var_name[0])
+	)
+
+	// Each local_var has the form -> [ 'k', {type: 'int'} ]
+	for (let local_var of local_vars) {
+		if (local_var[1].type === 'int') {
+			local_vars_size.int += 1
+		} else if (local_var[1].type === 'float') {
+			local_vars_size.float += 1
+		} else if (local_var[1].type === 'char') {
+			local_vars_size.char += 1
+		}
+	}
+
+	func_size_directory.set('local_vars_size', local_vars_size)
+}
+
+// Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory
+// Does not receive any parameters
+// Does not return anything
+mark_func_start = () => {
+	console.log('inside mark_func_start')
+	// Mark where the current function starts
+	func_directory.get(current_func).starting_point = quads.count
+}
+
+// Semantic action that marks the end of a function by releasing the var_directory, generating the endfunc quadruple and marking the number of temp variables of the function in its size_directory
+// Does not receive any parameters
+// Does not return anything
+mark_func_end = () => {
+	console.log('inside mark_func_end')
+
+	// Release current var_directory
+	func_directory.get(current_func).var_directory = null
+
+	// Release temp params_directory
+	params_directory = null
+
+	// Generate quad -> ENDFUNC, null, null, null
+	const operator = 'endfunc'
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: null,
+		right_operand: null,
+		result: null,
+	})
+
+	// Mark the number of temp variables of a function in the size_directory
+
+	// Slice quads to get only the current func quads
+	const starting_quad = func_directory.get(current_func).starting_point
+	const func_quads = quads.data.slice(starting_quad)
+
+	let temps_size = { total: 0 }
+
+	func_quads.forEach((quad) => {
+		if (quad.result !== null && quad.result.includes('temp')) {
+			temps_size.total += 1
+		}
+	})
+
+	func_size_directory.set('temps_size', temps_size)
 }
 
 // -> Helper functions
