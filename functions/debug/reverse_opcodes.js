@@ -22,6 +22,7 @@ reverse_operations = {
 	16: 'goto',
 	17: 'endfunc',
 	18: 'era',
+	19: 'gosub',
 }
 
 get_string_opcode = (num_opcode) => {

@@ -22,6 +22,7 @@ operations = {
 	goto: 16,
 	endfunc: 17,
 	era: 18,
+	gosub: 19,
 }
 
 get_opcode = (string_opcode) => {

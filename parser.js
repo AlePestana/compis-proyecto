@@ -395,9 +395,11 @@ const grammar = {
 
 		params_call: [
 			['expression', 'add_call_param(); mark_next_call_param()'],
-			['expression , params_call', '$$'],
+			['expression separate_params_comma params_call', '$$'],
 			['', '$$'],
 		],
+
+		separate_params_comma: [[',', 'add_call_param(); mark_next_call_param()']],
 
 		void_func_call: [
 			[
