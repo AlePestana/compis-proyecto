@@ -183,3 +183,42 @@ const test10 = parser.parse(`
         print("end program");
     }`)
 console.log('--> ' + (test10 ? 'yes :)' : 'no :('))
+
+console.log('\n\nERROR TEST 11 - Call a function that is not declared')
+// const test11 = parser.parse(`
+// 	program prog1;
+//     var <- int x, y; ->
+
+//     int func superPower (var <- int x; float z; ->)
+//     var <- int k; ->
+//     {
+//         return k;
+//     }
+
+// 	main() {
+//         x = 5;
+//         y = 6;
+//         x = y;
+//         x = surprise(1);
+//         print("end program");
+//     }`)
+// console.log('--> ' + (test11 ? 'yes :)' : 'no :('))
+
+console.log('\n\nTEST 12 - Void func with multiple parameters')
+const test12 = parser.parse(`
+	program prog1; 
+    var <- int x; float y; ->
+
+    void func surprise (var <- int z; float k; ->)
+    {
+        k = 9.5;
+        z = 4;
+    }
+
+	main() {
+        x = 5;
+        y = 6.5;
+        surprise(x, y);
+        print("end program");
+    }`)
+console.log('--> ' + (test12 ? 'yes :)' : 'no :('))

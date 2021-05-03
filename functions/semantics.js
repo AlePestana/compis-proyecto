@@ -31,6 +31,7 @@ let res_count = 0
 
 // Additional helpers
 let current_simple_id = null
+let current_func_name = null
 
 // -> Global semantic actions
 
@@ -904,23 +905,50 @@ mark_func_end = () => {
 
 // -> Funcs call semantic actions
 
-// Semantic action that
+// Semantic action that checks if the function that was called exists in the global function directory and throws otherwise
 // Does not receive any parameters
 // Does not return anything
 mark_func_call_start = () => {
 	console.log('inside mark_func_call_start')
 	console.log(
-		'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+		'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 	)
-	console.log('received simple id haha')
-	console.log(current_simple_id)
+
+	if (current_class == null) {
+		current_func_name = current_simple_id
+		current_simple_id = null
+
+		if (!func_directory.has(current_func_name)) {
+			console.log('ERROR - Function not defined')
+			throw 'ERROR - Function not defined'
+		}
+	}
 }
 
-// Semantic action that
+// Semantic action that marks the start of the params of a function call
 // Does not receive any parameters
 // Does not return anything
 mark_call_params_start = () => {
 	console.log('inside mark_call_params_start')
+	console.log(
+		'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+	)
+
+	// Generate era quad -> era, func_name, null, null
+	const operator = 'era'
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: current_func_name,
+		right_operand: null,
+		result: null,
+	})
+
+	console.log('params array')
+	// Generate array of parameters types of the form -> [ { type: 'int' } ]
+	const params_types = Array.from(
+		func_directory.get(current_func_name).params_directory.values()
+	)
+	console.log(params_types)
 }
 
 // Semantic action that
@@ -928,6 +956,9 @@ mark_call_params_start = () => {
 // Does not return anything
 add_call_param = () => {
 	console.log('inside add_call_param')
+	console.log(
+		'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+	)
 }
 
 // Semantic action that
@@ -935,6 +966,9 @@ add_call_param = () => {
 // Does not return anything
 mark_next_call_param = () => {
 	console.log('inside mark_next_call_param')
+	console.log(
+		'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+	)
 }
 
 // Semantic action that
@@ -942,6 +976,9 @@ mark_next_call_param = () => {
 // Does not return anything
 verify_call_params_size = () => {
 	console.log('inside verify_call_params_size')
+	console.log(
+		'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+	)
 }
 
 // Semantic action that
@@ -949,6 +986,12 @@ verify_call_params_size = () => {
 // Does not return anything
 mark_func_call_end = () => {
 	console.log('inside mark_func_call_end')
+	console.log(
+		'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+	)
+
+	// Reset current func name variable
+	current_func_name = null
 }
 
 // -> Helper functions

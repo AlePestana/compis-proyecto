@@ -400,7 +400,10 @@ const grammar = {
 		],
 
 		void_func_call: [
-			['ID ( params_call ) ;', '$$'],
+			[
+				'simple_id_keyword starting_call_params_parenthesis params_call closing_call_params_parenthesis ;',
+				'mark_func_call_end()',
+			],
 			['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
 		],
 
