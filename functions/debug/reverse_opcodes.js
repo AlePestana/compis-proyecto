@@ -20,6 +20,7 @@ reverse_operations = {
   14: 'gotoT',
   15: 'gotoF',
   16: 'goto',
+  17: 'endfunc',
 }
 
 get_string_opcode = (num_opcode) => {
