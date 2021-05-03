@@ -10,6 +10,9 @@ const oracle = require('./cube')
 // Opcodes
 const get_opcode = require('./opcodes')
 
+// Virtual Memory Addresses
+const virtual_memory = require('./virtualMemory') 
+
 // Helper structures
 const Stack = require('./helpers/stack.js')
 const Queue = require('./helpers/queue.js')
@@ -104,7 +107,7 @@ add_id = (id) => {
 		if (is_attr_dec) {
 			class_directory
 				.get(current_class)
-				.attr_directory.set(id, { type: currentType })
+				.attr_directory.set(id, { type: currentType }) // Set vAddress here
 		} else {
 			// Is method declaration
 			class_directory
