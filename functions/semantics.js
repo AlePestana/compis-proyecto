@@ -791,8 +791,10 @@ mark_for_end = () => {
 // Does not return anything
 create_params_directory = () => {
 	console.log('inside create_params_directory')
-	params_directory = new Map(func_directory.get(current_func).var_directory)
-	func_directory.get(current_func).params_directory = params_directory
+	if (current_class == null) {
+		params_directory = new Map(func_directory.get(current_func).var_directory)
+		func_directory.get(current_func).params_directory = params_directory
+	}
 }
 
 // Semantic action that marks the number of params of a function in its size_directory
@@ -801,19 +803,21 @@ create_params_directory = () => {
 mark_params_size = () => {
 	console.log('inside mark_params_size')
 
-	func_size_directory = new Map()
-	let params_size = { int: 0, float: 0, char: 0 }
+	if (current_class == null) {
+		func_size_directory = new Map()
+		let params_size = { int: 0, float: 0, char: 0 }
 
-	for (let value of params_directory.values()) {
-		if (value.type === 'int') {
-			params_size.int += 1
-		} else if (value.type === 'float') {
-			params_size.float += 1
-		} else if (value.type === 'char') {
-			params_size.char += 1
+		for (let value of params_directory.values()) {
+			if (value.type === 'int') {
+				params_size.int += 1
+			} else if (value.type === 'float') {
+				params_size.float += 1
+			} else if (value.type === 'char') {
+				params_size.char += 1
+			}
 		}
+		func_size_directory.set('params_size', params_size)
 	}
-	func_size_directory.set('params_size', params_size)
 }
 
 // Semantic action that marks the number of local variables of a function in its size_directory
@@ -821,28 +825,30 @@ mark_params_size = () => {
 // Does not return anything
 mark_local_vars_size = () => {
 	console.log('inside mark_local_vars_size')
-	let local_vars_size = { int: 0, float: 0, char: 0 }
+	if (current_class == null) {
+		let local_vars_size = { int: 0, float: 0, char: 0 }
 
-	// Turn current variable directory into array in order to be able to iterate over it
-	const all_vars = Array.from(func_directory.get(current_func).var_directory)
+		// Turn current variable directory into array in order to be able to iterate over it
+		const all_vars = Array.from(func_directory.get(current_func).var_directory)
 
-	// Filter variable directory by creating a new array of variables (removing the params)
-	const local_vars = all_vars.filter(
-		(var_name) => !params_directory.has(var_name[0])
-	)
+		// Filter variable directory by creating a new array of variables (removing the params)
+		const local_vars = all_vars.filter(
+			(var_name) => !params_directory.has(var_name[0])
+		)
 
-	// Each local_var has the form -> [ 'k', {type: 'int'} ]
-	for (let local_var of local_vars) {
-		if (local_var[1].type === 'int') {
-			local_vars_size.int += 1
-		} else if (local_var[1].type === 'float') {
-			local_vars_size.float += 1
-		} else if (local_var[1].type === 'char') {
-			local_vars_size.char += 1
+		// Each local_var has the form -> [ 'k', {type: 'int'} ]
+		for (let local_var of local_vars) {
+			if (local_var[1].type === 'int') {
+				local_vars_size.int += 1
+			} else if (local_var[1].type === 'float') {
+				local_vars_size.float += 1
+			} else if (local_var[1].type === 'char') {
+				local_vars_size.char += 1
+			}
 		}
-	}
 
-	func_size_directory.set('local_vars_size', local_vars_size)
+		func_size_directory.set('local_vars_size', local_vars_size)
+	}
 }
 
 // Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory
@@ -851,7 +857,9 @@ mark_local_vars_size = () => {
 mark_func_start = () => {
 	console.log('inside mark_func_start')
 	// Mark where the current function starts
-	func_directory.get(current_func).starting_point = quads.count
+	if (current_class == null) {
+		func_directory.get(current_func).starting_point = quads.count
+	}
 }
 
 // Semantic action that marks the end of a function by releasing the var_directory, generating the endfunc quadruple and marking the number of temp variables of the function in its size_directory
@@ -860,36 +868,38 @@ mark_func_start = () => {
 mark_func_end = () => {
 	console.log('inside mark_func_end')
 
-	// Release current var_directory
-	func_directory.get(current_func).var_directory = null
+	if (current_class == null) {
+		// Release current var_directory
+		func_directory.get(current_func).var_directory = null
 
-	// Release temp params_directory
-	params_directory = null
+		// Release temp params_directory
+		params_directory = null
 
-	// Generate quad -> ENDFUNC, null, null, null
-	const operator = 'endfunc'
-	quads.push({
-		operator: get_opcode(operator),
-		left_operand: null,
-		right_operand: null,
-		result: null,
-	})
+		// Generate quad -> ENDFUNC, null, null, null
+		const operator = 'endfunc'
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: null,
+			right_operand: null,
+			result: null,
+		})
 
-	// Mark the number of temp variables of a function in the size_directory
+		// Mark the number of temp variables of a function in the size_directory
 
-	// Slice quads to get only the current func quads
-	const starting_quad = func_directory.get(current_func).starting_point
-	const func_quads = quads.data.slice(starting_quad)
+		// Slice quads to get only the current func quads
+		const starting_quad = func_directory.get(current_func).starting_point
+		const func_quads = quads.data.slice(starting_quad)
 
-	let temps_size = { total: 0 }
+		let temps_size = { total: 0 }
 
-	func_quads.forEach((quad) => {
-		if (quad.result !== null && quad.result.includes('temp')) {
-			temps_size.total += 1
-		}
-	})
+		func_quads.forEach((quad) => {
+			if (quad.result !== null && quad.result.includes('temp')) {
+				temps_size.total += 1
+			}
+		})
 
-	func_size_directory.set('temps_size', temps_size)
+		func_size_directory.set('temps_size', temps_size)
+	}
 }
 
 // -> Funcs call semantic actions
