@@ -125,3 +125,8 @@ reset_local_addresses = () => {
 // console.log(get_address('local', 'int', 'perm'))
 // reset_local_addresses()
 // console.log(get_address('local', 'int', 'perm'))
+
+module.exports = {
+  get_address,
+  reset_local_addresses
+}
