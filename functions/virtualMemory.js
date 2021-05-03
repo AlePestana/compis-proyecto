@@ -28,33 +28,49 @@ virutal_memory_addresses = {
         limit: 11999,
         count: null
       } 
-    }
-  },
-  local: {
-    int: {
+    },
+    char: {
       perm: {
         start: 12000,
         limit: 13999,
         count: null
       },
-      temp: {
+      // We cannot create a temporary char variable (semantic cube operations)
+    }
+  },
+  local: {
+    int: {
+      perm: {
         start: 14000,
-        limit: 14999,
+        limit: 17999,
+        count: null
+      },
+      temp: {
+        start: 18000,
+        limit: 18999,
         count: null
       } 
     },
     float: {
       perm: {
-        start: 15000,
-        limit: 16999,
+        start: 19000,
+        limit: 21999,
         count: null
       },
       temp: {
-        start: 17000,
-        limit: 17999,
+        start: 22000,
+        limit: 22999,
         count: null
       } 
+    },
+    char: {
+      perm: {
+        start: 23000,
+        limit: 24999,
+        count: null
+      },
     }
+    // We cannot create a temporary char variable (semantic cube operations)
   },
   constant: {
     int: {
@@ -67,11 +83,16 @@ virutal_memory_addresses = {
       limit: 28999,
       count: null
     },
-    string: {
+    char: {
       start: 29000,
-      limit: 30000,
+      limit: 30999,
       count: null
-    }
+    },
+    string: {
+      start: 31000,
+      limit: 32000,
+      count: null
+    },
   }
 }
 
