@@ -29,6 +29,9 @@ let forStack = new Stack()
 // Declare all helper counters
 let res_count = 0
 
+// Additional helpers
+let current_simple_id = null
+
 // -> Global semantic actions
 
 // Declare function directory variable
@@ -258,6 +261,21 @@ delete_class_directory = () => {
 }
 
 // -> Expressions semantic actions
+
+// Semantic action that sets the current_simple_id variable with the provided id
+// Receives the id
+// Does not return anything
+set_simple_id = (id) => {
+	current_simple_id = id
+}
+
+// Semantic action that adds the current_simple_id variable to the operands stack and sets its value to null
+// Does not receive any parameters
+// Does not return anything
+add_simple_id_operand = () => {
+	add_operand(current_simple_id, 'var')
+	current_simple_id = null
+}
 
 // Semantic action that adds an operand to the operands stack by checking its type from either the class or global function directory
 // Receives the operand and its type (which only specifies if it's a variable or not)
@@ -881,6 +899,11 @@ mark_func_end = () => {
 // Does not return anything
 mark_func_call_start = () => {
 	console.log('inside mark_func_call_start')
+	console.log(
+		'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+	)
+	console.log('received simple id haha')
+	console.log(current_simple_id)
 }
 
 // Semantic action that
