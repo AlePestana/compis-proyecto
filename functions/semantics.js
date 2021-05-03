@@ -107,19 +107,21 @@ add_id = (id) => {
 		if (is_attr_dec) {
 			class_directory
 				.get(current_class)
-				.attr_directory.set(id, { type: currentType }) // Set vAddress here
+				.attr_directory.set(id, { type: currentType, virtual_address: virtual_memory.get_address('global', currentType, 'perm') }) // ???
 		} else {
 			// Is method declaration
 			class_directory
 				.get(current_class)
 				.method_directory.get(current_func)
-				.var_directory.set(id, { type: currentType })
+				.var_directory.set(id, { type: currentType, virtual_address: virtual_memory.get_address('local', currentType, 'perm') })
 		}
 	} else {
 		// Adding var in func / global var
+		const scope = (current_func == global_func) ? 'global' : 'local'
+		console.log(currentType)
 		func_directory
 			.get(current_func)
-			.var_directory.set(id, { type: currentType })
+			.var_directory.set(id, { type: currentType, virtual_address: virtual_memory.get_address(scope, currentType, 'perm') })
 	}
 }
 
