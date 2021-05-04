@@ -6,7 +6,7 @@
 
 const parser = require('../parser')
 
-console.log('TEST - Empty class declaration')
+console.log('TEST 1 - Empty class declaration')
 const test1 = parser.parse(`
   program prog1; 
 
@@ -24,7 +24,7 @@ const test1 = parser.parse(`
   main() {}`)
 console.log('--> ' + (test1 ? 'yes :)' : 'no :('))
 
-console.log('TEST - Class with attributes declaration')
+console.log('\n\nTEST 2 - Class with attributes declaration')
 const test2 = parser.parse(`
   program prog1; 
 
@@ -42,7 +42,7 @@ const test2 = parser.parse(`
   main() {}`)
 console.log('--> ' + (test2 ? 'yes :)' : 'no :('))
 
-console.log('TEST - Class with attributes and methods declaration')
+console.log('\n\nTEST 3 - Class with attributes and methods declaration')
 const test3 = parser.parse(`
   program prog1; 
 
@@ -65,7 +65,7 @@ const test3 = parser.parse(`
   main() {}`)
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
-console.log('ERROR TEST - Class with attribute of another fake class')
+console.log('\n\nERROR TEST 4 - Class with attribute of another fake class')
 const program4 = `
 program prog1; 
 
@@ -90,7 +90,7 @@ main() {}`
 // console.log('--> ' + (test4 ? 'yes :)' : 'no :('))
 
 console.log(
-	'ERROR TEST - Class with method of return type of another fake class'
+	'\n\nERROR TEST 5 - Class with method of return type of another fake class'
 )
 const program5 = `
 program prog1; 

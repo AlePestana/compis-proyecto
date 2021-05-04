@@ -127,33 +127,153 @@ console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
 console.log('\n\nTEST 9 - Two void funcs with parameters and variables')
 const test9 = parser.parse(`
 	program prog1; 
-    var <- int x, y; ->
+    var <- int x, y; float a; ->
 
-    void func surprise (var <- int z; ->)
+    void func surprise1(var <- int z; ->)
     var <- int k; ->
     {
-        print("inside void function");
-        print("setting global y var");
-        y = y * 2;
-        print("setting local k var");
-        k = z + y + 3;
-        print("end surprise");
+        print("inside surprise1 function");
+        print("end surprise 1");
     }
 
-    void func surprise2 (var <- float z; ->)
+    void func surprise2(var <- float z; ->)
     var <- float k; ->
     {
-        print("inside void function 2");
-        print("setting local k var");
-        k = z + 4;
+        print("inside surprise2 function");
         print("end surprise 2");
     }
 
 	main() {
         x = 5;
         y = 6;
-        surprise(x);
-        surprise2(y);
+        surprise1(x);
+        surprise2(a);
         print("end program");
     }`)
 console.log('--> ' + (test9 ? 'yes :)' : 'no :('))
+
+console.log('\n\nTEST 10 - Int func with parameters and variables')
+const test10 = parser.parse(`
+	program prog1; 
+    var <- int x, y; ->
+
+    int func surprise (var <- int z; ->)
+    var <- int k; ->
+    {
+        print("inside int function");
+        print("setting global y var");
+        y = y * 2;
+        print("setting local k var");
+        k = z + y + 3;
+        print("returning k");
+        return k;
+    }
+
+	main() {
+        x = 5;
+        y = 6;
+        x = y;
+        x = surprise(1);
+        print("end program");
+    }`)
+console.log('--> ' + (test10 ? 'yes :)' : 'no :('))
+
+console.log('\n\nERROR TEST 11 - Call a function that is not declared')
+// const test11 = parser.parse(`
+// 	program prog1;
+//     var <- int x, y; ->
+
+//     int func superPower (var <- int x; float z; ->)
+//     var <- int k; ->
+//     {
+//         return k;
+//     }
+
+// 	main() {
+//         x = 5;
+//         y = 6;
+//         x = y;
+//         x = surprise(1);
+//         print("end program");
+//     }`)
+// console.log('--> ' + (test11 ? 'yes :)' : 'no :('))
+
+console.log('\n\nTEST 12 - Void func with multiple parameters')
+const test12 = parser.parse(`
+	program prog1; 
+    var <- int x; float y; ->
+
+    void func surprise (var <- int z; float k; ->)
+    {
+        k = 9.5;
+        z = 4;
+    }
+
+	main() {
+        x = 5;
+        y = 6.5;
+        surprise(x, y);
+        print("end program");
+    }`)
+console.log('--> ' + (test12 ? 'yes :)' : 'no :('))
+
+console.log('\n\nERROR TEST 13 - Different parameter type')
+// const test13 = parser.parse(`
+// 	program prog1;
+//     var <- int x; char y; ->
+
+//     void func surprise (var <- int z; float k; ->)
+//     {
+//         k = 9.5;
+//         z = 4;
+//     }
+
+// 	main() {
+//         x = 5;
+//         surprise(x, y);
+//         print("end program");
+//     }`)
+// console.log('--> ' + (test13 ? 'yes :)' : 'no :('))
+
+console.log(
+	'\n\nERROR TEST 14 - Different parameter size (additional parameter sent)'
+)
+// const test14 = parser.parse(`
+// 	program prog1;
+//     var <- int x; float y, z; ->
+
+//     void func surprise (var <- int z; float k; ->)
+//     {
+//         k = 9.5;
+//         z = 4;
+//     }
+
+// 	main() {
+//         x = 5;
+//         y = 5.5;
+//         z = 6.5;
+//         surprise(x, y, z);
+//         print("end program");
+//     }`)
+// console.log('--> ' + (test14 ? 'yes :)' : 'no :('))
+
+console.log(
+	'\n\nERROR TEST 15 - Different parameter size (additional parameter declared)'
+)
+// const test15 = parser.parse(`
+// 	program prog1;
+//     var <- int x; float y; ->
+
+//     void func surprise (var <- int z; float k, j; ->)
+//     {
+//         k = 9.5;
+//         z = 4;
+//     }
+
+// 	main() {
+//         x = 5;
+//         y = 5.5;
+//         surprise(x, y);
+//         print("end program");
+//     }`)
+// console.log('--> ' + (test15 ? 'yes :)' : 'no :('))
