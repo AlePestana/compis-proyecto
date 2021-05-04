@@ -32,6 +32,12 @@ let forStack = new Stack()
 // Declare all helper counters
 let res_count = 0
 
+// Additional helpers
+let current_simple_id = null
+let current_func_name = null
+let params_count = null
+let params_types = null
+
 // -> Global semantic actions
 
 // Declare function directory variable
@@ -261,6 +267,21 @@ delete_class_directory = () => {
 }
 
 // -> Expressions semantic actions
+
+// Semantic action that sets the current_simple_id variable with the provided id
+// Receives the id
+// Does not return anything
+set_simple_id = (id) => {
+	current_simple_id = id
+}
+
+// Semantic action that adds the current_simple_id variable to the operands stack and sets its value to null
+// Does not receive any parameters
+// Does not return anything
+add_simple_id_operand = () => {
+	add_operand(current_simple_id, 'var')
+	current_simple_id = null
+}
 
 // Semantic action that adds an operand to the operands stack by checking its type from either the class or global function directory
 // Receives the operand and its type (which only specifies if it's a variable or not)
@@ -769,15 +790,17 @@ mark_for_end = () => {
 	quads.data[false_jump].result = quads.count
 }
 
-// -> Funcs semantic actions
+// -> Funcs declaration semantic actions
 
 // Semantic action that creates the params_directory for a func and adds all its params with their corresponding types (by copying the current var_directory of the current_func)
 // Does not receive any parameters
 // Does not return anything
 create_params_directory = () => {
 	console.log('inside create_params_directory')
-	params_directory = new Map(func_directory.get(current_func).var_directory)
-	func_directory.get(current_func).params_directory = params_directory
+	if (current_class == null) {
+		params_directory = new Map(func_directory.get(current_func).var_directory)
+		func_directory.get(current_func).params_directory = params_directory
+	}
 }
 
 // Semantic action that marks the number of params of a function in its size_directory
@@ -786,19 +809,21 @@ create_params_directory = () => {
 mark_params_size = () => {
 	console.log('inside mark_params_size')
 
-	func_size_directory = new Map()
-	let params_size = { int: 0, float: 0, char: 0 }
+	if (current_class == null) {
+		func_size_directory = new Map()
+		let params_size = { int: 0, float: 0, char: 0 }
 
-	for (let value of params_directory.values()) {
-		if (value.type === 'int') {
-			params_size.int += 1
-		} else if (value.type === 'float') {
-			params_size.float += 1
-		} else if (value.type === 'char') {
-			params_size.char += 1
+		for (let value of params_directory.values()) {
+			if (value.type === 'int') {
+				params_size.int += 1
+			} else if (value.type === 'float') {
+				params_size.float += 1
+			} else if (value.type === 'char') {
+				params_size.char += 1
+			}
 		}
+		func_size_directory.set('params_size', params_size)
 	}
-	func_size_directory.set('params_size', params_size)
 }
 
 // Semantic action that marks the number of local variables of a function in its size_directory
@@ -806,28 +831,30 @@ mark_params_size = () => {
 // Does not return anything
 mark_local_vars_size = () => {
 	console.log('inside mark_local_vars_size')
-	let local_vars_size = { int: 0, float: 0, char: 0 }
+	if (current_class == null) {
+		let local_vars_size = { int: 0, float: 0, char: 0 }
 
-	// Turn current variable directory into array in order to be able to iterate over it
-	const all_vars = Array.from(func_directory.get(current_func).var_directory)
+		// Turn current variable directory into array in order to be able to iterate over it
+		const all_vars = Array.from(func_directory.get(current_func).var_directory)
 
-	// Filter variable directory by creating a new array of variables (removing the params)
-	const local_vars = all_vars.filter(
-		(var_name) => !params_directory.has(var_name[0])
-	)
+		// Filter variable directory by creating a new array of variables (removing the params)
+		const local_vars = all_vars.filter(
+			(var_name) => !params_directory.has(var_name[0])
+		)
 
-	// Each local_var has the form -> [ 'k', {type: 'int'} ]
-	for (let local_var of local_vars) {
-		if (local_var[1].type === 'int') {
-			local_vars_size.int += 1
-		} else if (local_var[1].type === 'float') {
-			local_vars_size.float += 1
-		} else if (local_var[1].type === 'char') {
-			local_vars_size.char += 1
+		// Each local_var has the form -> [ 'k', {type: 'int'} ]
+		for (let local_var of local_vars) {
+			if (local_var[1].type === 'int') {
+				local_vars_size.int += 1
+			} else if (local_var[1].type === 'float') {
+				local_vars_size.float += 1
+			} else if (local_var[1].type === 'char') {
+				local_vars_size.char += 1
+			}
 		}
-	}
 
-	func_size_directory.set('local_vars_size', local_vars_size)
+		func_size_directory.set('local_vars_size', local_vars_size)
+	}
 }
 
 // Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory
@@ -836,7 +863,9 @@ mark_local_vars_size = () => {
 mark_func_start = () => {
 	console.log('inside mark_func_start')
 	// Mark where the current function starts
-	func_directory.get(current_func).starting_point = quads.count
+	if (current_class == null) {
+		func_directory.get(current_func).starting_point = quads.count
+	}
 }
 
 // Semantic action that marks the end of a function by releasing the var_directory, generating the endfunc quadruple and marking the number of temp variables of the function in its size_directory
@@ -845,36 +874,154 @@ mark_func_start = () => {
 mark_func_end = () => {
 	console.log('inside mark_func_end')
 
-	// Release current var_directory
-	func_directory.get(current_func).var_directory = null
+	if (current_class == null) {
+		// Release current var_directory
+		func_directory.get(current_func).var_directory = null
 
-	// Release temp params_directory
-	params_directory = null
+		// Release temp params_directory
+		params_directory = null
 
-	// Generate quad -> ENDFUNC, null, null, null
-	const operator = 'endfunc'
-	quads.push({
-		operator: get_opcode(operator),
-		left_operand: null,
-		right_operand: null,
-		result: null,
-	})
+		// Generate quad -> ENDFUNC, null, null, null
+		const operator = 'endfunc'
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: null,
+			right_operand: null,
+			result: null,
+		})
 
-	// Mark the number of temp variables of a function in the size_directory
+		// Mark the number of temp variables of a function in the size_directory
 
-	// Slice quads to get only the current func quads
-	const starting_quad = func_directory.get(current_func).starting_point
-	const func_quads = quads.data.slice(starting_quad)
+		// Slice quads to get only the current func quads
+		const starting_quad = func_directory.get(current_func).starting_point
+		const func_quads = quads.data.slice(starting_quad)
 
-	let temps_size = { total: 0 }
+		let temps_size = { total: 0 }
 
-	func_quads.forEach((quad) => {
-		if (quad.result !== null && quad.result.includes('temp')) {
-			temps_size.total += 1
+		func_quads.forEach((quad) => {
+			if (quad.result !== null && quad.result.includes('temp')) {
+				temps_size.total += 1
+			}
+		})
+
+		func_size_directory.set('temps_size', temps_size)
+	}
+}
+
+// -> Funcs call semantic actions
+
+// Semantic action that checks if the function that was called exists in the global function directory and throws otherwise
+// Does not receive any parameters
+// Does not return anything
+mark_func_call_start = () => {
+	console.log('inside mark_func_call_start')
+
+	if (current_class == null) {
+		current_func_name = current_simple_id
+		current_simple_id = null
+
+		if (!func_directory.has(current_func_name)) {
+			console.log('ERROR - Function not defined')
+			throw 'ERROR - Function not defined'
 		}
-	})
+	}
+}
 
-	func_size_directory.set('temps_size', temps_size)
+// Semantic action that marks the start of the params of a function call by creating the era quad and starting the parameter counter
+// Does not receive any parameters
+// Does not return anything
+mark_call_params_start = () => {
+	console.log('inside mark_call_params_start')
+
+	if (current_class == null) {
+		// Generate era quad -> era, func_name, null, null
+		const operator = 'era'
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: current_func_name,
+			right_operand: null,
+			result: null,
+		})
+
+		// Start parameter counter to 1
+		params_count = 1
+
+		// Generate array of parameters types of the form -> [ { type: 'int' } ]
+		params_types = Array.from(
+			func_directory.get(current_func_name).params_directory.values()
+		)
+	}
+}
+
+// Semantic action that
+// Does not receive any parameters
+// Does not return anything
+add_call_param = () => {
+	console.log('inside add_call_param')
+
+	if (current_class == null) {
+		const current_param = operands.pop()
+
+		// More parameters were sent
+		if (params_count - 1 >= params_types.length) {
+			console.log('ERROR - Number of parameters required does not match')
+			throw 'ERROR - Number of parameters required does not match'
+		}
+
+		if (current_param.type !== params_types[params_count - 1].type) {
+			console.log('ERROR - Parameter type does not match')
+			throw 'ERROR - Parameter type does not match'
+		}
+	}
+}
+
+// Semantic action that moves the params_count forward to allow iteration over params call
+// Does not receive any parameters
+// Does not return anything
+mark_next_call_param = () => {
+	console.log('inside mark_next_call_param')
+
+	if (current_class == null) {
+		params_count++
+	}
+}
+
+// Semantic action that verifies the number of defined parameters and the ones send is equal
+// Does not receive any parameters
+// Does not return anything
+verify_call_params_size = () => {
+	console.log('inside verify_call_params_size')
+
+	// More parameters were declared than sent
+	if (current_class == null) {
+		if (params_count - 1 !== params_types.length) {
+			console.log('ERROR - Number of parameters required does not match')
+			throw 'ERROR - Number of parameters required does not match'
+		}
+	}
+}
+
+// Semantic action that clears all current function related variables and generates the 'gosub' quad
+// Does not receive any parameters
+// Does not return anything
+mark_func_call_end = () => {
+	console.log('inside mark_func_call_end')
+
+	if (current_class == null) {
+		// Generate gosub quad -> gosub, func_name, null, starting_point
+		const operator = 'gosub'
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: current_func_name,
+			right_operand: null,
+			result: func_directory.get(current_func_name).starting_point,
+		})
+
+		// Reset current func name and parameters variable
+		current_func_name = null
+		params_count = null
+		params_types = null
+	}
 }
 
 // -> Helper functions
