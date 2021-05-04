@@ -4,6 +4,7 @@
 // Output: get_string_opcode (the function that returns the corresponding numeric opcode for a given opcode)
 // Used by: semantics.js
 reverse_operations = {
+
 	1: '+',
 	2: '-',
 	3: '*',
