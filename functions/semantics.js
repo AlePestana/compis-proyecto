@@ -55,11 +55,21 @@ params_directory = null
 // Declare func size directory variable
 func_size_directory = null
 
+// Declare constants directory variable
+constants_directory = null
+
 // Semantic action that creates a new empty instance of the global function directory
 // Does not receive any parameters
 // Does not return anything
 create_func_directory = function () {
 	func_directory = new Map()
+}
+
+// Semantic action that creates a new empty instance of the constants directory
+// Does not receive any parameters
+// Does not return anything
+create_constants_directory = () => {
+	constants_directory = new Map()
 }
 
 // Semantic action that adds the program name to the function directory and sets both the global and current function variables
@@ -211,6 +221,22 @@ delete_func_directory = function () {
 	jumps = new Stack()
 	forStack = new Stack()
 	res_count = 0
+}
+
+// Semantic action that deletes the constants directory after the program finishes
+// Does not receive any parameters
+// Does not return anything
+delete_constants_directory = () => {
+	console.log("constants_directory before exit")
+	console.log(constants_directory)
+	constants_directory = null
+}
+
+// Semantic action that resets virtual memory addresses
+// Does not receive any parameters
+// Does not return anything
+reset_virtual_memory = () => {
+	virtual_memory.initialize_counters()
 }
 
 // -> Class semantic actions
@@ -531,7 +557,15 @@ print_string = (string) => {
 	console.log('inside print_string')
 
 	const operator = 'print'
-	const result = string
+
+	// Get string virtual address
+	let result
+	if (constants_directory.has(string)) {
+		result = constants_directory.get(string)
+	} else {
+		result = virtual_memory.get_address('constant', 'string', 'null')
+		constants_directory.set(string, result)
+	}
 
 	const left_operand = null
 	const right_operand = null

@@ -96,18 +96,22 @@ virutal_memory_addresses = {
   }
 }
 
-// Initialize counters
-for (const scope in virutal_memory_addresses) {
-  for (const type in virutal_memory_addresses[scope]) {
-    if (scope != 'constant') {
-      for (const duration in virutal_memory_addresses[scope][type]) {
-        virutal_memory_addresses[scope][type][duration].count = virutal_memory_addresses[scope][type][duration].start
-      }  
-    } else {
-      virutal_memory_addresses[scope][type].count = virutal_memory_addresses[scope][type].start
+// Initialize/reset counters
+initialize_counters = () => {
+  for (const scope in virutal_memory_addresses) {
+    for (const type in virutal_memory_addresses[scope]) {
+      if (scope != 'constant') {
+        for (const duration in virutal_memory_addresses[scope][type]) {
+          virutal_memory_addresses[scope][type][duration].count = virutal_memory_addresses[scope][type][duration].start
+        }  
+      } else {
+        virutal_memory_addresses[scope][type].count = virutal_memory_addresses[scope][type].start
+      }
     }
   }
 }
+
+initialize_counters() // Initialize for first time
 
 // console.log(JSON.stringify(virutal_memory_addresses)) // debug
 
@@ -148,6 +152,7 @@ reset_local_addresses = () => {
 // console.log(get_address('local', 'int', 'perm'))
 
 module.exports = {
+  initialize_counters,
   get_address,
   reset_local_addresses
 }
