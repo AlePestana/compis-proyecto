@@ -11,7 +11,7 @@ const oracle = require('./cube')
 const get_opcode = require('./opcodes')
 
 // Virtual Memory Addresses
-const virtual_memory = require('./virtualMemory') 
+const virtual_memory = require('./virtualMemory')
 
 // Helper structures
 const Stack = require('./helpers/stack.js')
@@ -227,7 +227,7 @@ delete_func_directory = function () {
 // Does not receive any parameters
 // Does not return anything
 delete_constants_directory = () => {
-	console.log("constants_directory before exit")
+	console.log('constants_directory before exit')
 	console.log(constants_directory)
 	constants_directory = null
 }
@@ -933,6 +933,7 @@ mark_func_end = () => {
 		let temps_size = { total: 0 }
 
 		func_quads.forEach((quad) => {
+			// ERROR -> Change to dynamically check if the address stored in the quad.result belongs to a temporal variable
 			if (quad.result !== null && quad.result.includes('temp')) {
 				temps_size.total += 1
 			}
