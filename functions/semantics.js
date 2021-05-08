@@ -344,6 +344,17 @@ add_operand = (operand, type) => {
 				type = 'undefined'
 			}
 		}
+	} else {
+		// It is a constant
+		switch (type) {
+			case 'int':
+				operand = parseInt(operand)
+				break;
+			case 'float':
+				operand = parseFloat(operand)
+				break;
+		}
+		operand = get_constant_virtual_address(operand, type)
 	}
 	operands.push({ operand, type })
 }
@@ -559,13 +570,7 @@ print_string = (string) => {
 	const operator = 'print'
 
 	// Get string virtual address
-	let result
-	if (constants_directory.has(string)) {
-		result = constants_directory.get(string)
-	} else {
-		result = virtual_memory.get_address('constant', 'string', 'null')
-		constants_directory.set(string, result)
-	}
+	const result = get_constant_virtual_address(string, 'string')
 
 	const left_operand = null
 	const right_operand = null
@@ -1115,6 +1120,19 @@ is_var_in_scope = (variable) => {
 		} else {
 			return func_directory.get(global_func).var_directory.has(variable)
 		}
+	}
+}
+
+// Function that checks if a constant value is already in the constants directory and returns its value or inserts it and generates a new value
+// Receives the constant and its type
+// Returns the virtual memory address for the constant
+get_constant_virtual_address = (constant, type) => {
+	if (constants_directory.has(constant)) {
+		return constants_directory.get(constant)
+	} else {
+		const result = virtual_memory.get_address('constant', type, 'null')
+		constants_directory.set(constant, result)
+		return result
 	}
 }
 
