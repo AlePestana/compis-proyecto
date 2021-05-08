@@ -337,6 +337,12 @@ add_operand = (operand, type) => {
 						.method_directory.get(current_func)
 						.var_directory.get(operand).type
 				: class_directory.get(current_class).attr_directory.get(operand).type
+			operand = is_inside_class_method
+				? class_directory
+						.get(current_class)
+						.method_directory.get(current_func)
+						.var_directory.get(operand).virtual_address
+				: class_directory.get(current_class).attr_directory.get(operand).virtual_address
 		} else {
 			// Search in current var_directory
 			const is_inside_current_func =
@@ -348,8 +354,10 @@ add_operand = (operand, type) => {
 
 			if (is_inside_current_func) {
 				type = func_directory.get(current_func).var_directory.get(operand).type
+				operand = func_directory.get(current_func).var_directory.get(operand).virtual_address
 			} else if (is_inside_global_scope) {
 				type = func_directory.get(global_func).var_directory.get(operand).type
+				operand = func_directory.get(global_func).var_directory.get(operand).virtual_address
 			} else {
 				type = 'undefined'
 			}
@@ -772,8 +780,8 @@ mark_while_end = () => {
 // Semantic action that pushes to the for stack the last variable (the result stored in the quadruple before)
 // Does not receive any parameters
 // Does not return anything
-for_start_exp = () => {
-	forStack.push(quads.data[quads.count - 1].result)
+for_start_exp = (control_variable) => {
+	forStack.push(control_variable)
 }
 
 // Semantic action that adds to the operands stack the top of the for stack (the last variable) and the < operator to the operators stack, plus it marks a false bottom on the operators stack
