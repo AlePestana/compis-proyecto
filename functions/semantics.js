@@ -135,9 +135,17 @@ add_id = (id) => {
 		// Adding var in func / global var
 		const scope = (current_func == global_func) ? 'global' : 'local'
 		console.log(currentType)
-		func_directory
-			.get(current_func)
-			.var_directory.set(id, { type: currentType, virtual_address: virtual_memory.get_address(scope, currentType, 'perm') })
+		if (currentType === 'int' || currentType === 'float' || currentType === 'char') {
+			// Basic type
+			func_directory
+				.get(current_func)
+				.var_directory.set(id, { type: currentType, virtual_address: virtual_memory.get_address(scope, currentType, 'perm') })
+		} else {
+			// Instance of a class, do not add virtual memory address
+			func_directory
+				.get(current_func)
+				.var_directory.set(id, { type: currentType })
+		}
 	}
 }
 
