@@ -111,12 +111,12 @@ const grammar = {
 		program: [
 			[
 				'program_keyword program_id_keyword ; classes dec_vars funcs MAIN ( ) { statements } EOF',
-				'delete_func_directory(); delete_class_directory(); $$ = true',
+				'delete_func_directory(); delete_class_directory(); delete_constants_directory(); reset_virtual_memory(); $$ = true',
 			],
 		],
 
 		program_keyword: [
-			['PROGRAM', 'create_func_directory(); create_class_directory();'],
+			['PROGRAM', 'create_func_directory(); create_class_directory(); create_constants_directory()'],
 		],
 
 		program_id_keyword: [['ID', 'add_program_id($1)']],
