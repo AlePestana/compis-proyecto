@@ -111,12 +111,12 @@ const grammar = {
 		program: [
 			[
 				'program_keyword program_id_keyword ; classes dec_vars funcs MAIN ( ) { statements } EOF',
-				'delete_func_directory(); delete_class_directory(); $$ = true',
+				'delete_func_directory(); delete_class_directory(); delete_constants_directory(); reset_virtual_memory(); $$ = true',
 			],
 		],
 
 		program_keyword: [
-			['PROGRAM', 'create_func_directory(); create_class_directory();'],
+			['PROGRAM', 'create_func_directory(); create_class_directory(); create_constants_directory()'],
 		],
 
 		program_id_keyword: [['ID', 'add_program_id($1)']],
@@ -213,11 +213,11 @@ const grammar = {
 
 		func: [
 			[
-				'void_keyword FUNC func_id_keyword ( params ) dec_vars { func_statements }',
+				'void_keyword FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace func_statements closing_func_brace',
 				'finish_func_dec(); $$',
 			],
 			[
-				'simple_type FUNC func_id_keyword ( params ) dec_vars { func_statements }',
+				'simple_type FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace func_statements closing_func_brace',
 				'finish_func_dec(); $$',
 			],
 		],
@@ -233,6 +233,14 @@ const grammar = {
 			],
 			['', '$$'],
 		],
+
+		closing_params_parenthesis: [
+			[')', 'create_params_directory(); mark_params_size()'],
+		],
+
+		starting_func_brace: [['{', 'mark_local_vars_size(); mark_func_start()']],
+
+		closing_func_brace: [['}', 'mark_func_end()']],
 
 		func_statements: [['statements return_statement', '$$']],
 
@@ -336,20 +344,12 @@ const grammar = {
 			['left_parenthesis expression right_parenthesis', '$$'],
 			['INT_CTE', `add_operand($1, 'int')`],
 			['FLOAT_CTE', `add_operand($1, 'float')`],
-			['var_name', `add_operand($1, 'var')`],
-			['ID ( params_call )', '$$'], // Calling a function with return type
-			['ID . ID ( params_call )', '$$'], // Calling a method from a class with return type
+			['var_name', '$$'],
 		],
 
 		left_parenthesis: [['(', 'start_subexpression()']],
 
 		right_parenthesis: [[')', 'end_subexpression()']],
-
-		params_call: [
-			['expression', '$$'],
-			['expression , params_call', '$$'],
-			['', '$$'],
-		],
 
 		assignment: [
 			[
@@ -368,15 +368,44 @@ const grammar = {
 		],
 
 		simple_id: [
-			['ID', '$$'],
-			['ID [ expression ]', '$$'],
-			['ID [ expression ] [ expression ]', '$$'],
+			['simple_id_keyword func_call', '$$'],
+			['ID [ expression ]', `add_operand($1, 'var')`],
+			['ID [ expression ] [ expression ]', `add_operand($1, 'var')`],
 		],
 
-		compound_id: [['ID . simple_id', '$$']], // Objects
+		simple_id_keyword: [['ID', 'set_simple_id($1)']],
+
+		compound_id: [['ID . simple_id', `add_operand($1, 'var')`]], // Objects
+
+		func_call: [
+			['', 'add_simple_id_operand()'], // If only a simple id is provided, add it to the operands stack and reset the current_simple_id variable to null
+			[
+				'starting_call_params_parenthesis params_call closing_call_params_parenthesis',
+				'mark_func_call_end()',
+			], // Call a function with a return type
+		],
+
+		func_call_id_keyword: [['ID', 'mark_func_call_start()']],
+
+		starting_call_params_parenthesis: [
+			['(', 'mark_func_call_start(); mark_call_params_start()'],
+		],
+
+		closing_call_params_parenthesis: [[')', 'verify_call_params_size()']],
+
+		params_call: [
+			['expression', 'add_call_param(); mark_next_call_param()'],
+			['expression separate_params_comma params_call', '$$'],
+			['', '$$'],
+		],
+
+		separate_params_comma: [[',', 'add_call_param(); mark_next_call_param()']],
 
 		void_func_call: [
-			['ID ( params_call ) ;', '$$'],
+			[
+				'simple_id_keyword starting_call_params_parenthesis params_call closing_call_params_parenthesis ;',
+				'mark_func_call_end()',
+			],
 			['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
 		],
 

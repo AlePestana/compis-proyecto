@@ -69,3 +69,17 @@ AS_Documentation in https://docs.google.com/document/d/1jp9XdFYVZX3s2JJBVLnCjyrr
 | tests/all.js           |                                                    Import new tests |
 | AS_Syntax_Diagrams     |                                  Update ArrowScript syntax diagrams |
 | AS_Documentation       |                             Update ArrowScript formal documentation |
+
+##### 5th delivery
+
+| Files changed                      |                                         Functionalities delivered |
+| :--------------------------------- | ----------------------------------------------------------------: |
+| parser.js                          |     Add semantic actions to rules for func calls and declarations |
+| functions/semantics.js             | Functions for func calls and declarations (both void and nonvoid) |
+| tests/funcs.js                     |                       Update funcs tests for new semantic actions |
+| tests/classes.js                   |                                         Fix failing classes tests |
+| functions/virtualMemory.js         |             Specify virtual memory addresses and access functions |
+| functions/opcodes.js               |                          Specify operation opcodes used by the VM |
+| functions/debug/reverse_opcodes.js |     Reverse the numeric opcode to string representation for debug |
+| AS_Syntax_Diagrams                 |                                Update ArrowScript syntax diagrams |
+| AS_Documentation                   |                           Update ArrowScript formal documentation |
