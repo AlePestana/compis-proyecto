@@ -977,7 +977,7 @@ mark_func_end = () => {
 
 		func_quads.forEach((quad) => {
 			// ERROR -> Change to dynamically check if the address stored in the quad.result belongs to a temporal variable
-			if (quad.result !== null && quad.result.includes('temp')) {
+			if (quad.result !== null && virtual_memory.is_temp_address(quad.result)) {
 				temps_size.total += 1
 			}
 		})
