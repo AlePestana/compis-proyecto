@@ -123,19 +123,29 @@ add_id = (id) => {
 		if (is_attr_dec) {
 			class_directory
 				.get(current_class)
-				.attr_directory.set(id, { type: currentType }) // Set vAddress here
+				.attr_directory.set(id, { type: currentType, virtual_address: virtual_memory.get_address('global', currentType, 'perm') }) // ???
 		} else {
 			// Is method declaration
 			class_directory
 				.get(current_class)
 				.method_directory.get(current_func)
-				.var_directory.set(id, { type: currentType })
+				.var_directory.set(id, { type: currentType, virtual_address: virtual_memory.get_address('local', currentType, 'perm') })
 		}
 	} else {
 		// Adding var in func / global var
-		func_directory
-			.get(current_func)
-			.var_directory.set(id, { type: currentType })
+		const scope = (current_func == global_func) ? 'global' : 'local'
+		console.log(currentType)
+		if (currentType === 'int' || currentType === 'float' || currentType === 'char') {
+			// Basic type
+			func_directory
+				.get(current_func)
+				.var_directory.set(id, { type: currentType, virtual_address: virtual_memory.get_address(scope, currentType, 'perm') })
+		} else {
+			// Instance of a class, do not add virtual memory address
+			func_directory
+				.get(current_func)
+				.var_directory.set(id, { type: currentType })
+		}
 	}
 }
 
@@ -327,6 +337,12 @@ add_operand = (operand, type) => {
 						.method_directory.get(current_func)
 						.var_directory.get(operand).type
 				: class_directory.get(current_class).attr_directory.get(operand).type
+			operand = is_inside_class_method
+				? class_directory
+						.get(current_class)
+						.method_directory.get(current_func)
+						.var_directory.get(operand).virtual_address
+				: class_directory.get(current_class).attr_directory.get(operand).virtual_address
 		} else {
 			// Search in current var_directory
 			const is_inside_current_func =
@@ -338,8 +354,10 @@ add_operand = (operand, type) => {
 
 			if (is_inside_current_func) {
 				type = func_directory.get(current_func).var_directory.get(operand).type
+				operand = func_directory.get(current_func).var_directory.get(operand).virtual_address
 			} else if (is_inside_global_scope) {
 				type = func_directory.get(global_func).var_directory.get(operand).type
+				operand = func_directory.get(global_func).var_directory.get(operand).virtual_address
 			} else {
 				type = 'undefined'
 			}
@@ -762,8 +780,8 @@ mark_while_end = () => {
 // Semantic action that pushes to the for stack the last variable (the result stored in the quadruple before)
 // Does not receive any parameters
 // Does not return anything
-for_start_exp = () => {
-	forStack.push(quads.data[quads.count - 1].result)
+for_start_exp = (control_variable) => {
+	forStack.push(control_variable)
 }
 
 // Semantic action that adds to the operands stack the top of the for stack (the last variable) and the < operator to the operators stack, plus it marks a false bottom on the operators stack

@@ -475,7 +475,7 @@ const grammar = {
 		for_assignment: [
 			[
 				'var_name_assignment_keyword assignment_operator expression',
-				'assign_exp(); for_start_exp()',
+				'assign_exp(); for_start_exp($1)',
 			],
 		],
 
