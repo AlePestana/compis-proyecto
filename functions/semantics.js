@@ -121,25 +121,41 @@ add_id = (id) => {
 	if (current_class != null) {
 		// Adding var in class
 		if (is_attr_dec) {
-			class_directory
-				.get(current_class)
-				.attr_directory.set(id, { type: currentType, virtual_address: virtual_memory.get_address('global', currentType, 'perm') }) // ???
+			class_directory.get(current_class).attr_directory.set(id, {
+				type: currentType,
+				virtual_address: virtual_memory.get_address(
+					'global',
+					currentType,
+					'perm'
+				),
+			}) // ???
 		} else {
 			// Is method declaration
 			class_directory
 				.get(current_class)
 				.method_directory.get(current_func)
-				.var_directory.set(id, { type: currentType, virtual_address: virtual_memory.get_address('local', currentType, 'perm') })
+				.var_directory.set(id, {
+					type: currentType,
+					virtual_address: virtual_memory.get_address(
+						'local',
+						currentType,
+						'perm'
+					),
+				})
 		}
 	} else {
 		// Adding var in func / global var
-		const scope = (current_func == global_func) ? 'global' : 'local'
-		console.log(currentType)
-		if (currentType === 'int' || currentType === 'float' || currentType === 'char') {
+		const scope = current_func == global_func ? 'global' : 'local'
+		if (
+			currentType === 'int' ||
+			currentType === 'float' ||
+			currentType === 'char'
+		) {
 			// Basic type
-			func_directory
-				.get(current_func)
-				.var_directory.set(id, { type: currentType, virtual_address: virtual_memory.get_address(scope, currentType, 'perm') })
+			func_directory.get(current_func).var_directory.set(id, {
+				type: currentType,
+				virtual_address: virtual_memory.get_address(scope, currentType, 'perm'),
+			})
 		} else {
 			// Instance of a class, do not add virtual memory address
 			func_directory
@@ -221,6 +237,7 @@ finish_func_dec = () => {
 // Does not receive any parameters
 // Does not return anything
 delete_func_directory = function () {
+	console.log('Func directory before exit')
 	console.log(func_directory)
 	func_directory = null
 	console.log('Quads before exit')
@@ -342,7 +359,8 @@ add_operand = (operand, type) => {
 						.get(current_class)
 						.method_directory.get(current_func)
 						.var_directory.get(operand).virtual_address
-				: class_directory.get(current_class).attr_directory.get(operand).virtual_address
+				: class_directory.get(current_class).attr_directory.get(operand)
+						.virtual_address
 		} else {
 			// Search in current var_directory
 			const is_inside_current_func =
@@ -354,10 +372,12 @@ add_operand = (operand, type) => {
 
 			if (is_inside_current_func) {
 				type = func_directory.get(current_func).var_directory.get(operand).type
-				operand = func_directory.get(current_func).var_directory.get(operand).virtual_address
+				operand = func_directory.get(current_func).var_directory.get(operand)
+					.virtual_address
 			} else if (is_inside_global_scope) {
 				type = func_directory.get(global_func).var_directory.get(operand).type
-				operand = func_directory.get(global_func).var_directory.get(operand).virtual_address
+				operand = func_directory.get(global_func).var_directory.get(operand)
+					.virtual_address
 			} else {
 				type = 'undefined'
 			}
@@ -367,10 +387,10 @@ add_operand = (operand, type) => {
 		switch (type) {
 			case 'int':
 				operand = parseInt(operand)
-				break;
+				break
 			case 'float':
 				operand = parseFloat(operand)
-				break;
+				break
 		}
 		operand = get_constant_virtual_address(operand, type)
 	}
@@ -381,7 +401,7 @@ add_operand = (operand, type) => {
 // Receives the operator
 // Does not return anything
 add_operator = (operator) => {
-	console.log('adding operator = ' + operator)
+	// console.log('adding operator = ' + operator)
 	operators.push(operator)
 }
 
@@ -389,7 +409,7 @@ add_operator = (operator) => {
 // Does not receive any parameters
 // Does not return anything
 add_mult_div_operation = () => {
-	console.log('inside add_mult_div_operation')
+	// console.log('inside add_mult_div_operation')
 	if (operators.top() === '*' || operators.top() === '/') {
 		const right = operands.pop()
 		const right_operand = right.operand
@@ -419,7 +439,7 @@ add_mult_div_operation = () => {
 // Does not receive any parameters
 // Does not return anything
 add_sum_sub_operation = () => {
-	console.log('inside add_sum_sub_operation')
+	// console.log('inside add_sum_sub_operation')
 	if (operators.top() === '+' || operators.top() === '-') {
 		const right = operands.pop()
 		const right_operand = right.operand
@@ -449,7 +469,7 @@ add_sum_sub_operation = () => {
 // Does not receive any parameters
 // Does not return anything
 start_subexpression = () => {
-	console.log('inside start_subexpression')
+	// console.log('inside start_subexpression')
 	operators.push('(')
 }
 
@@ -457,7 +477,7 @@ start_subexpression = () => {
 // Does not receive any parameters
 // Does not return anything
 end_subexpression = () => {
-	console.log('inside end_subexpression')
+	// console.log('inside end_subexpression')
 	operators.pop()
 }
 
@@ -465,7 +485,7 @@ end_subexpression = () => {
 // Does not receive any parameters
 // Does not return anything
 add_rel_operation = () => {
-	console.log('inside add_rel_operation')
+	// console.log('inside add_rel_operation')
 	if (
 		operators.top() === '>' ||
 		operators.top() === '<' ||
@@ -500,7 +520,7 @@ add_rel_operation = () => {
 // Does not receive any parameters
 // Does not return anything
 add_and_operation = () => {
-	console.log('inside add_and_operation')
+	// console.log('inside add_and_operation')
 	if (operators.top() === '&') {
 		const right = operands.pop()
 		const right_operand = right.operand
@@ -530,7 +550,7 @@ add_and_operation = () => {
 // Does not receive any parameters
 // Does not return anything
 add_or_operation = () => {
-	console.log('inside add_or_operation')
+	// console.log('inside add_or_operation')
 	if (operators.top() === '|') {
 		const right = operands.pop()
 		const right_operand = right.operand
@@ -562,7 +582,7 @@ add_or_operation = () => {
 // Does not receive any parameters
 // Does not return anything
 print_expression = () => {
-	console.log('inside print_expression')
+	// console.log('inside print_expression')
 
 	const operator = 'print'
 	const res = operands.pop()
@@ -583,7 +603,7 @@ print_expression = () => {
 // Receives the string to print
 // Does not return anything
 print_string = (string) => {
-	console.log('inside print_string')
+	// console.log('inside print_string')
 
 	const operator = 'print'
 
@@ -605,7 +625,7 @@ print_string = (string) => {
 // Receives the variable name
 // Does not return anything
 read_var = (variable) => {
-	console.log('inside read_var')
+	// console.log('inside read_var')
 
 	// if variable is within scope
 	if (is_var_in_scope(variable)) {
@@ -631,7 +651,7 @@ read_var = (variable) => {
 // Does not receive any parameters
 // Does not return anything
 assign_exp = () => {
-	console.log('inside assign_exp')
+	// console.log('inside assign_exp')
 
 	const res = operands.pop()
 	const result = res.operand
@@ -663,7 +683,7 @@ assign_exp = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_if_condition = () => {
-	console.log('inside mark_if_condition')
+	// console.log('inside mark_if_condition')
 
 	const cond = operands.pop()
 	if (cond.type !== 'int') {
@@ -688,7 +708,7 @@ mark_if_condition = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_if_end = () => {
-	console.log('inside mark_if_end')
+	// console.log('inside mark_if_end')
 
 	const end = jumps.pop()
 	quads.data[end].result = quads.count
@@ -698,7 +718,7 @@ mark_if_end = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_else = () => {
-	console.log('inside mark_else')
+	// console.log('inside mark_else')
 
 	const false_jump = jumps.pop()
 
@@ -724,7 +744,7 @@ mark_else = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_while_start = () => {
-	console.log('inside mark_while_start')
+	// console.log('inside mark_while_start')
 
 	jumps.push(quads.count)
 }
@@ -733,7 +753,7 @@ mark_while_start = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_while_condition = () => {
-	console.log('inside mark_while_condition')
+	// console.log('inside mark_while_condition')
 
 	const cond = operands.pop()
 	if (cond.type !== 'int') {
@@ -758,7 +778,7 @@ mark_while_condition = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_while_end = () => {
-	console.log('inside mark_while_end')
+	// console.log('inside mark_while_end')
 
 	const false_jump = jumps.pop()
 	const return_jump = jumps.pop()
@@ -853,7 +873,7 @@ mark_for_end = () => {
 // Does not receive any parameters
 // Does not return anything
 create_params_directory = () => {
-	console.log('inside create_params_directory')
+	// console.log('inside create_params_directory')
 	if (current_class == null) {
 		params_directory = new Map(func_directory.get(current_func).var_directory)
 		func_directory.get(current_func).params_directory = params_directory
@@ -864,7 +884,7 @@ create_params_directory = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_params_size = () => {
-	console.log('inside mark_params_size')
+	// console.log('inside mark_params_size')
 
 	if (current_class == null) {
 		func_size_directory = new Map()
@@ -887,7 +907,7 @@ mark_params_size = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_local_vars_size = () => {
-	console.log('inside mark_local_vars_size')
+	// console.log('inside mark_local_vars_size')
 	if (current_class == null) {
 		let local_vars_size = { int: 0, float: 0, char: 0 }
 
@@ -918,7 +938,7 @@ mark_local_vars_size = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_func_start = () => {
-	console.log('inside mark_func_start')
+	// console.log('inside mark_func_start')
 	// Mark where the current function starts
 	if (current_class == null) {
 		func_directory.get(current_func).starting_point = quads.count
@@ -929,7 +949,7 @@ mark_func_start = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_func_end = () => {
-	console.log('inside mark_func_end')
+	// console.log('inside mark_func_end')
 
 	if (current_class == null) {
 		// Release current var_directory
@@ -972,7 +992,7 @@ mark_func_end = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_func_call_start = () => {
-	console.log('inside mark_func_call_start')
+	// console.log('inside mark_func_call_start')
 
 	if (current_class == null) {
 		current_func_name = current_simple_id
@@ -989,7 +1009,7 @@ mark_func_call_start = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_call_params_start = () => {
-	console.log('inside mark_call_params_start')
+	// console.log('inside mark_call_params_start')
 
 	if (current_class == null) {
 		// Generate era quad -> era, func_name, null, null
@@ -1015,7 +1035,7 @@ mark_call_params_start = () => {
 // Does not receive any parameters
 // Does not return anything
 add_call_param = () => {
-	console.log('inside add_call_param')
+	// console.log('inside add_call_param')
 
 	if (current_class == null) {
 		const current_param = operands.pop()
@@ -1037,7 +1057,7 @@ add_call_param = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_next_call_param = () => {
-	console.log('inside mark_next_call_param')
+	// console.log('inside mark_next_call_param')
 
 	if (current_class == null) {
 		params_count++
@@ -1048,7 +1068,7 @@ mark_next_call_param = () => {
 // Does not receive any parameters
 // Does not return anything
 verify_call_params_size = () => {
-	console.log('inside verify_call_params_size')
+	// console.log('inside verify_call_params_size')
 
 	// More parameters were declared than sent
 	if (current_class == null) {
@@ -1063,7 +1083,7 @@ verify_call_params_size = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_func_call_end = () => {
-	console.log('inside mark_func_call_end')
+	// console.log('inside mark_func_call_end')
 
 	if (current_class == null) {
 		// Generate gosub quad -> gosub, func_name, null, starting_point
