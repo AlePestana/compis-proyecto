@@ -992,6 +992,8 @@ mark_func_end = () => {
 		})
 
 		func_size_directory.set('temps_size', temps_size)
+		func_directory.get(current_func).func_size_directory = func_size_directory
+		func_size_directory = null
 	}
 }
 
@@ -1048,6 +1050,8 @@ add_call_param = () => {
 
 	if (current_class == null) {
 		const current_param = operands.pop()
+
+		// Generate params quad!!!
 
 		// More parameters were sent
 		if (params_count - 1 >= params_types.length) {
