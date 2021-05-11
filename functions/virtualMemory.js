@@ -153,9 +153,9 @@ function isBetween(x, min, max) {
 }
 
 // Function to check if an address belongs to any listed addresses of those specified as temp
-is_temp_address = (address) => {
-	const local_int = virutal_memory_addresses.local.int
-	const local_float = virutal_memory_addresses.local.float
+is_local_temp_address = (address) => {
+	const local_int = virutal_memory_addresses.local.int.temp
+	const local_float = virutal_memory_addresses.local.float.temp
 	if (
 		isBetween(address, local_int.start, local_int.limit) ||
 		isBetween(address, local_float.start, local_float.limit) ||
@@ -178,5 +178,5 @@ module.exports = {
 	initialize_counters,
 	get_address,
 	reset_local_addresses,
-	is_temp_address,
+	is_local_temp_address,
 }

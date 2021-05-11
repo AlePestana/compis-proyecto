@@ -372,12 +372,14 @@ add_operand = (operand, type) => {
 
 			if (is_inside_current_func) {
 				type = func_directory.get(current_func).var_directory.get(operand).type
-				operand = func_directory.get(current_func).var_directory.get(operand)
-					.virtual_address
+				operand = func_directory
+					.get(current_func)
+					.var_directory.get(operand).virtual_address
 			} else if (is_inside_global_scope) {
 				type = func_directory.get(global_func).var_directory.get(operand).type
-				operand = func_directory.get(global_func).var_directory.get(operand)
-					.virtual_address
+				operand = func_directory
+					.get(global_func)
+					.var_directory.get(operand).virtual_address
 			} else {
 				type = 'undefined'
 			}
@@ -420,7 +422,8 @@ add_mult_div_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			const result = `temp${res_count++}`
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, result_type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -450,7 +453,8 @@ add_sum_sub_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			const result = `temp${res_count++}`
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, result_type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -501,7 +505,8 @@ add_rel_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			const result = `temp${res_count++}`
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, result_type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -531,7 +536,8 @@ add_and_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			const result = `temp${res_count++}`
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, result_type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -561,7 +567,8 @@ add_or_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			const result = `temp${res_count++}`
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, result_type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -976,8 +983,10 @@ mark_func_end = () => {
 		let temps_size = { total: 0 }
 
 		func_quads.forEach((quad) => {
-			// ERROR -> Change to dynamically check if the address stored in the quad.result belongs to a temporal variable
-			if (quad.result !== null && virtual_memory.is_temp_address(quad.result)) {
+			if (
+				quad.result !== null &&
+				virtual_memory.is_local_temp_address(quad.result)
+			) {
 				temps_size.total += 1
 			}
 		})
