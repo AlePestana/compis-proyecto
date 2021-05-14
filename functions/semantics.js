@@ -903,12 +903,12 @@ mark_params_size = () => {
 		func_size_directory = new Map()
 		let params_size = { int: 0, float: 0, char: 0 }
 
-		for (let value of params_directory.values()) {
-			if (value.type === 'int') {
+		for (let type of func_directory.get(current_func).params_type_list) {
+			if (type === 'int') {
 				params_size.int += 1
-			} else if (value.type === 'float') {
+			} else if (type === 'float') {
 				params_size.float += 1
-			} else if (value.type === 'char') {
+			} else if (type === 'char') {
 				params_size.char += 1
 			}
 		}
