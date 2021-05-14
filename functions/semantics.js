@@ -882,8 +882,14 @@ mark_for_end = () => {
 create_params_directory = () => {
 	// console.log('inside create_params_directory')
 	if (current_class == null) {
+		// The var_directory of the function at this point only has the parameters
 		params_directory = new Map(func_directory.get(current_func).var_directory)
-		func_directory.get(current_func).params_directory = params_directory
+		let params_type_list = new Array()
+		for (let [param, info] of params_directory) {
+			params_type_list.push(info.type)
+		}
+		//console.log(params_type_list)
+		func_directory.get(current_func).params_type_list = params_type_list
 	}
 }
 
