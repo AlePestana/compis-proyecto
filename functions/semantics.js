@@ -20,6 +20,9 @@ const Queue = require('./helpers/queue.js')
 // Debug helper functions
 const get_string_opcode = require('./debug/reverse_opcodes')
 
+// Virtual machine information
+virtual_machine_info = null
+
 // Declare quadruples
 let quads = new Queue()
 
@@ -76,7 +79,6 @@ create_constants_directory = () => {
 // Does not receive any parameters
 // Does not return anything
 insert_goto_main_quad = () => {
-	
 	const operator = 'goto'
 	const left_operand = null
 	const right_operand = null
@@ -274,6 +276,12 @@ finish_func_dec = () => {
 // Does not receive any parameters
 // Does not return anything
 delete_func_directory = function () {
+	// Set virtual machine information object before clearing structures
+	virtual_machine_info = {
+		quads,
+		func_directory,
+		constants_directory,
+	}
 	console.log('Func directory before exit')
 	console.log(func_directory)
 	func_directory = null
