@@ -2,7 +2,7 @@
 // Lexer and parser that specifies the rules, tokens, and grammar
 // Inputs: does not receive parameters
 // Output: parser to be check user inputs (used by test files)
-// Used by: all test files (inside tests folder)
+// Used by: virtual machine (virtual_machine/virtual_machine.js)
 
 const Parser = require('jison').Parser
 
@@ -116,7 +116,10 @@ const grammar = {
 		],
 
 		program_keyword: [
-			['PROGRAM', 'create_func_directory(); create_class_directory(); create_constants_directory(); insert_goto_main_quad()'],
+			[
+				'PROGRAM',
+				'create_func_directory(); create_class_directory(); create_constants_directory(); insert_goto_main_quad()',
+			],
 		],
 
 		program_id_keyword: [['ID', 'add_program_id($1)']],
@@ -262,9 +265,7 @@ const grammar = {
 			['iteration', '$$'],
 		],
 
-		main_keyword: [
-			['MAIN', 'fill_goto_main()']
-		],
+		main_keyword: [['MAIN', 'fill_goto_main()']],
 
 		// expression
 		expression: [
@@ -487,7 +488,7 @@ const grammar = {
 
 		closing_for_parenthesis: [[')', 'mark_for_condition()']],
 
-		closing_main_bracket: [['}', 'mark_main_end()']]
+		closing_main_bracket: [['}', 'mark_main_end()']],
 	},
 }
 
