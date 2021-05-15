@@ -1156,7 +1156,7 @@ verify_call_params_size = () => {
 	}
 }
 
-// Semantic action that clears all current function related variables and generates the 'gosub' quad
+// Semantic action that generates the 'gosub' quad
 // Does not receive any parameters
 // Does not return anything
 mark_func_call_end = () => {
@@ -1171,12 +1171,44 @@ mark_func_call_end = () => {
 			right_operand: null,
 			result: func_directory.get(current_func_name).starting_point,
 		})
-
-		// Reset current func name and parameters variable
-		current_func_name = null
-		params_count = null
-		params_types = null
 	}
+}
+
+// Semantic action that checks that the called function is non void, adds the assignment quad for the return value, and pushes it to the operands stack
+// Does not receive any parameters
+// Does not return anything
+add_func_return = () => {
+	if (func_directory.get(current_func_name).type === 'void') {
+		console.log('ERROR - Calling void function in expression')
+		throw 'ERROR - Calling void function in expression'
+	}
+
+	if (current_class == null) {
+		// Generate temp assignment quad -> =, func_name, null, temp_var
+
+		const result_type = func_directory.get(current_func_name).type
+		const scope = current_func == global_func ? 'global' : 'local'
+
+		const operator = '='
+		const left_operand = func_directory.get(global_func).var_directory.get(current_func_name).virtual_address
+		const result = virtual_memory.get_address(scope, result_type, 'temp')
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: left_operand,
+			right_operand: null,
+			result: result,
+		})
+		operands.push({ operand: result, type: result_type })
+	}
+}
+
+// Semantic action that clears all current function related variables
+// Does not receive any parameters
+// Does not return anything
+reset_func_call_helpers = () =>  {
+	current_func_name = null
+	params_count = null
+	params_types = null
 }
 
 // -> Helper functions

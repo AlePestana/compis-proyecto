@@ -386,7 +386,7 @@ const grammar = {
 			['', 'add_simple_id_operand()'], // If only a simple id is provided, add it to the operands stack and reset the current_simple_id variable to null
 			[
 				'starting_call_params_parenthesis params_call closing_call_params_parenthesis',
-				'mark_func_call_end()',
+				'mark_func_call_end(); add_func_return(); reset_func_call_helpers()',
 			], // Call a function with a return type
 		],
 
@@ -409,7 +409,7 @@ const grammar = {
 		void_func_call: [
 			[
 				'simple_id_keyword starting_call_params_parenthesis params_call closing_call_params_parenthesis ;',
-				'mark_func_call_end()',
+				'mark_func_call_end(); reset_func_call_helpers()',
 			],
 			['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
 		],
