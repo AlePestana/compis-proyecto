@@ -120,7 +120,8 @@ add_program_id = (program_id) => {
 	func_directory.set(program_id, { type: 'program', var_directory: new Map() })
 }
 
-// Semantic action that adds a function name to the global function directory, sets the current function variable and creates a new instance of a variable directory for the object
+// Semantic action that adds a function name to the global function directory, sets the current function variable and creates a new instance of a variable directory for the object.
+// In case it has a return type it adds that space to the global variables space
 // Receives the function name
 // Does not return anything
 add_func_id = (func_id) => {
@@ -142,6 +143,12 @@ add_func_id = (func_id) => {
 			throw 'ERROR - Function already exists'
 		}
 		func_directory.set(func_id, { type: currentType, var_directory: new Map() })
+		if (currentType !== 'void') {
+			func_directory.get(global_func).var_directory.set(func_id, {
+				type: currentType,
+				virtual_address: virtual_memory.get_address('global', currentType, 'perm'),
+			})
+		}
 	}
 }
 
@@ -1048,6 +1055,33 @@ mark_func_end = () => {
 	}
 }
 
+// Semantic action that verifies that a return expression matches the function's type and generates the 'return' quad
+// Does not receive any parameters
+// Does not return anything
+assign_return = () => {
+	const operator = 'return'
+	const result = operands.pop()
+
+	if (current_class == null) {
+		const func_return_type = func_directory.get(current_func).type
+		if (func_return_type === 'void') {
+			console.log('ERROR - Void function cannot have return expression')
+			throw 'ERROR - Void function cannot have return expression'
+		}
+		if (func_return_type !== result.type) {
+			console.log('ERROR - Return type mismatch')
+			throw 'ERROR - Return type mismatch'
+		}
+	}
+	
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: null,
+		right_operand: null,
+		result: result.operand,
+	})
+}
+
 // -> Funcs call semantic actions
 
 // Semantic action that checks if the function that was called exists in the global function directory and throws otherwise
@@ -1149,7 +1183,7 @@ verify_call_params_size = () => {
 	}
 }
 
-// Semantic action that clears all current function related variables and generates the 'gosub' quad
+// Semantic action that generates the 'gosub' quad
 // Does not receive any parameters
 // Does not return anything
 mark_func_call_end = () => {
@@ -1164,12 +1198,44 @@ mark_func_call_end = () => {
 			right_operand: null,
 			result: func_directory.get(current_func_name).starting_point,
 		})
-
-		// Reset current func name and parameters variable
-		current_func_name = null
-		params_count = null
-		params_types = null
 	}
+}
+
+// Semantic action that checks that the called function is non void, adds the assignment quad for the return value, and pushes it to the operands stack
+// Does not receive any parameters
+// Does not return anything
+add_func_return = () => {
+	if (func_directory.get(current_func_name).type === 'void') {
+		console.log('ERROR - Calling void function in expression')
+		throw 'ERROR - Calling void function in expression'
+	}
+
+	if (current_class == null) {
+		// Generate temp assignment quad -> =, func_name, null, temp_var
+
+		const result_type = func_directory.get(current_func_name).type
+		const scope = current_func == global_func ? 'global' : 'local'
+
+		const operator = '='
+		const left_operand = func_directory.get(global_func).var_directory.get(current_func_name).virtual_address
+		const result = virtual_memory.get_address(scope, result_type, 'temp')
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: left_operand,
+			right_operand: null,
+			result: result,
+		})
+		operands.push({ operand: result, type: result_type })
+	}
+}
+
+// Semantic action that clears all current function related variables
+// Does not receive any parameters
+// Does not return anything
+reset_func_call_helpers = () =>  {
+	current_func_name = null
+	params_count = null
+	params_types = null
 }
 
 // -> Helper functions
