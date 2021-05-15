@@ -24,12 +24,14 @@ reverse_operations = {
 	17: 'endfunc',
 	18: 'era',
 	19: 'gosub',
+	20: 'param',
+	21: 'end',
 }
 
 get_string_opcode = (num_opcode) => {
 	return reverse_operations[num_opcode]
 }
 
-console.log(get_string_opcode('1'))
+//console.log(get_string_opcode('1'))
 
 module.exports = get_string_opcode

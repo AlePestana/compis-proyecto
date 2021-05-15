@@ -110,7 +110,7 @@ const grammar = {
 
 		program: [
 			[
-				'program_keyword program_id_keyword ; classes dec_vars funcs main_keyword ( ) { statements } EOF',
+				'program_keyword program_id_keyword ; classes dec_vars funcs main_keyword ( ) { statements closing_main_bracket EOF',
 				'delete_func_directory(); delete_class_directory(); delete_constants_directory(); reset_virtual_memory(); $$ = true',
 			],
 		],
@@ -486,6 +486,8 @@ const grammar = {
 		until_keyword: [['UNTIL', 'mark_until()']],
 
 		closing_for_parenthesis: [[')', 'mark_for_condition()']],
+
+		closing_main_bracket: [['}', 'mark_main_end()']]
 	},
 }
 
