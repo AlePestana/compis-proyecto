@@ -390,7 +390,7 @@ const grammar = {
 			], // Call a function with a return type
 		],
 
-		func_call_id_keyword: [['ID', 'mark_func_call_start()']],
+		//func_call_id_keyword: [['ID', 'mark_func_call_start()']],
 
 		starting_call_params_parenthesis: [
 			['(', 'mark_func_call_start(); mark_call_params_start()'],
