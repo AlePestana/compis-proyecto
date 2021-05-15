@@ -120,7 +120,8 @@ add_program_id = (program_id) => {
 	func_directory.set(program_id, { type: 'program', var_directory: new Map() })
 }
 
-// Semantic action that adds a function name to the global function directory, sets the current function variable and creates a new instance of a variable directory for the object
+// Semantic action that adds a function name to the global function directory, sets the current function variable and creates a new instance of a variable directory for the object.
+// In case it has a return type it adds that space to the global variables space
 // Receives the function name
 // Does not return anything
 add_func_id = (func_id) => {
@@ -142,6 +143,12 @@ add_func_id = (func_id) => {
 			throw 'ERROR - Function already exists'
 		}
 		func_directory.set(func_id, { type: currentType, var_directory: new Map() })
+		if (currentType !== 'void') {
+			func_directory.get(global_func).var_directory.set(func_id, {
+				type: currentType,
+				virtual_address: virtual_memory.get_address('global', currentType, 'perm'),
+			})
+		}
 	}
 }
 
