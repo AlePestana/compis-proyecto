@@ -40,6 +40,7 @@ let current_simple_id = null
 let current_func_name = null
 let params_count = null
 let params_types = null
+let expecting_func_return = null
 
 // -> Global semantic actions
 
@@ -1057,7 +1058,11 @@ mark_func_end = () => {
 
 // -> Funcs call semantic actions
 
-// Semantic action that checks if the function that was called exists in the global function directory and throws otherwise
+set_expecting_func_return = () => {
+	expecting_func_return = true
+}
+
+// Semantic action that checks if the function that was called exists in the global function directory and throws otherwise, and then checks if a return is expected
 // Does not receive any parameters
 // Does not return anything
 mark_func_call_start = () => {
@@ -1071,6 +1076,12 @@ mark_func_call_start = () => {
 			console.log('ERROR - Function not defined')
 			throw 'ERROR - Function not defined'
 		}
+
+		if (expecting_func_return && func_directory.get(current_func_name).type === 'void') {
+			console.log('ERROR - Calling void function in expression')
+			throw 'ERROR - Calling void function in expression'
+		}
+		expecting_func_return = null
 	}
 }
 
