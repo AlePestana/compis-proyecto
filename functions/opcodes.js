@@ -23,6 +23,8 @@ operations = {
 	endfunc: 17,
 	era: 18,
 	gosub: 19,
+	param: 20,
+	end: 21,
 }
 
 get_opcode = (string_opcode) => {

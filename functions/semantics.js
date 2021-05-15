@@ -72,6 +72,43 @@ create_constants_directory = () => {
 	constants_directory = new Map()
 }
 
+// Semantic action that inserts the initial goto quad to go to the main program quads
+// Does not receive any parameters
+// Does not return anything
+insert_goto_main_quad = () => {
+	
+	const operator = 'goto'
+	const left_operand = null
+	const right_operand = null
+	const result = 'pending'
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
+}
+
+// Semantic action that fills the initial goto (main) with the next quad counter
+// Does not receive any parameters
+// Does not return anything
+fill_goto_main = () => {
+	quads.data[0].result = quads.count
+}
+
+// Semantic action that adds the final end quad
+// Does not receive any parameters
+// Does not return anything
+mark_main_end = () => {
+	operator = 'end'
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: null,
+		right_operand: null,
+		result: null,
+	})
+}
+
 // Semantic action that adds the program name to the function directory and sets both the global and current function variables
 // Receives the program name
 // Does not return anything
@@ -882,8 +919,14 @@ mark_for_end = () => {
 create_params_directory = () => {
 	// console.log('inside create_params_directory')
 	if (current_class == null) {
+		// The var_directory of the function at this point only has the parameters
 		params_directory = new Map(func_directory.get(current_func).var_directory)
-		func_directory.get(current_func).params_directory = params_directory
+		let params_type_list = new Array()
+		for (let [param, info] of params_directory) {
+			params_type_list.push(info.type)
+		}
+		//console.log(params_type_list)
+		func_directory.get(current_func).params_type_list = params_type_list
 	}
 }
 
@@ -897,12 +940,12 @@ mark_params_size = () => {
 		func_size_directory = new Map()
 		let params_size = { int: 0, float: 0, char: 0 }
 
-		for (let value of params_directory.values()) {
-			if (value.type === 'int') {
+		for (let type of func_directory.get(current_func).params_type_list) {
+			if (type === 'int') {
 				params_size.int += 1
-			} else if (value.type === 'float') {
+			} else if (type === 'float') {
 				params_size.float += 1
-			} else if (value.type === 'char') {
+			} else if (type === 'char') {
 				params_size.char += 1
 			}
 		}
@@ -1035,23 +1078,19 @@ mark_call_params_start = () => {
 		// Start parameter counter to 1
 		params_count = 1
 
-		// Generate array of parameters types of the form -> [ { type: 'int' } ]
-		params_types = Array.from(
-			func_directory.get(current_func_name).params_directory.values()
-		)
+		// Generate array of parameters types
+		params_types = func_directory.get(current_func_name).params_type_list
 	}
 }
 
-// Semantic action that
+// Semantic action that verifies a function call's argument and generates it param quad
 // Does not receive any parameters
 // Does not return anything
 add_call_param = () => {
 	// console.log('inside add_call_param')
 
 	if (current_class == null) {
-		const current_param = operands.pop()
-
-		// Generate params quad!!!
+		const current_argument = operands.pop()
 
 		// More parameters were sent
 		if (params_count - 1 >= params_types.length) {
@@ -1059,9 +1098,19 @@ add_call_param = () => {
 			throw 'ERROR - Number of parameters required does not match'
 		}
 
-		if (current_param.type !== params_types[params_count - 1].type) {
+		if (current_argument.type !== params_types[params_count - 1]) {
 			console.log('ERROR - Parameter type does not match')
 			throw 'ERROR - Parameter type does not match'
+		} else {
+			const operator = 'param'
+			const left_operand = current_argument.operand
+			const result = 'param' + params_count
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand: left_operand,
+				right_operand: null,
+				result: result,
+			})
 		}
 	}
 }
