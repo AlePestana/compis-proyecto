@@ -248,8 +248,12 @@ const grammar = {
 		func_statements: [['statements return_statement', '$$']],
 
 		return_statement: [
-			['RETURN expression ; func_statements', '$$'],
+			['return_expression ; func_statements', '$$'],
 			['', '$$'],
+		],
+
+		return_expression: [
+			['RETURN expression', 'assign_return()'],
 		],
 
 		statements: [

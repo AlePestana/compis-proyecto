@@ -1055,6 +1055,33 @@ mark_func_end = () => {
 	}
 }
 
+// Semantic action that verifies that a return expression matches the function's type and generates the 'return' quad
+// Does not receive any parameters
+// Does not return anything
+assign_return = () => {
+	const operator = 'return'
+	const result = operands.pop()
+
+	if (current_class == null) {
+		const func_return_type = func_directory.get(current_func).type
+		if (func_return_type === 'void') {
+			console.log('ERROR - Void function cannot have return expression')
+			throw 'ERROR - Void function cannot have return expression'
+		}
+		if (func_return_type !== result.type) {
+			console.log('ERROR - Return type mismatch')
+			throw 'ERROR - Return type mismatch'
+		}
+	}
+	
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: null,
+		right_operand: null,
+		result: result.operand,
+	})
+}
+
 // -> Funcs call semantic actions
 
 // Semantic action that checks if the function that was called exists in the global function directory and throws otherwise
