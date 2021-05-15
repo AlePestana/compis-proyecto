@@ -110,13 +110,13 @@ const grammar = {
 
 		program: [
 			[
-				'program_keyword program_id_keyword ; classes dec_vars funcs MAIN ( ) { statements } EOF',
+				'program_keyword program_id_keyword ; classes dec_vars funcs main_keyword ( ) { statements } EOF',
 				'delete_func_directory(); delete_class_directory(); delete_constants_directory(); reset_virtual_memory(); $$ = true',
 			],
 		],
 
 		program_keyword: [
-			['PROGRAM', 'create_func_directory(); create_class_directory(); create_constants_directory()'],
+			['PROGRAM', 'create_func_directory(); create_class_directory(); create_constants_directory(); insert_goto_main_quad()'],
 		],
 
 		program_id_keyword: [['ID', 'add_program_id($1)']],
@@ -260,6 +260,10 @@ const grammar = {
 			['io', '$$'],
 			['control', '$$'],
 			['iteration', '$$'],
+		],
+
+		main_keyword: [
+			['MAIN', 'fill_goto_main()']
 		],
 
 		// expression

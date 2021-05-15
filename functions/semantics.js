@@ -72,6 +72,30 @@ create_constants_directory = () => {
 	constants_directory = new Map()
 }
 
+// Semantic action that inserts the initial goto quad to go to the main program quads
+// Does not receive any parameters
+// Does not return anything
+insert_goto_main_quad = () => {
+	
+	const operator = 'goto'
+	const left_operand = null
+	const right_operand = null
+	const result = 'pending'
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
+}
+
+// Semantic action that fills the initial goto (main) with the next quad counter
+// Does not receive any parameters
+// Does not return anything
+fill_goto_main = () => {
+	quads.data[0].result = quads.count
+}
+
 // Semantic action that adds the program name to the function directory and sets both the global and current function variables
 // Receives the program name
 // Does not return anything
