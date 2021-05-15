@@ -147,7 +147,7 @@ const test18 = parser.parse(`
 	program prog1; 
     var <- float z; ->
 
-	void func myFunc1 (var <- int x; ->)
+	float func myFunc1 (var <- int x; ->)
     var <- float y; ->
     { return x / y; }
 
@@ -159,7 +159,7 @@ const test19 = parser.parse(`
 	program prog1; 
     var <- float z; ->
 	
-	void func myFunc1 (var <- int x; ->)
+	float func myFunc1 (var <- int x; ->)
     var <- float y; ->
     { return z / y * x; }
 
