@@ -386,14 +386,12 @@ const grammar = {
 			['', 'add_simple_id_operand()'], // If only a simple id is provided, add it to the operands stack and reset the current_simple_id variable to null
 			[
 				// If we take out set_expecting_func_return it works
-				'set_expecting_func_return starting_call_params_parenthesis params_call closing_call_params_parenthesis',
+				'starting_call_params_parenthesis params_call closing_call_params_parenthesis',
 				'mark_func_call_end()',
 			], // Call a function with a return type
 		],
 
 		//func_call_id_keyword: [['ID', 'mark_func_call_start()']],
-
-		set_expecting_func_return: ['', "set_expecting_func_return()"],
 
 		starting_call_params_parenthesis: [
 			['(', 'mark_func_call_start(); mark_call_params_start()'],
