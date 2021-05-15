@@ -25,6 +25,7 @@ operations = {
 	gosub: 19,
 	param: 20,
 	end: 21,
+	return: 22,
 }
 
 get_opcode = (string_opcode) => {
