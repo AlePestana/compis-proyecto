@@ -1,0 +1,6 @@
+program prog1;
+var <- float x; ->
+main() { 
+    x = 10 / 5 * 1;
+    print(x); 
+}

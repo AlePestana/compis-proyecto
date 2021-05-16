@@ -2,7 +2,7 @@
 // Lexer and parser that specifies the rules, tokens, and grammar
 // Inputs: does not receive parameters
 // Output: parser to be check user inputs (used by test files)
-// Used by: all test files (inside tests folder)
+// Used by: virtual machine (virtual_machine/virtual_machine.js)
 
 const Parser = require('jison').Parser
 
@@ -110,13 +110,16 @@ const grammar = {
 
 		program: [
 			[
-				'program_keyword program_id_keyword ; classes dec_vars funcs MAIN ( ) { statements } EOF',
+				'program_keyword program_id_keyword ; classes dec_vars funcs main_keyword ( ) { statements closing_main_bracket EOF',
 				'delete_func_directory(); delete_class_directory(); delete_constants_directory(); reset_virtual_memory(); $$ = true',
 			],
 		],
 
 		program_keyword: [
-			['PROGRAM', 'create_func_directory(); create_class_directory(); create_constants_directory()'],
+			[
+				'PROGRAM',
+				'create_func_directory(); create_class_directory(); create_constants_directory(); insert_goto_main_quad()',
+			],
 		],
 
 		program_id_keyword: [['ID', 'add_program_id($1)']],
@@ -245,8 +248,12 @@ const grammar = {
 		func_statements: [['statements return_statement', '$$']],
 
 		return_statement: [
-			['RETURN expression ; func_statements', '$$'],
+			['return_expression ; func_statements', '$$'],
 			['', '$$'],
+		],
+
+		return_expression: [
+			['RETURN expression', 'assign_return()'],
 		],
 
 		statements: [
@@ -261,6 +268,8 @@ const grammar = {
 			['control', '$$'],
 			['iteration', '$$'],
 		],
+
+		main_keyword: [['MAIN', 'fill_goto_main()']],
 
 		// expression
 		expression: [
@@ -381,11 +390,11 @@ const grammar = {
 			['', 'add_simple_id_operand()'], // If only a simple id is provided, add it to the operands stack and reset the current_simple_id variable to null
 			[
 				'starting_call_params_parenthesis params_call closing_call_params_parenthesis',
-				'mark_func_call_end()',
+				'mark_func_call_end(); add_func_return(); reset_func_call_helpers()',
 			], // Call a function with a return type
 		],
 
-		func_call_id_keyword: [['ID', 'mark_func_call_start()']],
+		//func_call_id_keyword: [['ID', 'mark_func_call_start()']],
 
 		starting_call_params_parenthesis: [
 			['(', 'mark_func_call_start(); mark_call_params_start()'],
@@ -404,7 +413,7 @@ const grammar = {
 		void_func_call: [
 			[
 				'simple_id_keyword starting_call_params_parenthesis params_call closing_call_params_parenthesis ;',
-				'mark_func_call_end()',
+				'mark_func_call_end(); reset_func_call_helpers()',
 			],
 			['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
 		],
@@ -475,13 +484,15 @@ const grammar = {
 		for_assignment: [
 			[
 				'var_name_assignment_keyword assignment_operator expression',
-				'assign_exp(); for_start_exp()',
+				'assign_exp(); for_start_exp($1)',
 			],
 		],
 
 		until_keyword: [['UNTIL', 'mark_until()']],
 
 		closing_for_parenthesis: [[')', 'mark_for_condition()']],
+
+		closing_main_bracket: [['}', 'mark_main_end()']],
 	},
 }
 

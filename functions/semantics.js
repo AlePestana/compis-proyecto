@@ -20,6 +20,9 @@ const Queue = require('./helpers/queue.js')
 // Debug helper functions
 const get_string_opcode = require('./debug/reverse_opcodes')
 
+// Virtual machine information
+virtual_machine_info = null
+
 // Declare quadruples
 let quads = new Queue()
 
@@ -72,6 +75,42 @@ create_constants_directory = () => {
 	constants_directory = new Map()
 }
 
+// Semantic action that inserts the initial goto quad to go to the main program quads
+// Does not receive any parameters
+// Does not return anything
+insert_goto_main_quad = () => {
+	const operator = 'goto'
+	const left_operand = null
+	const right_operand = null
+	const result = 'pending'
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
+}
+
+// Semantic action that fills the initial goto (main) with the next quad counter
+// Does not receive any parameters
+// Does not return anything
+fill_goto_main = () => {
+	quads.data[0].result = quads.count
+}
+
+// Semantic action that adds the final end quad
+// Does not receive any parameters
+// Does not return anything
+mark_main_end = () => {
+	operator = 'end'
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: null,
+		right_operand: null,
+		result: null,
+	})
+}
+
 // Semantic action that adds the program name to the function directory and sets both the global and current function variables
 // Receives the program name
 // Does not return anything
@@ -81,7 +120,8 @@ add_program_id = (program_id) => {
 	func_directory.set(program_id, { type: 'program', var_directory: new Map() })
 }
 
-// Semantic action that adds a function name to the global function directory, sets the current function variable and creates a new instance of a variable directory for the object
+// Semantic action that adds a function name to the global function directory, sets the current function variable and creates a new instance of a variable directory for the object.
+// In case it has a return type it adds that space to the global variables space
 // Receives the function name
 // Does not return anything
 add_func_id = (func_id) => {
@@ -103,6 +143,12 @@ add_func_id = (func_id) => {
 			throw 'ERROR - Function already exists'
 		}
 		func_directory.set(func_id, { type: currentType, var_directory: new Map() })
+		if (currentType !== 'void') {
+			func_directory.get(global_func).var_directory.set(func_id, {
+				type: currentType,
+				virtual_address: virtual_memory.get_address('global', currentType, 'perm'),
+			})
+		}
 	}
 }
 
@@ -121,21 +167,47 @@ add_id = (id) => {
 	if (current_class != null) {
 		// Adding var in class
 		if (is_attr_dec) {
-			class_directory
-				.get(current_class)
-				.attr_directory.set(id, { type: currentType }) // Set vAddress here
+			class_directory.get(current_class).attr_directory.set(id, {
+				type: currentType,
+				virtual_address: virtual_memory.get_address(
+					'global',
+					currentType,
+					'perm'
+				),
+			}) // ???
 		} else {
 			// Is method declaration
 			class_directory
 				.get(current_class)
 				.method_directory.get(current_func)
-				.var_directory.set(id, { type: currentType })
+				.var_directory.set(id, {
+					type: currentType,
+					virtual_address: virtual_memory.get_address(
+						'local',
+						currentType,
+						'perm'
+					),
+				})
 		}
 	} else {
 		// Adding var in func / global var
-		func_directory
-			.get(current_func)
-			.var_directory.set(id, { type: currentType })
+		const scope = current_func == global_func ? 'global' : 'local'
+		if (
+			currentType === 'int' ||
+			currentType === 'float' ||
+			currentType === 'char'
+		) {
+			// Basic type
+			func_directory.get(current_func).var_directory.set(id, {
+				type: currentType,
+				virtual_address: virtual_memory.get_address(scope, currentType, 'perm'),
+			})
+		} else {
+			// Instance of a class, do not add virtual memory address
+			func_directory
+				.get(current_func)
+				.var_directory.set(id, { type: currentType })
+		}
 	}
 }
 
@@ -211,6 +283,13 @@ finish_func_dec = () => {
 // Does not receive any parameters
 // Does not return anything
 delete_func_directory = function () {
+	// Set virtual machine information object before clearing structures
+	virtual_machine_info = {
+		quads,
+		func_directory,
+		constants_directory,
+	}
+	console.log('Func directory before exit')
 	console.log(func_directory)
 	func_directory = null
 	console.log('Quads before exit')
@@ -327,6 +406,13 @@ add_operand = (operand, type) => {
 						.method_directory.get(current_func)
 						.var_directory.get(operand).type
 				: class_directory.get(current_class).attr_directory.get(operand).type
+			operand = is_inside_class_method
+				? class_directory
+						.get(current_class)
+						.method_directory.get(current_func)
+						.var_directory.get(operand).virtual_address
+				: class_directory.get(current_class).attr_directory.get(operand)
+						.virtual_address
 		} else {
 			// Search in current var_directory
 			const is_inside_current_func =
@@ -338,12 +424,29 @@ add_operand = (operand, type) => {
 
 			if (is_inside_current_func) {
 				type = func_directory.get(current_func).var_directory.get(operand).type
+				operand = func_directory
+					.get(current_func)
+					.var_directory.get(operand).virtual_address
 			} else if (is_inside_global_scope) {
 				type = func_directory.get(global_func).var_directory.get(operand).type
+				operand = func_directory
+					.get(global_func)
+					.var_directory.get(operand).virtual_address
 			} else {
 				type = 'undefined'
 			}
 		}
+	} else {
+		// It is a constant
+		switch (type) {
+			case 'int':
+				operand = parseInt(operand)
+				break
+			case 'float':
+				operand = parseFloat(operand)
+				break
+		}
+		operand = get_constant_virtual_address(operand, type)
 	}
 	operands.push({ operand, type })
 }
@@ -352,7 +455,7 @@ add_operand = (operand, type) => {
 // Receives the operator
 // Does not return anything
 add_operator = (operator) => {
-	console.log('adding operator = ' + operator)
+	// console.log('adding operator = ' + operator)
 	operators.push(operator)
 }
 
@@ -360,7 +463,7 @@ add_operator = (operator) => {
 // Does not receive any parameters
 // Does not return anything
 add_mult_div_operation = () => {
-	console.log('inside add_mult_div_operation')
+	// console.log('inside add_mult_div_operation')
 	if (operators.top() === '*' || operators.top() === '/') {
 		const right = operands.pop()
 		const right_operand = right.operand
@@ -371,7 +474,8 @@ add_mult_div_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			const result = `temp${res_count++}`
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, result_type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -390,7 +494,7 @@ add_mult_div_operation = () => {
 // Does not receive any parameters
 // Does not return anything
 add_sum_sub_operation = () => {
-	console.log('inside add_sum_sub_operation')
+	// console.log('inside add_sum_sub_operation')
 	if (operators.top() === '+' || operators.top() === '-') {
 		const right = operands.pop()
 		const right_operand = right.operand
@@ -401,7 +505,8 @@ add_sum_sub_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			const result = `temp${res_count++}`
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, result_type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -420,7 +525,7 @@ add_sum_sub_operation = () => {
 // Does not receive any parameters
 // Does not return anything
 start_subexpression = () => {
-	console.log('inside start_subexpression')
+	// console.log('inside start_subexpression')
 	operators.push('(')
 }
 
@@ -428,7 +533,7 @@ start_subexpression = () => {
 // Does not receive any parameters
 // Does not return anything
 end_subexpression = () => {
-	console.log('inside end_subexpression')
+	// console.log('inside end_subexpression')
 	operators.pop()
 }
 
@@ -436,7 +541,7 @@ end_subexpression = () => {
 // Does not receive any parameters
 // Does not return anything
 add_rel_operation = () => {
-	console.log('inside add_rel_operation')
+	// console.log('inside add_rel_operation')
 	if (
 		operators.top() === '>' ||
 		operators.top() === '<' ||
@@ -452,7 +557,8 @@ add_rel_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			const result = `temp${res_count++}`
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, result_type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -471,7 +577,7 @@ add_rel_operation = () => {
 // Does not receive any parameters
 // Does not return anything
 add_and_operation = () => {
-	console.log('inside add_and_operation')
+	// console.log('inside add_and_operation')
 	if (operators.top() === '&') {
 		const right = operands.pop()
 		const right_operand = right.operand
@@ -482,7 +588,8 @@ add_and_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			const result = `temp${res_count++}`
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, result_type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -501,7 +608,7 @@ add_and_operation = () => {
 // Does not receive any parameters
 // Does not return anything
 add_or_operation = () => {
-	console.log('inside add_or_operation')
+	// console.log('inside add_or_operation')
 	if (operators.top() === '|') {
 		const right = operands.pop()
 		const right_operand = right.operand
@@ -512,7 +619,8 @@ add_or_operation = () => {
 		const result_type = oracle(left.type, right.type, operator)
 
 		if (result_type !== 'error') {
-			const result = `temp${res_count++}`
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, result_type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -533,7 +641,7 @@ add_or_operation = () => {
 // Does not receive any parameters
 // Does not return anything
 print_expression = () => {
-	console.log('inside print_expression')
+	// console.log('inside print_expression')
 
 	const operator = 'print'
 	const res = operands.pop()
@@ -554,18 +662,12 @@ print_expression = () => {
 // Receives the string to print
 // Does not return anything
 print_string = (string) => {
-	console.log('inside print_string')
+	// console.log('inside print_string')
 
 	const operator = 'print'
 
 	// Get string virtual address
-	let result
-	if (constants_directory.has(string)) {
-		result = constants_directory.get(string)
-	} else {
-		result = virtual_memory.get_address('constant', 'string', 'null')
-		constants_directory.set(string, result)
-	}
+	const result = get_constant_virtual_address(string, 'string')
 
 	const left_operand = null
 	const right_operand = null
@@ -582,7 +684,7 @@ print_string = (string) => {
 // Receives the variable name
 // Does not return anything
 read_var = (variable) => {
-	console.log('inside read_var')
+	// console.log('inside read_var')
 
 	// if variable is within scope
 	if (is_var_in_scope(variable)) {
@@ -608,7 +710,7 @@ read_var = (variable) => {
 // Does not receive any parameters
 // Does not return anything
 assign_exp = () => {
-	console.log('inside assign_exp')
+	// console.log('inside assign_exp')
 
 	const res = operands.pop()
 	const result = res.operand
@@ -640,7 +742,7 @@ assign_exp = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_if_condition = () => {
-	console.log('inside mark_if_condition')
+	// console.log('inside mark_if_condition')
 
 	const cond = operands.pop()
 	if (cond.type !== 'int') {
@@ -665,7 +767,7 @@ mark_if_condition = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_if_end = () => {
-	console.log('inside mark_if_end')
+	// console.log('inside mark_if_end')
 
 	const end = jumps.pop()
 	quads.data[end].result = quads.count
@@ -675,7 +777,7 @@ mark_if_end = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_else = () => {
-	console.log('inside mark_else')
+	// console.log('inside mark_else')
 
 	const false_jump = jumps.pop()
 
@@ -701,7 +803,7 @@ mark_else = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_while_start = () => {
-	console.log('inside mark_while_start')
+	// console.log('inside mark_while_start')
 
 	jumps.push(quads.count)
 }
@@ -710,7 +812,7 @@ mark_while_start = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_while_condition = () => {
-	console.log('inside mark_while_condition')
+	// console.log('inside mark_while_condition')
 
 	const cond = operands.pop()
 	if (cond.type !== 'int') {
@@ -735,7 +837,7 @@ mark_while_condition = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_while_end = () => {
-	console.log('inside mark_while_end')
+	// console.log('inside mark_while_end')
 
 	const false_jump = jumps.pop()
 	const return_jump = jumps.pop()
@@ -757,8 +859,8 @@ mark_while_end = () => {
 // Semantic action that pushes to the for stack the last variable (the result stored in the quadruple before)
 // Does not receive any parameters
 // Does not return anything
-for_start_exp = () => {
-	forStack.push(quads.data[quads.count - 1].result)
+for_start_exp = (control_variable) => {
+	forStack.push(control_variable)
 }
 
 // Semantic action that adds to the operands stack the top of the for stack (the last variable) and the < operator to the operators stack, plus it marks a false bottom on the operators stack
@@ -830,10 +932,16 @@ mark_for_end = () => {
 // Does not receive any parameters
 // Does not return anything
 create_params_directory = () => {
-	console.log('inside create_params_directory')
+	// console.log('inside create_params_directory')
 	if (current_class == null) {
+		// The var_directory of the function at this point only has the parameters
 		params_directory = new Map(func_directory.get(current_func).var_directory)
-		func_directory.get(current_func).params_directory = params_directory
+		let params_type_list = new Array()
+		for (let [param, info] of params_directory) {
+			params_type_list.push(info.type)
+		}
+		//console.log(params_type_list)
+		func_directory.get(current_func).params_type_list = params_type_list
 	}
 }
 
@@ -841,18 +949,18 @@ create_params_directory = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_params_size = () => {
-	console.log('inside mark_params_size')
+	// console.log('inside mark_params_size')
 
 	if (current_class == null) {
 		func_size_directory = new Map()
 		let params_size = { int: 0, float: 0, char: 0 }
 
-		for (let value of params_directory.values()) {
-			if (value.type === 'int') {
+		for (let type of func_directory.get(current_func).params_type_list) {
+			if (type === 'int') {
 				params_size.int += 1
-			} else if (value.type === 'float') {
+			} else if (type === 'float') {
 				params_size.float += 1
-			} else if (value.type === 'char') {
+			} else if (type === 'char') {
 				params_size.char += 1
 			}
 		}
@@ -864,7 +972,7 @@ mark_params_size = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_local_vars_size = () => {
-	console.log('inside mark_local_vars_size')
+	// console.log('inside mark_local_vars_size')
 	if (current_class == null) {
 		let local_vars_size = { int: 0, float: 0, char: 0 }
 
@@ -895,7 +1003,7 @@ mark_local_vars_size = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_func_start = () => {
-	console.log('inside mark_func_start')
+	// console.log('inside mark_func_start')
 	// Mark where the current function starts
 	if (current_class == null) {
 		func_directory.get(current_func).starting_point = quads.count
@@ -906,7 +1014,7 @@ mark_func_start = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_func_end = () => {
-	console.log('inside mark_func_end')
+	// console.log('inside mark_func_end')
 
 	if (current_class == null) {
 		// Release current var_directory
@@ -933,14 +1041,45 @@ mark_func_end = () => {
 		let temps_size = { total: 0 }
 
 		func_quads.forEach((quad) => {
-			// ERROR -> Change to dynamically check if the address stored in the quad.result belongs to a temporal variable
-			if (quad.result !== null && quad.result.includes('temp')) {
+			if (
+				quad.result !== null &&
+				virtual_memory.is_local_temp_address(quad.result)
+			) {
 				temps_size.total += 1
 			}
 		})
 
 		func_size_directory.set('temps_size', temps_size)
+		func_directory.get(current_func).func_size_directory = func_size_directory
+		func_size_directory = null
 	}
+}
+
+// Semantic action that verifies that a return expression matches the function's type and generates the 'return' quad
+// Does not receive any parameters
+// Does not return anything
+assign_return = () => {
+	const operator = 'return'
+	const result = operands.pop()
+
+	if (current_class == null) {
+		const func_return_type = func_directory.get(current_func).type
+		if (func_return_type === 'void') {
+			console.log('ERROR - Void function cannot have return expression')
+			throw 'ERROR - Void function cannot have return expression'
+		}
+		if (func_return_type !== result.type) {
+			console.log('ERROR - Return type mismatch')
+			throw 'ERROR - Return type mismatch'
+		}
+	}
+	
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: null,
+		right_operand: null,
+		result: result.operand,
+	})
 }
 
 // -> Funcs call semantic actions
@@ -949,7 +1088,7 @@ mark_func_end = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_func_call_start = () => {
-	console.log('inside mark_func_call_start')
+	// console.log('inside mark_func_call_start')
 
 	if (current_class == null) {
 		current_func_name = current_simple_id
@@ -966,7 +1105,7 @@ mark_func_call_start = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_call_params_start = () => {
-	console.log('inside mark_call_params_start')
+	// console.log('inside mark_call_params_start')
 
 	if (current_class == null) {
 		// Generate era quad -> era, func_name, null, null
@@ -981,21 +1120,19 @@ mark_call_params_start = () => {
 		// Start parameter counter to 1
 		params_count = 1
 
-		// Generate array of parameters types of the form -> [ { type: 'int' } ]
-		params_types = Array.from(
-			func_directory.get(current_func_name).params_directory.values()
-		)
+		// Generate array of parameters types
+		params_types = func_directory.get(current_func_name).params_type_list
 	}
 }
 
-// Semantic action that
+// Semantic action that verifies a function call's argument and generates it param quad
 // Does not receive any parameters
 // Does not return anything
 add_call_param = () => {
-	console.log('inside add_call_param')
+	// console.log('inside add_call_param')
 
 	if (current_class == null) {
-		const current_param = operands.pop()
+		const current_argument = operands.pop()
 
 		// More parameters were sent
 		if (params_count - 1 >= params_types.length) {
@@ -1003,9 +1140,19 @@ add_call_param = () => {
 			throw 'ERROR - Number of parameters required does not match'
 		}
 
-		if (current_param.type !== params_types[params_count - 1].type) {
+		if (current_argument.type !== params_types[params_count - 1]) {
 			console.log('ERROR - Parameter type does not match')
 			throw 'ERROR - Parameter type does not match'
+		} else {
+			const operator = 'param'
+			const left_operand = current_argument.operand
+			const result = 'param' + params_count
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand: left_operand,
+				right_operand: null,
+				result: result,
+			})
 		}
 	}
 }
@@ -1014,7 +1161,7 @@ add_call_param = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_next_call_param = () => {
-	console.log('inside mark_next_call_param')
+	// console.log('inside mark_next_call_param')
 
 	if (current_class == null) {
 		params_count++
@@ -1025,7 +1172,7 @@ mark_next_call_param = () => {
 // Does not receive any parameters
 // Does not return anything
 verify_call_params_size = () => {
-	console.log('inside verify_call_params_size')
+	// console.log('inside verify_call_params_size')
 
 	// More parameters were declared than sent
 	if (current_class == null) {
@@ -1036,11 +1183,11 @@ verify_call_params_size = () => {
 	}
 }
 
-// Semantic action that clears all current function related variables and generates the 'gosub' quad
+// Semantic action that generates the 'gosub' quad
 // Does not receive any parameters
 // Does not return anything
 mark_func_call_end = () => {
-	console.log('inside mark_func_call_end')
+	// console.log('inside mark_func_call_end')
 
 	if (current_class == null) {
 		// Generate gosub quad -> gosub, func_name, null, starting_point
@@ -1051,12 +1198,44 @@ mark_func_call_end = () => {
 			right_operand: null,
 			result: func_directory.get(current_func_name).starting_point,
 		})
-
-		// Reset current func name and parameters variable
-		current_func_name = null
-		params_count = null
-		params_types = null
 	}
+}
+
+// Semantic action that checks that the called function is non void, adds the assignment quad for the return value, and pushes it to the operands stack
+// Does not receive any parameters
+// Does not return anything
+add_func_return = () => {
+	if (func_directory.get(current_func_name).type === 'void') {
+		console.log('ERROR - Calling void function in expression')
+		throw 'ERROR - Calling void function in expression'
+	}
+
+	if (current_class == null) {
+		// Generate temp assignment quad -> =, func_name, null, temp_var
+
+		const result_type = func_directory.get(current_func_name).type
+		const scope = current_func == global_func ? 'global' : 'local'
+
+		const operator = '='
+		const left_operand = func_directory.get(global_func).var_directory.get(current_func_name).virtual_address
+		const result = virtual_memory.get_address(scope, result_type, 'temp')
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: left_operand,
+			right_operand: null,
+			result: result,
+		})
+		operands.push({ operand: result, type: result_type })
+	}
+}
+
+// Semantic action that clears all current function related variables
+// Does not receive any parameters
+// Does not return anything
+reset_func_call_helpers = () =>  {
+	current_func_name = null
+	params_count = null
+	params_types = null
 }
 
 // -> Helper functions
@@ -1115,6 +1294,19 @@ is_var_in_scope = (variable) => {
 		} else {
 			return func_directory.get(global_func).var_directory.has(variable)
 		}
+	}
+}
+
+// Function that checks if a constant value is already in the constants directory and returns its value or inserts it and generates a new value
+// Receives the constant and its type
+// Returns the virtual memory address for the constant
+get_constant_virtual_address = (constant, type) => {
+	if (constants_directory.has(constant)) {
+		return constants_directory.get(constant)
+	} else {
+		const result = virtual_memory.get_address('constant', type, 'null')
+		constants_directory.set(constant, result)
+		return result
 	}
 }
 
