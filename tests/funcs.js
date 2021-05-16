@@ -305,3 +305,31 @@ console.log(
 //         print("end program");
 //     }`)
 // console.log('--> ' + (test16 ? 'yes :)' : 'no :('))
+
+console.log(
+	'\n\nERROR TEST 17 - Calling a func in an expression with type mismatch'
+)
+// const test17 = parser.parse(`
+//     program prog1; 
+//     var <- float x, y; ->
+
+//     int func surprise (var <- int z; ->)
+//     var <- int k; ->
+//     {
+//         print("inside int function");
+//         print("setting global y var");
+//         y = y * 2;
+//         print("setting local k var");
+//         k = z + y + 3;
+//         print("returning k");
+//         return k;
+//     }
+
+//     main() {
+//         x = 5;
+//         y = 6;
+//         x = y;
+//         x = surprise(1);
+//         print("end program");
+//     }`)
+// console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
