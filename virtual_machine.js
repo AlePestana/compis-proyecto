@@ -4,6 +4,30 @@
 // Output: prints in the console the outputs of the execution of quadruples
 // Used by: ArrowScript.js
 
+// Helper structures
+const Memory = require('./functions/helpers/memory.js')
+
+// Determine the offsets for addresses for main (stored as global on parser)
+const main_func_offsets = {
+	int_vars_offset: 5000,
+	float_vars_offset: 9000,
+	char_vars_offset: 12000,
+	int_temps_offset: 8000,
+	float_temps_offset: 11000,
+}
+
+// Determine the offsets for addresses for functions (stored as local on parser)
+const funcs_offsets = {
+	int_vars_offset: 14000,
+	float_vars_offset: 19000,
+	char_vars_offset: 23000,
+	int_temps_offset: 18000,
+	float_temps_offset: 22000,
+}
+
+// Function that executes the virtual machine by creating the data, code, and stack segment
+// Receives the relevant information from the parser (quads, func_directory, and constants_directory)
+// Does not return anything since it performs the necessary operations inside
 async function execute_virtual_machine(virtual_machine_info) {
 	if (virtual_machine_info == null) {
 		console.log('Expected information from parser inside virtual machine')
@@ -14,3 +38,16 @@ async function execute_virtual_machine(virtual_machine_info) {
 }
 
 module.exports = { execute_virtual_machine }
+
+/*
+Example using the Memory data structure
+const main_memory = new Memory(main_func_offsets)
+console.log('created main memory')
+console.log(main_memory)
+main_memory.push(1, 'vars', 'int')
+main_memory.push(2, 'vars', 'int')
+console.log(main_memory.memory)
+main_memory.update(2, 5000, 'vars', 'int')
+console.log(main_memory.memory)
+console.log(main_memory.get(5001, 'vars', 'int'))
+*/
