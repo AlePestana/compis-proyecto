@@ -6,6 +6,7 @@
 
 // Helper structures
 const Memory = require('./functions/helpers/memory.js')
+const Stack = require('./functions/helpers/stack')
 
 // Determine the offsets for addresses for main (stored as global on parser)
 const main_func_offsets = {
@@ -34,7 +35,61 @@ async function execute_virtual_machine(virtual_machine_info) {
 		throw 'Expected information from parser inside virtual machine'
 	}
 
+	// Retrieve relevant information from parser
 	const { quads, func_directory, constants_directory } = virtual_machine_info
+
+	// Declare all necessary types
+	const code_segment = quads
+	const data_segment = {}
+	const exec_stack = new Stack()
+	let ip = 0 // instruction pointer
+
+	// Create memory map for main
+	// Data segment will have the form -> { main: {}, func1: {}}
+	data_segment['main'] = new Memory(main_func_offsets)
+
+	// Execute code_segment
+	while (ip != -1) {
+		const quad = code_segment.get(ip)
+		switch (quad.operator) {
+			case 1: // +
+			case 2: // -
+			case 3: // *
+			case 4: // /
+			case 5: // <
+			case 6: // >
+			case 7: // ==
+			case 8: // !=
+			case 9: // &
+			case 10: // |
+			case 11: // =
+			case 12: // print
+			case 13: // read
+			case 14: // gotoT
+			case 15: // gotoF
+				ip++
+				break
+
+			case 16: // goto
+				ip = quad.result
+				break
+			case 17: // endfunc
+			case 18: // era
+			case 19: // gosub
+			case 20: // param
+				ip++
+				break
+			case 21: // end
+				ip = -1
+				break
+			case 22: // return
+				ip++
+				break
+			default:
+				ip = -1
+				break
+		}
+	}
 }
 
 module.exports = { execute_virtual_machine }
