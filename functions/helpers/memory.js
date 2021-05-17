@@ -4,6 +4,11 @@
 // Output: the Memory data structure
 // Used by: virtual_machine.js
 
+// Function to check if a given address is within a range
+function isBetween(x, min, max) {
+	return x >= min && x < max
+}
+
 class Memory {
 	constructor({
 		int_vars_offset,
@@ -62,8 +67,30 @@ class Memory {
 		return this.memory[scope][type][index]
 	}
 
+	// Dependending on the provided address, returns the type of variable (according to the scopes and offsets specified)
+	get_address_type(address, scope) {
+		if (scope == 'vars') {
+			if (isBetween(address, this.int_vars_offset, this.float_vars_offset)) {
+				return 'int'
+			} else if (
+				isBetween(address, this.float_vars_offset, this.char_vars_offset)
+			) {
+				return 'float'
+			} else {
+				return 'char'
+			}
+		} else {
+			if (isBetween(address, this.int_temps_offset, this.float_temps_offset)) {
+				return 'int'
+			} else {
+				return 'float'
+			}
+		}
+	}
+
 	// Update the value from a given address
-	update(value, address, scope, type) {
+	set(value, address, scope) {
+		const type = this.get_address_type(address, scope)
 		const index = address - this.get_offset(scope, type)
 		this.memory[scope][type][index] = value
 	}

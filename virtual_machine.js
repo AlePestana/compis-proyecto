@@ -38,6 +38,12 @@ const getConstant = (map, searchValue) => {
 	}
 }
 
+const getVarType = (func_directory, address) => {
+	for (let [, value] of func_directory.entries()) {
+		if (value.virtual_address === address) return value.type
+	}
+}
+
 // Function that executes the virtual machine by creating the data, code, and stack segment
 // Receives the relevant information from the parser (quads, func_directory, and constants_directory)
 // Does not return anything since it performs the necessary operations inside
@@ -55,30 +61,88 @@ async function execute_virtual_machine(virtual_machine_info) {
 	const data_segment = {}
 	const exec_stack = new Stack()
 	let ip = 0 // instruction pointer
-	let current_func = 'main'
+	let current_func = func_directory.entries().next().value[0] // returns the name of the first func inside the current directory
 
 	// Create memory map for main
 	// Data segment will have the form -> { main: {}, func1: {}}
-	data_segment['main'] = new Memory(main_func_offsets)
+	data_segment[current_func] = new Memory(main_func_offsets)
+
+	const getOperandValue = (address) => {
+		console.log('searching for address ' + address)
+		if (isConstant(address)) {
+			return getConstant(constants_directory, address)
+		} else if (func_directory.get(current_func).temps_directory.has(address)) {
+			const temp_type = func_directory
+				.get(current_func)
+				.temps_directory.get(address).type
+			// Look for temp value in corresponding memory (since it must have already been stored)
+			return data_segment[current_func].get(address, 'temps', temp_type)
+		} else {
+			const var_type = getVarType(
+				func_directory.get(current_func).var_directory,
+				address
+			)
+			// Look for value in corresponding memory ?????
+			return data_segment[current_func].get(address, 'vars', var_type)
+		}
+	}
+
+	let left_operand, right_operand, result, address
 
 	// Execute code_segment
 	while (ip != -1) {
 		const quad = code_segment.get(ip)
 		switch (quad.operator) {
 			case 1: // +
-				// const left_operand = isConstant(quad.left_operand)
-				// 	? getConstant(constants_directory, quad.left_operand)
-				// 	: 0
-				// const right_operand = isConstant(quad.right_operand)
-				// 	? getConstant(constants_directory, quad.right_operand)
-				// 	: 0
-				// const result = left_operand + right_operand
+				left_operand = getOperandValue(quad.left_operand)
+				right_operand = getOperandValue(quad.right_operand)
+				result =
+					getOperandValue(quad.left_operand) +
+					getOperandValue(quad.right_operand)
+				address = quad.result
 				// Save result on memory
-				// data_segment[main].push(result)
+				data_segment[current_func].set(result, address, 'temps')
+				ip++
+				console.log('+')
+				console.log(data_segment[current_func])
 				break
+
 			case 2: // -
+				left_operand = getOperandValue(quad.left_operand)
+				right_operand = getOperandValue(quad.right_operand)
+				result = left_operand - right_operand
+				address = quad.result
+				// Save result on memory
+				data_segment[current_func].set(result, address, 'temps')
+				ip++
+				console.log('-')
+				console.log(data_segment[current_func])
+				break
+
 			case 3: // *
+				left_operand = getOperandValue(quad.left_operand)
+				right_operand = getOperandValue(quad.right_operand)
+				result = left_operand * right_operand
+				address = quad.result
+				// Save result on memory
+				data_segment[current_func].set(result, address, 'temps')
+				ip++
+				console.log('*')
+				console.log(data_segment[current_func].memory)
+				break
+
 			case 4: // /
+				left_operand = getOperandValue(quad.left_operand)
+				right_operand = getOperandValue(quad.right_operand)
+				result = left_operand / right_operand
+				address = quad.result
+				// Save result on memory
+				data_segment[current_func].set(result, address, 'temps')
+				ip++
+				console.log('/')
+				console.log(data_segment[current_func].memory)
+				break
+
 			case 5: // <
 			case 6: // >
 			case 7: // ==
@@ -86,7 +150,13 @@ async function execute_virtual_machine(virtual_machine_info) {
 			case 9: // &
 			case 10: // |
 			case 11: // =
+				ip++
+				break
+
 			case 12: // print
+				console.log(getOperandValue(quad.result))
+				ip++
+				break
 			case 13: // read
 			case 14: // gotoT
 			case 15: // gotoF

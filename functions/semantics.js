@@ -114,7 +114,11 @@ mark_main_end = () => {
 add_program_id = (program_id) => {
 	global_func = program_id
 	current_func = program_id
-	func_directory.set(program_id, { type: 'program', var_directory: new Map() })
+	func_directory.set(program_id, {
+		type: 'program',
+		var_directory: new Map(),
+		temps_directory: new Map(),
+	})
 }
 
 // Semantic action that adds a function name to the global function directory, sets the current function variable and creates a new instance of a variable directory for the object.
@@ -133,13 +137,18 @@ add_func_id = (func_id) => {
 		class_directory.get(current_class).method_directory.set(func_id, {
 			type: currentType,
 			var_directory: new Map(),
+			temps_directory: new Map(),
 		})
 	} else {
 		if (func_directory.has(func_id)) {
 			console.log('ERROR - Function already exists')
 			throw 'ERROR - Function already exists'
 		}
-		func_directory.set(func_id, { type: currentType, var_directory: new Map() })
+		func_directory.set(func_id, {
+			type: currentType,
+			var_directory: new Map(),
+			temps_directory: new Map(),
+		})
 		if (currentType !== 'void') {
 			func_directory.get(global_func).var_directory.set(func_id, {
 				type: currentType,
@@ -338,6 +347,7 @@ add_class_id = (class_id) => {
 		type: 'class',
 		attr_directory: new Map(),
 		method_directory: new Map(),
+		temps_directory: new Map(),
 	})
 }
 
@@ -483,6 +493,11 @@ add_mult_div_operation = () => {
 				result,
 			})
 			operands.push({ operand: result, type: result_type })
+			if (current_class == null) {
+				func_directory.get(current_func).temps_directory.set(result, {
+					type: result_type,
+				})
+			}
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
