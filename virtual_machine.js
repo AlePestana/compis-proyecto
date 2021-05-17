@@ -26,6 +26,18 @@ const funcs_offsets = {
 	float_temps_offset: 22000,
 }
 
+// Function that checks if an address belongs to a constant (all constants are stored after virtual address 25000)
+const isConstant = (address) => {
+	return address >= 25000
+}
+
+// Function that returns the value of a constanst by receiving the constants directory and the address
+const getConstant = (map, searchValue) => {
+	for (let [key, value] of map.entries()) {
+		if (value === searchValue) return key
+	}
+}
+
 // Function that executes the virtual machine by creating the data, code, and stack segment
 // Receives the relevant information from the parser (quads, func_directory, and constants_directory)
 // Does not return anything since it performs the necessary operations inside
@@ -43,6 +55,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 	const data_segment = {}
 	const exec_stack = new Stack()
 	let ip = 0 // instruction pointer
+	let current_func = 'main'
 
 	// Create memory map for main
 	// Data segment will have the form -> { main: {}, func1: {}}
@@ -53,6 +66,16 @@ async function execute_virtual_machine(virtual_machine_info) {
 		const quad = code_segment.get(ip)
 		switch (quad.operator) {
 			case 1: // +
+				// const left_operand = isConstant(quad.left_operand)
+				// 	? getConstant(constants_directory, quad.left_operand)
+				// 	: 0
+				// const right_operand = isConstant(quad.right_operand)
+				// 	? getConstant(constants_directory, quad.right_operand)
+				// 	: 0
+				// const result = left_operand + right_operand
+				// Save result on memory
+				// data_segment[main].push(result)
+				break
 			case 2: // -
 			case 3: // *
 			case 4: // /
