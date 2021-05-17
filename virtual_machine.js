@@ -143,13 +143,77 @@ async function execute_virtual_machine(virtual_machine_info) {
 				break
 
 			case 5: // <
-			case 6: // >
-			case 7: // ==
-			case 8: // !=
-			case 9: // &
-			case 10: // |
+				left_operand = getOperandValue(quad.left_operand)
+				right_operand = getOperandValue(quad.right_operand)
+				result = left_operand < right_operand ? 1 : 0
+				address = quad.result
+				// Save result on memory
+				data_segment[current_func].set(result, address, 'temps')
 				ip++
+				console.log('<')
+				console.log(data_segment[current_func].memory)
 				break
+
+			case 6: // >
+				left_operand = getOperandValue(quad.left_operand)
+				right_operand = getOperandValue(quad.right_operand)
+				result = left_operand > right_operand ? 1 : 0
+				address = quad.result
+				// Save result on memory
+				data_segment[current_func].set(result, address, 'temps')
+				ip++
+				console.log('>')
+				console.log(data_segment[current_func].memory)
+				break
+
+			case 7: // ==
+				left_operand = getOperandValue(quad.left_operand)
+				right_operand = getOperandValue(quad.right_operand)
+				result = left_operand == right_operand ? 1 : 0
+				address = quad.result
+				// Save result on memory
+				data_segment[current_func].set(result, address, 'temps')
+				ip++
+				console.log('==')
+				console.log(data_segment[current_func].memory)
+				break
+
+			case 8: // !=
+				left_operand = getOperandValue(quad.left_operand)
+				right_operand = getOperandValue(quad.right_operand)
+				result = left_operand != right_operand ? 1 : 0
+				address = quad.result
+				// Save result on memory
+				data_segment[current_func].set(result, address, 'temps')
+				ip++
+				console.log('!=')
+				console.log(data_segment[current_func].memory)
+				break
+
+			case 9: // &
+				left_operand = getOperandValue(quad.left_operand)
+				right_operand = getOperandValue(quad.right_operand)
+				result = left_operand & right_operand ? 1 : 0
+				address = quad.result
+				// Save result on memory
+				data_segment[current_func].set(result, address, 'temps')
+				ip++
+				console.log('&')
+				console.log(data_segment[current_func].memory)
+				break
+
+			case 10: // |
+				left_operand = getOperandValue(quad.left_operand)
+				right_operand = getOperandValue(quad.right_operand)
+				result = left_operand | right_operand ? 1 : 0
+				address = quad.result
+				// Save result on memory
+				data_segment[current_func].set(result, address, 'temps')
+				ip++
+				console.log('|')
+				console.log(data_segment[current_func].memory)
+				break
+
 			case 11: // =
 				result = getOperandValue(quad.left_operand)
 				address = quad.result
@@ -161,7 +225,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 				break
 
 			case 12: // print
-				console.log(getOperandValue(quad.result))
+				result = getOperandValue(quad.result)
+				// Remove "" from constant before printing it
+				if (isConstant(quad.result) && typeof result === 'string') {
+					result = result.slice(1, -1)
+				}
+				console.log(result)
 				ip++
 				break
 			case 13: // read
