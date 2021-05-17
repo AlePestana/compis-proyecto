@@ -103,7 +103,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 				data_segment[current_func].set(result, address, 'temps')
 				ip++
 				console.log('+')
-				console.log(data_segment[current_func])
+				console.log(data_segment[current_func].memory)
 				break
 
 			case 2: // -
@@ -115,7 +115,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 				data_segment[current_func].set(result, address, 'temps')
 				ip++
 				console.log('-')
-				console.log(data_segment[current_func])
+				console.log(data_segment[current_func].memory)
 				break
 
 			case 3: // *

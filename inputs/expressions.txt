@@ -2,7 +2,7 @@ program prog1;
 var <- int x; float y; ->
 
 main() { 
-    x = 10;
+    x = 10 - 8 + 3;
     y = x / 5 * 1;
-    print(y); 
+    print(y + 5); 
 }

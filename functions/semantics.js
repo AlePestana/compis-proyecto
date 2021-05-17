@@ -529,6 +529,11 @@ add_sum_sub_operation = () => {
 				result,
 			})
 			operands.push({ operand: result, type: result_type })
+			if (current_class == null) {
+				func_directory.get(current_func).temps_directory.set(result, {
+					type: result_type,
+				})
+			}
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
@@ -581,6 +586,11 @@ add_rel_operation = () => {
 				result,
 			})
 			operands.push({ operand: result, type: result_type })
+			if (current_class == null) {
+				func_directory.get(current_func).temps_directory.set(result, {
+					type: result_type,
+				})
+			}
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
@@ -612,6 +622,11 @@ add_and_operation = () => {
 				result,
 			})
 			operands.push({ operand: result, type: result_type })
+			if (current_class == null) {
+				func_directory.get(current_func).temps_directory.set(result, {
+					type: result_type,
+				})
+			}
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
@@ -643,6 +658,11 @@ add_or_operation = () => {
 				result,
 			})
 			operands.push({ operand: result, type: result_type })
+			if (current_class == null) {
+				func_directory.get(current_func).temps_directory.set(result, {
+					type: result_type,
+				})
+			}
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
