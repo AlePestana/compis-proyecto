@@ -68,7 +68,6 @@ async function execute_virtual_machine(virtual_machine_info) {
 	data_segment[current_func] = new Memory(main_func_offsets)
 
 	const getOperandValue = (address) => {
-		console.log('searching for address ' + address)
 		if (isConstant(address)) {
 			return getConstant(constants_directory, address)
 		} else if (func_directory.get(current_func).temps_directory.has(address)) {
@@ -149,7 +148,15 @@ async function execute_virtual_machine(virtual_machine_info) {
 			case 8: // !=
 			case 9: // &
 			case 10: // |
+				ip++
+				break
 			case 11: // =
+				result = getOperandValue(quad.left_operand)
+				address = quad.result
+				// This will break when assigning values to global variables inside funcs ????
+				data_segment[current_func].set(result, address, 'vars') // assignment is only possible for variables
+				console.log('=')
+				console.log(data_segment[current_func].memory)
 				ip++
 				break
 
