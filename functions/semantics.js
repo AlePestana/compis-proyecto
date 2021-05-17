@@ -117,7 +117,6 @@ add_program_id = (program_id) => {
 	func_directory.set(program_id, {
 		type: 'program',
 		var_directory: new Map(),
-		temps_directory: new Map(),
 	})
 }
 
@@ -137,7 +136,6 @@ add_func_id = (func_id) => {
 		class_directory.get(current_class).method_directory.set(func_id, {
 			type: currentType,
 			var_directory: new Map(),
-			temps_directory: new Map(),
 		})
 	} else {
 		if (func_directory.has(func_id)) {
@@ -147,7 +145,6 @@ add_func_id = (func_id) => {
 		func_directory.set(func_id, {
 			type: currentType,
 			var_directory: new Map(),
-			temps_directory: new Map(),
 		})
 		if (currentType !== 'void') {
 			func_directory.get(global_func).var_directory.set(func_id, {
@@ -347,7 +344,6 @@ add_class_id = (class_id) => {
 		type: 'class',
 		attr_directory: new Map(),
 		method_directory: new Map(),
-		temps_directory: new Map(),
 	})
 }
 
@@ -493,11 +489,6 @@ add_mult_div_operation = () => {
 				result,
 			})
 			operands.push({ operand: result, type: result_type })
-			if (current_class == null) {
-				func_directory.get(current_func).temps_directory.set(result, {
-					type: result_type,
-				})
-			}
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
@@ -529,11 +520,6 @@ add_sum_sub_operation = () => {
 				result,
 			})
 			operands.push({ operand: result, type: result_type })
-			if (current_class == null) {
-				func_directory.get(current_func).temps_directory.set(result, {
-					type: result_type,
-				})
-			}
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
@@ -586,11 +572,6 @@ add_rel_operation = () => {
 				result,
 			})
 			operands.push({ operand: result, type: result_type })
-			if (current_class == null) {
-				func_directory.get(current_func).temps_directory.set(result, {
-					type: result_type,
-				})
-			}
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
@@ -622,11 +603,6 @@ add_and_operation = () => {
 				result,
 			})
 			operands.push({ operand: result, type: result_type })
-			if (current_class == null) {
-				func_directory.get(current_func).temps_directory.set(result, {
-					type: result_type,
-				})
-			}
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'
@@ -658,11 +634,6 @@ add_or_operation = () => {
 				result,
 			})
 			operands.push({ operand: result, type: result_type })
-			if (current_class == null) {
-				func_directory.get(current_func).temps_directory.set(result, {
-					type: result_type,
-				})
-			}
 		} else {
 			console.log('ERROR - Type mismatch')
 			throw 'ERROR - Type mismatch'

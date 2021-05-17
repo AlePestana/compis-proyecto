@@ -38,6 +38,31 @@ const getConstant = (map, searchValue) => {
 	}
 }
 
+// Function to check if a given address is within a range
+function isBetween(x, min, max) {
+	return x >= min && x <= max
+}
+
+// Function that checks if an address belongs to the spaces of memory designated for temps
+const isTempVar = (address) => {
+	return (
+		isBetween(address, 8000, 8999) ||
+		isBetween(address, 11000, 11999) ||
+		isBetween(address, 18000, 18999) ||
+		isBetween(address, 22000, 22999)
+	)
+}
+
+// Function that returns the type of a temp var by checking the memory ranges designated for temps
+const getTempVarType = (address) => {
+	if (isBetween(address, 8000, 8999) || isBetween(address, 18000, 18999)) {
+		return 'int'
+	} else {
+		return 'float'
+	}
+}
+
+// Function that gets the type of a variable from the func_directory
 const getVarType = (func_directory, address) => {
 	for (let [, value] of func_directory.entries()) {
 		if (value.virtual_address === address) return value.type
@@ -70,11 +95,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 	const getOperandValue = (address) => {
 		if (isConstant(address)) {
 			return getConstant(constants_directory, address)
-		} else if (func_directory.get(current_func).temps_directory.has(address)) {
-			const temp_type = func_directory
-				.get(current_func)
-				.temps_directory.get(address).type
+		} else if (isTempVar(address)) {
 			// Look for temp value in corresponding memory (since it must have already been stored)
+			const temp_type = getTempVarType(address)
 			return data_segment[current_func].get(address, 'temps', temp_type)
 		} else {
 			const var_type = getVarType(
