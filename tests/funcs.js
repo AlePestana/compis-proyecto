@@ -33,7 +33,7 @@ const test3 = parser.parse(`
 
     int func myFunc2 (var <- int z; ->)
     var <- char k; ->
-    { }
+    { return 1; }
 	main() {}`)
 // console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
