@@ -147,7 +147,7 @@ const test18 = parser.parse(`
 	program prog1; 
     var <- float z; ->
 
-	void func myFunc1 (var <- int x; ->)
+	float func myFunc1 (var <- int x; ->)
     var <- float y; ->
     { return x / y; }
 
@@ -159,7 +159,7 @@ const test19 = parser.parse(`
 	program prog1; 
     var <- float z; ->
 	
-	void func myFunc1 (var <- int x; ->)
+	float func myFunc1 (var <- int x; ->)
     var <- float y; ->
     { return z / y * x; }
 
@@ -173,3 +173,10 @@ console.log('\nERROR TEST 20 - Relational expression with double symbols')
 // 	main() { x = 10 > y > x; }`)
 // console.log('--> ' + (test20 ? 'yes :)' : 'no :('))
 // Caught by syntax
+
+console.log('\nERROR TEST 21 - Mixed OR expression')
+// const test21 = parser.parse(`
+// 	program prog1;
+// 	var <- int x; ->
+// 	main() { x = 10 / 5 | 2 + 8; }`)
+// console.log('--> ' + (test21 ? 'yes :)' : 'no :('))

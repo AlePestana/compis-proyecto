@@ -32,9 +32,6 @@ let operands = new Stack()
 let jumps = new Stack()
 let forStack = new Stack()
 
-// Declare all helper counters
-let res_count = 0
-
 // Additional helpers
 let current_simple_id = null
 let current_func_name = null
@@ -117,7 +114,10 @@ mark_main_end = () => {
 add_program_id = (program_id) => {
 	global_func = program_id
 	current_func = program_id
-	func_directory.set(program_id, { type: 'program', var_directory: new Map() })
+	func_directory.set(program_id, {
+		type: 'program',
+		var_directory: new Map(),
+	})
 }
 
 // Semantic action that adds a function name to the global function directory, sets the current function variable and creates a new instance of a variable directory for the object.
@@ -142,11 +142,18 @@ add_func_id = (func_id) => {
 			console.log('ERROR - Function already exists')
 			throw 'ERROR - Function already exists'
 		}
-		func_directory.set(func_id, { type: currentType, var_directory: new Map() })
+		func_directory.set(func_id, {
+			type: currentType,
+			var_directory: new Map(),
+		})
 		if (currentType !== 'void') {
 			func_directory.get(global_func).var_directory.set(func_id, {
 				type: currentType,
-				virtual_address: virtual_memory.get_address('global', currentType, 'perm'),
+				virtual_address: virtual_memory.get_address(
+					'global',
+					currentType,
+					'perm'
+				),
 			})
 		}
 	}
@@ -299,7 +306,6 @@ delete_func_directory = function () {
 	operands = new Stack()
 	jumps = new Stack()
 	forStack = new Stack()
-	res_count = 0
 }
 
 // Semantic action that deletes the constants directory after the program finishes
@@ -1073,7 +1079,7 @@ assign_return = () => {
 			throw 'ERROR - Return type mismatch'
 		}
 	}
-	
+
 	quads.push({
 		operator: get_opcode(operator),
 		left_operand: null,
@@ -1217,7 +1223,9 @@ add_func_return = () => {
 		const scope = current_func == global_func ? 'global' : 'local'
 
 		const operator = '='
-		const left_operand = func_directory.get(global_func).var_directory.get(current_func_name).virtual_address
+		const left_operand = func_directory
+			.get(global_func)
+			.var_directory.get(current_func_name).virtual_address
 		const result = virtual_memory.get_address(scope, result_type, 'temp')
 		quads.push({
 			operator: get_opcode(operator),
@@ -1232,7 +1240,7 @@ add_func_return = () => {
 // Semantic action that clears all current function related variables
 // Does not receive any parameters
 // Does not return anything
-reset_func_call_helpers = () =>  {
+reset_func_call_helpers = () => {
 	current_func_name = null
 	params_count = null
 	params_types = null
