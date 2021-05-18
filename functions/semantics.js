@@ -40,6 +40,7 @@ let current_simple_id = null
 let current_func_name = null
 let params_count = null
 let params_types = null
+let func_return_exists = null
 
 // -> Global semantic actions
 
@@ -1010,13 +1011,21 @@ mark_func_start = () => {
 	}
 }
 
-// Semantic action that marks the end of a function by releasing the var_directory, generating the endfunc quadruple and marking the number of temp variables of the function in its size_directory
+// Semantic action that marks the end of a function by checking if func has returned something, releasing the var_directory, generating the endfunc quadruple and marking the number of temp variables of the function in its size_directory
 // Does not receive any parameters
 // Does not return anything
 mark_func_end = () => {
 	// console.log('inside mark_func_end')
 
 	if (current_class == null) {
+		// Check if function that returns has returned something
+		if (func_directory.get(current_func).type !== 'void') {
+			if (!func_return_exists) {
+				console.log('ERROR - Function does not return a value')
+				throw 'ERROR - Function does not return a value'
+			}
+		}
+
 		// Release current var_directory
 		func_directory.get(current_func).var_directory = null
 
@@ -1080,6 +1089,8 @@ assign_return = () => {
 		right_operand: null,
 		result: result.operand,
 	})
+
+	func_return_exists = true
 }
 
 // -> Funcs call semantic actions
@@ -1236,6 +1247,7 @@ reset_func_call_helpers = () =>  {
 	current_func_name = null
 	params_count = null
 	params_types = null
+	func_return_exists = null
 }
 
 // -> Helper functions
