@@ -182,6 +182,7 @@ add_id = (id) => {
 					currentType,
 					'perm'
 				),
+				dimension: null,
 			}) // ???
 		} else {
 			// Is method declaration
@@ -195,6 +196,7 @@ add_id = (id) => {
 						currentType,
 						'perm'
 					),
+					dimension: null,
 				})
 		}
 	} else {
@@ -209,6 +211,7 @@ add_id = (id) => {
 			func_directory.get(current_func).var_directory.set(id, {
 				type: currentType,
 				virtual_address: virtual_memory.get_address(scope, currentType, 'perm'),
+				dimension: null,
 			})
 		} else {
 			// Instance of a class, do not add virtual memory address
