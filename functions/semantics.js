@@ -275,22 +275,50 @@ add_id_array = (id, size) => {
 // Does not return anything
 add_id_matrix = (id, sizeR, sizeC) => {
 	is_id_duplicated(id)
+
+	const colsDimNode = {
+		infLimit: 0,
+		supLimit: sizeC - 1,
+		mValue: 0,
+		nextNode: null
+	}
+
+	const rowsDimNode = {
+		infLimit: 0,
+		supLimit: sizeR - 1,
+		mValue: sizeC,
+		nextNode: colsDimNode
+	}
+
+	const memSize = sizeR * sizeC
+
 	if (current_class != null) {
 		// Adding var in class
 		if (is_attr_dec) {
 			class_directory
 				.get(current_class)
-				.attr_directory.set(id, { type: `${currentType}[${sizeR}][${sizeC}]` })
+				.attr_directory.set(id, { 
+					type: currentType,
+					virtual_address: virtual_memory.get_continuous_addresses('global', currentType, 'perm', memSize),
+					dimension: rowsDimNode
+				})
 		} else {
 			// Is method declaration
 			class_directory
 				.get(current_class)
 				.method_directory.get(current_func)
-				.var_directory.set(id, { type: `${currentType}[${sizeR}][${sizeC}]` })
+				.var_directory.set(id, { 
+					type: currentType,
+					virtual_address: virtual_memory.get_continuous_addresses('local', currentType, 'perm', memSize),
+					dimension: rowsDimNode
+				})
 		}
 	} else {
+		const scope = current_func == global_func ? 'global' : 'local'
 		func_directory.get(current_func).var_directory.set(id, {
-			type: `${currentType}[${sizeR}][${sizeC}]`,
+			type: currentType,
+			virtual_address: virtual_memory.get_continuous_addresses(scope, currentType, 'perm', memSize),
+			dimension: rowsDimNode
 		})
 		// console.log(
 		// 	'received matrix with id = ' +
