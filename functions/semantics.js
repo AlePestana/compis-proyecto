@@ -276,6 +276,10 @@ add_id_array = (id, size) => {
 add_id_matrix = (id, sizeR, sizeC) => {
 	is_id_duplicated(id)
 
+	// Parse as Int because they come as Strings
+	sizeR = parseInt(sizeR)
+	sizeC = parseInt(sizeC)
+
 	const colsDimNode = {
 		supLimit: sizeC - 1,
 		mValue: 0,
@@ -349,6 +353,10 @@ delete_func_directory = function () {
 	}
 	console.log('Func directory before exit')
 	console.log(func_directory)
+	func_directory.forEach((value, key, map) => {
+		console.log(key)
+		console.log(value)
+	})
 	func_directory = null
 	console.log('Quads before exit')
 	print_quads(quads)
@@ -1041,14 +1049,21 @@ mark_local_vars_size = () => {
 			(var_name) => !params_directory.has(var_name[0])
 		)
 
-		// Each local_var has the form -> [ 'k', {type: 'int'} ]
+		// Each local_var has the form -> [ 'k', { type: 'int', virtual_address: 5000, dimension: null } ]
 		for (let local_var of local_vars) {
+			let size = 1
+			let dimNode = local_var[1].dimension
+			while (dimNode != null) { // Check if it is array or matrix
+				size *= dimNode.supLimit + 1
+				dimNode = dimNode.nextNode
+			}
+
 			if (local_var[1].type === 'int') {
-				local_vars_size.int += 1
+				local_vars_size.int += size
 			} else if (local_var[1].type === 'float') {
-				local_vars_size.float += 1
+				local_vars_size.float += size
 			} else if (local_var[1].type === 'char') {
-				local_vars_size.char += 1
+				local_vars_size.char += size
 			}
 		}
 
