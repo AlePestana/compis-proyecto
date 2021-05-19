@@ -137,7 +137,8 @@ get_address = (scope, type, duration) => {
 	}
 }
 
-get_continous_addresses = (scope, type, duration, number_addresses) =>  {
+// Ask for a number of continuous memory addresses
+get_continuous_addresses = (scope, type, duration, number_addresses) =>  {
 	const base_address = get_address(scope, type, duration)
 	number_addresses--
 	for (let i = 0; i < number_addresses; i++) {
@@ -186,7 +187,7 @@ is_local_temp_address = (address) => {
 module.exports = {
 	initialize_counters,
 	get_address,
-	get_continous_addresses,
+	get_continuous_addresses,
 	reset_local_addresses,
 	is_local_temp_address,
 }

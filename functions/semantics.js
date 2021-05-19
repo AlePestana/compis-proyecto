@@ -242,7 +242,7 @@ add_id_array = (id, size) => {
 				.get(current_class)
 				.attr_directory.set(id, { 
 					type: currentType,
-					virtual_address: virtual_memory.get_continous_addresses('global', currentType, 'perm', size),
+					virtual_address: virtual_memory.get_continuous_addresses('global', currentType, 'perm', size),
 					dimension: dimNode
 				})
 		} else {
@@ -252,7 +252,7 @@ add_id_array = (id, size) => {
 				.method_directory.get(current_func)
 				.var_directory.set(id, { 
 					type: currentType,
-					virtual_address: virtual_memory.get_continous_addresses('local', currentType, 'perm', size),
+					virtual_address: virtual_memory.get_continuous_addresses('local', currentType, 'perm', size),
 					dimension: dimNode
 				})
 		}
@@ -262,7 +262,7 @@ add_id_array = (id, size) => {
 			.get(current_func)
 			.var_directory.set(id, { 
 				type: currentType,
-				virtual_address: virtual_memory.get_continous_addresses(scope, currentType, 'perm', size),
+				virtual_address: virtual_memory.get_continuous_addresses(scope, currentType, 'perm', size),
 				dimension: dimNode
 			})
 		// console.log('received array with id = ' + id + ' and size of = ' + size)
