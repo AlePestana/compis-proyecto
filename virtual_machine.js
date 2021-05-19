@@ -8,6 +8,23 @@
 const Memory = require('./functions/helpers/memory.js')
 const Stack = require('./functions/helpers/stack')
 
+const readline = require('readline')
+
+// Helpers to read user input
+const receive_user_input = () => {
+	const rl = readline.createInterface({
+		input: process.stdin,
+		output: process.stdout,
+	})
+
+	return new Promise((resolve) =>
+		rl.question('', (answer) => {
+			rl.close()
+			resolve(answer)
+		})
+	)
+}
+
 // Determine the offsets for addresses for main (stored as global on parser)
 const main_func_offsets = {
 	int_vars_offset: 5000,
@@ -257,6 +274,17 @@ async function execute_virtual_machine(virtual_machine_info) {
 				ip++
 				break
 			case 13: // read
+				// Read user input
+				result = await receive_user_input()
+				// Validate type ???
+				// Look for address in func_directory
+				address = func_directory
+					.get(current_func)
+					.var_directory.get(quad.result).virtual_address
+				// Save result on memory
+				data_segment[current_func].set(result, address, 'vars')
+				ip++
+				break
 			case 14: // gotoT
 			case 15: // gotoF
 				ip++
