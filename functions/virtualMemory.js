@@ -140,11 +140,13 @@ get_address = (scope, type, duration) => {
 // Ask for a number of continuous memory addresses
 get_continuous_addresses = (scope, type, duration, number_addresses) =>  {
 	const base_address = get_address(scope, type, duration)
-	number_addresses--
-	for (let i = 0; i < number_addresses; i++) {
-		get_address(scope, type, duration)
+	const last_address = base_address + (number_addresses - 1)
+	if (last_address <= virutal_memory_addresses[scope][type][duration].limit)  {
+		virutal_memory_addresses[scope][type][duration].count = last_address + 1
+		return base_address
+	}  else {
+		throw `ERROR - Too many variables of SCOPE: ${scope}, TYPE: ${type}, DURATION: ${duration}`
 	}
-	return base_address
 }
 
 // Erase local scope virtual memory

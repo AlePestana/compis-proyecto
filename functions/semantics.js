@@ -226,6 +226,7 @@ add_id = (id) => {
 // Receives the variable name and size of the array
 // Does not return anything
 add_id_array = (id, size) => {
+	size = parseInt(size) // The parameter originally comes as a String
 	is_id_duplicated(id)
 
 	const dimNode = {
