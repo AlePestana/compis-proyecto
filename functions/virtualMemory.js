@@ -137,6 +137,15 @@ get_address = (scope, type, duration) => {
 	}
 }
 
+get_continous_addresses = (scope, type, duration, number_addresses) =>  {
+	const base_address = get_address(scope, type, duration)
+	number_addresses--
+	for (let i = 0; i < number_addresses; i++) {
+		get_address(scope, type, duration)
+	}
+	return base_address
+}
+
 // Erase local scope virtual memory
 reset_local_addresses = () => {
 	for (const type in virutal_memory_addresses.local) {
@@ -177,6 +186,7 @@ is_local_temp_address = (address) => {
 module.exports = {
 	initialize_counters,
 	get_address,
+	get_continous_addresses,
 	reset_local_addresses,
 	is_local_temp_address,
 }

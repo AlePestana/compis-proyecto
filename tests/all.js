@@ -35,3 +35,7 @@ require('./control')
 console.log('\n\n--------------------------------------------------------')
 console.log('Iteration Tests')
 require('./iteration')
+
+console.log('\n\n--------------------------------------------------------')
+console.log('Array/Matrices Tests')
+require('./arraysMatrices')

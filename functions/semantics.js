@@ -227,23 +227,44 @@ add_id = (id) => {
 // Does not return anything
 add_id_array = (id, size) => {
 	is_id_duplicated(id)
+
+	const dimNode = {
+		infLimit: 0,
+		supLimit: size - 1,
+		mValue: 0,
+		nextNode: null
+	}
+
 	if (current_class != null) {
 		// Adding var in class
 		if (is_attr_dec) {
 			class_directory
 				.get(current_class)
-				.attr_directory.set(id, { type: `${currentType}[${size}]` })
+				.attr_directory.set(id, { 
+					type: currentType,
+					virtual_address: virtual_memory.get_continous_addresses('global', currentType, 'perm', size),
+					dimension: dimNode
+				})
 		} else {
 			// Is method declaration
 			class_directory
 				.get(current_class)
 				.method_directory.get(current_func)
-				.var_directory.set(id, { type: `${currentType}[${size}]` })
+				.var_directory.set(id, { 
+					type: currentType,
+					virtual_address: virtual_memory.get_continous_addresses('local', currentType, 'perm', size),
+					dimension: dimNode
+				})
 		}
 	} else {
+		const scope = current_func == global_func ? 'global' : 'local'
 		func_directory
 			.get(current_func)
-			.var_directory.set(id, { type: `${currentType}[${size}]` })
+			.var_directory.set(id, { 
+				type: currentType,
+				virtual_address: virtual_memory.get_continous_addresses(scope, currentType, 'perm', size),
+				dimension: dimNode
+			})
 		// console.log('received array with id = ' + id + ' and size of = ' + size)
 		// console.log(func_directory.get(current_func).var_directory)
 	}
