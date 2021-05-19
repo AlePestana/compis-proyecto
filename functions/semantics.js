@@ -229,7 +229,6 @@ add_id_array = (id, size) => {
 	is_id_duplicated(id)
 
 	const dimNode = {
-		infLimit: 0,
 		supLimit: size - 1,
 		mValue: 0,
 		nextNode: null
@@ -277,14 +276,12 @@ add_id_matrix = (id, sizeR, sizeC) => {
 	is_id_duplicated(id)
 
 	const colsDimNode = {
-		infLimit: 0,
 		supLimit: sizeC - 1,
 		mValue: 0,
 		nextNode: null
 	}
 
 	const rowsDimNode = {
-		infLimit: 0,
 		supLimit: sizeR - 1,
 		mValue: sizeC,
 		nextNode: colsDimNode
