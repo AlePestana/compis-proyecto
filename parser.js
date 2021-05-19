@@ -110,7 +110,7 @@ const grammar = {
 
 		program: [
 			[
-				'program_keyword program_id_keyword ; classes dec_vars funcs main_keyword ( ) { statements closing_main_bracket EOF',
+				'program_keyword program_id_keyword ; classes dec_vars funcs MAIN ( ) opening_main_bracket statements closing_main_bracket EOF',
 				'delete_func_directory(); delete_class_directory(); delete_constants_directory(); reset_virtual_memory(); $$ = true',
 			],
 		],
@@ -267,7 +267,7 @@ const grammar = {
 			['iteration', '$$'],
 		],
 
-		main_keyword: [['MAIN', 'fill_goto_main()']],
+		opening_main_bracket: [['{', 'mark_main_start();']],
 
 		// expression
 		expression: [

@@ -89,11 +89,34 @@ insert_goto_main_quad = () => {
 	})
 }
 
-// Semantic action that fills the initial goto (main) with the next quad counter
+// Semantic action that fills the initial goto (main) with the next quad counter and calculates the program's global variables' size
 // Does not receive any parameters
 // Does not return anything
-fill_goto_main = () => {
+mark_main_start = () => {
 	quads.data[0].result = quads.count
+	let local_vars_size = { int: 0, float: 0, char: 0 }
+
+	// Turn current variable directory into array in order to be able to iterate over it
+	const local_vars = Array.from(func_directory.get(global_func).var_directory)
+
+	for (let local_var of local_vars) {
+		let size = 1
+		let dimNode = local_var[1].dimension
+		while (dimNode != null) { // Check if it is array or matrix
+			size *= dimNode.supLimit + 1
+			dimNode = dimNode.nextNode
+		}
+
+		if (local_var[1].type === 'int') {
+			local_vars_size.int += size
+		} else if (local_var[1].type === 'float') {
+			local_vars_size.float += size
+		} else if (local_var[1].type === 'char') {
+			local_vars_size.char += size
+		}
+	}
+
+	func_directory.get(global_func).func_size_directory.set('local_vars_size', local_vars_size)
 }
 
 // Semantic action that adds the final end quad
@@ -118,6 +141,7 @@ add_program_id = (program_id) => {
 	func_directory.set(program_id, {
 		type: 'program',
 		var_directory: new Map(),
+		func_size_directory: new Map()
 	})
 }
 
