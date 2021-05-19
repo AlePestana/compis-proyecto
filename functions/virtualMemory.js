@@ -137,6 +137,18 @@ get_address = (scope, type, duration) => {
 	}
 }
 
+// Ask for a number of continuous memory addresses
+get_continuous_addresses = (scope, type, duration, number_addresses) =>  {
+	const base_address = get_address(scope, type, duration)
+	const last_address = base_address + (number_addresses - 1)
+	if (last_address <= virutal_memory_addresses[scope][type][duration].limit)  {
+		virutal_memory_addresses[scope][type][duration].count = last_address + 1
+		return base_address
+	}  else {
+		throw `ERROR - Too many variables of SCOPE: ${scope}, TYPE: ${type}, DURATION: ${duration}`
+	}
+}
+
 // Erase local scope virtual memory
 reset_local_addresses = () => {
 	for (const type in virutal_memory_addresses.local) {
@@ -177,6 +189,7 @@ is_local_temp_address = (address) => {
 module.exports = {
 	initialize_counters,
 	get_address,
+	get_continuous_addresses,
 	reset_local_addresses,
 	is_local_temp_address,
 }
