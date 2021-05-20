@@ -116,7 +116,9 @@ mark_main_start = () => {
 		}
 	}
 
-	func_directory.get(global_func).func_size_directory.set('local_vars_size', local_vars_size)
+	func_size_directory = new Map();
+	func_size_directory.set('local_vars_size', local_vars_size)
+	func_size_directory.set('temps_size', { int: 0, float: 0 })
 }
 
 // Semantic action that adds the final end quad
@@ -130,6 +132,9 @@ mark_main_end = () => {
 		right_operand: null,
 		result: null,
 	})
+
+	func_directory.get(global_func).func_size_directory = func_size_directory
+	func_size_directory = null
 }
 
 // Semantic action that adds the program name to the function directory and sets both the global and current function variables
@@ -565,6 +570,9 @@ add_mult_div_operation = () => {
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
 			const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+			func_size_directory.get('temps_size')[result_type]++
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -596,6 +604,9 @@ add_sum_sub_operation = () => {
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
 			const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+			func_size_directory.get('temps_size')[result_type]++
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -648,6 +659,9 @@ add_rel_operation = () => {
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
 			const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+			func_size_directory.get('temps_size')[result_type]++
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -679,6 +693,9 @@ add_and_operation = () => {
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
 			const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+			func_size_directory.get('temps_size')[result_type]++
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -710,6 +727,9 @@ add_or_operation = () => {
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
 			const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+			func_size_directory.get('temps_size')[result_type]++
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -1101,6 +1121,8 @@ mark_local_vars_size = () => {
 mark_func_start = () => {
 	// console.log('inside mark_func_start')
 	// Mark where the current function starts
+	func_size_directory.set('temps_size', { int: 0, float: 0 })
+
 	if (current_class == null) {
 		func_directory.get(current_func).starting_point = quads.count
 	}
@@ -1135,25 +1157,7 @@ mark_func_end = () => {
 			right_operand: null,
 			result: null,
 		})
-
-		// Mark the number of temp variables of a function in the size_directory
-
-		// Slice quads to get only the current func quads
-		const starting_quad = func_directory.get(current_func).starting_point
-		const func_quads = quads.data.slice(starting_quad)
-
-		let temps_size = { total: 0 }
-
-		func_quads.forEach((quad) => {
-			if (
-				quad.result !== null &&
-				virtual_memory.is_local_temp_address(quad.result)
-			) {
-				temps_size.total += 1
-			}
-		})
-
-		func_size_directory.set('temps_size', temps_size)
+		
 		func_directory.get(current_func).func_size_directory = func_size_directory
 		func_size_directory = null
 	}
@@ -1327,6 +1331,9 @@ add_func_return = () => {
 			.get(global_func)
 			.var_directory.get(current_func_name).virtual_address
 		const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+		func_size_directory.get('temps_size')[result_type]++
+
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand: left_operand,
