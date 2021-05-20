@@ -94,7 +94,7 @@ insert_goto_main_quad = () => {
 // Does not return anything
 mark_main_start = () => {
 	quads.data[0].result = quads.count
-	let local_vars_size = { int: 0, float: 0, char: 0 }
+	let vars_size = { int: 0, float: 0, char: 0 }
 
 	// Turn current variable directory into array in order to be able to iterate over it
 	const local_vars = Array.from(func_directory.get(global_func).var_directory)
@@ -108,16 +108,16 @@ mark_main_start = () => {
 		}
 
 		if (local_var[1].type === 'int') {
-			local_vars_size.int += size
+			vars_size.int += size
 		} else if (local_var[1].type === 'float') {
-			local_vars_size.float += size
+			vars_size.float += size
 		} else if (local_var[1].type === 'char') {
-			local_vars_size.char += size
+			vars_size.char += size
 		}
 	}
 
 	func_size_directory = new Map();
-	func_size_directory.set('local_vars_size', local_vars_size)
+	func_size_directory.set('vars_size', vars_size)
 	func_size_directory.set('temps_size', { int: 0, float: 0 })
 }
 
