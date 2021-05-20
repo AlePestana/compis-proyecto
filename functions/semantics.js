@@ -89,14 +89,39 @@ insert_goto_main_quad = () => {
 	})
 }
 
-// Semantic action that fills the initial goto (main) with the next quad counter
+// Semantic action that fills the initial goto (main) with the next quad counter and calculates the program's global variables' size, and creates the empty structure for the temp vars
 // Does not receive any parameters
 // Does not return anything
-fill_goto_main = () => {
+mark_main_start = () => {
 	quads.data[0].result = quads.count
+	let vars_size = { int: 0, float: 0, char: 0 }
+
+	// Turn current variable directory into array in order to be able to iterate over it
+	const local_vars = Array.from(func_directory.get(global_func).var_directory)
+
+	for (let local_var of local_vars) {
+		let size = 1
+		let dimNode = local_var[1].dimension
+		while (dimNode != null) { // Check if it is array or matrix
+			size *= dimNode.supLimit + 1
+			dimNode = dimNode.nextNode
+		}
+
+		if (local_var[1].type === 'int') {
+			vars_size.int += size
+		} else if (local_var[1].type === 'float') {
+			vars_size.float += size
+		} else if (local_var[1].type === 'char') {
+			vars_size.char += size
+		}
+	}
+
+	func_size_directory = new Map();
+	func_size_directory.set('vars_size', vars_size)
+	func_size_directory.set('temps_size', { int: 0, float: 0 })
 }
 
-// Semantic action that adds the final end quad
+// Semantic action that adds the final end quad, assigns the size_directory to main in the func_directory, and resets the helper func_size_directory structure
 // Does not receive any parameters
 // Does not return anything
 mark_main_end = () => {
@@ -107,6 +132,9 @@ mark_main_end = () => {
 		right_operand: null,
 		result: null,
 	})
+
+	func_directory.get(global_func).func_size_directory = func_size_directory
+	func_size_directory = null
 }
 
 // Semantic action that adds the program name to the function directory and sets both the global and current function variables
@@ -118,6 +146,7 @@ add_program_id = (program_id) => {
 	func_directory.set(program_id, {
 		type: 'program',
 		var_directory: new Map(),
+		func_size_directory: new Map()
 	})
 }
 
@@ -222,7 +251,7 @@ add_id = (id) => {
 	}
 }
 
-// Semantic action that adds an array variable name to the class or global function directory (depending on the previously set variables) and verifies it is not duplicated
+// Semantic action that adds an array variable name to the class or global function directory (depending on the previously set variables), adds its dimension node, gets its virtual addresses, and verifies it is not duplicated
 // Receives the variable name and size of the array
 // Does not return anything
 add_id_array = (id, size) => {
@@ -270,11 +299,15 @@ add_id_array = (id, size) => {
 	}
 }
 
-// Semantic action that adds a matrix variable name to the class or global function directory (depending on the previously set variables) and verifies it is not duplicated
+// Semantic action that adds a matrix variable name to the class or global function directory (depending on the previously set variables), adds its dimension nodes, gets its virtual addresses and verifies it is not duplicated
 // Receives the variable name and size of the matrix (number of rows and columns)
 // Does not return anything
 add_id_matrix = (id, sizeR, sizeC) => {
 	is_id_duplicated(id)
+
+	// Parse as Int because they come as Strings
+	sizeR = parseInt(sizeR)
+	sizeC = parseInt(sizeC)
 
 	const colsDimNode = {
 		supLimit: sizeC - 1,
@@ -349,6 +382,10 @@ delete_func_directory = function () {
 	}
 	console.log('Func directory before exit')
 	console.log(func_directory)
+	func_directory.forEach((value, key, map) => {
+		console.log(key)
+		console.log(value)
+	})
 	func_directory = null
 	console.log('Quads before exit')
 	print_quads(quads)
@@ -533,6 +570,9 @@ add_mult_div_operation = () => {
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
 			const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+			func_size_directory.get('temps_size')[result_type]++
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -564,6 +604,9 @@ add_sum_sub_operation = () => {
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
 			const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+			func_size_directory.get('temps_size')[result_type]++
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -616,6 +659,9 @@ add_rel_operation = () => {
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
 			const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+			func_size_directory.get('temps_size')[result_type]++
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -647,6 +693,9 @@ add_and_operation = () => {
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
 			const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+			func_size_directory.get('temps_size')[result_type]++
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -678,6 +727,9 @@ add_or_operation = () => {
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
 			const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+			func_size_directory.get('temps_size')[result_type]++
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -1041,14 +1093,21 @@ mark_local_vars_size = () => {
 			(var_name) => !params_directory.has(var_name[0])
 		)
 
-		// Each local_var has the form -> [ 'k', {type: 'int'} ]
+		// Each local_var has the form -> [ 'k', { type: 'int', virtual_address: 5000, dimension: null } ]
 		for (let local_var of local_vars) {
+			let size = 1
+			let dimNode = local_var[1].dimension
+			while (dimNode != null) { // Check if it is array or matrix
+				size *= dimNode.supLimit + 1
+				dimNode = dimNode.nextNode
+			}
+
 			if (local_var[1].type === 'int') {
-				local_vars_size.int += 1
+				local_vars_size.int += size
 			} else if (local_var[1].type === 'float') {
-				local_vars_size.float += 1
+				local_vars_size.float += size
 			} else if (local_var[1].type === 'char') {
-				local_vars_size.char += 1
+				local_vars_size.char += size
 			}
 		}
 
@@ -1056,12 +1115,14 @@ mark_local_vars_size = () => {
 	}
 }
 
-// Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory
+// Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory, and initializes the temps counters in the func_size_directory helper structure
 // Does not receive any parameters
 // Does not return anything
 mark_func_start = () => {
 	// console.log('inside mark_func_start')
 	// Mark where the current function starts
+	func_size_directory.set('temps_size', { int: 0, float: 0 })
+
 	if (current_class == null) {
 		func_directory.get(current_func).starting_point = quads.count
 	}
@@ -1096,25 +1157,7 @@ mark_func_end = () => {
 			right_operand: null,
 			result: null,
 		})
-
-		// Mark the number of temp variables of a function in the size_directory
-
-		// Slice quads to get only the current func quads
-		const starting_quad = func_directory.get(current_func).starting_point
-		const func_quads = quads.data.slice(starting_quad)
-
-		let temps_size = { total: 0 }
-
-		func_quads.forEach((quad) => {
-			if (
-				quad.result !== null &&
-				virtual_memory.is_local_temp_address(quad.result)
-			) {
-				temps_size.total += 1
-			}
-		})
-
-		func_size_directory.set('temps_size', temps_size)
+		
 		func_directory.get(current_func).func_size_directory = func_size_directory
 		func_size_directory = null
 	}
@@ -1288,6 +1331,9 @@ add_func_return = () => {
 			.get(global_func)
 			.var_directory.get(current_func_name).virtual_address
 		const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+		func_size_directory.get('temps_size')[result_type]++
+
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand: left_operand,
