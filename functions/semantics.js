@@ -89,7 +89,7 @@ insert_goto_main_quad = () => {
 	})
 }
 
-// Semantic action that fills the initial goto (main) with the next quad counter and calculates the program's global variables' size
+// Semantic action that fills the initial goto (main) with the next quad counter and calculates the program's global variables' size, and creates the empty structure for the temp vars
 // Does not receive any parameters
 // Does not return anything
 mark_main_start = () => {
@@ -121,7 +121,7 @@ mark_main_start = () => {
 	func_size_directory.set('temps_size', { int: 0, float: 0 })
 }
 
-// Semantic action that adds the final end quad
+// Semantic action that adds the final end quad, assigns the size_directory to main in the func_directory, and resets the helper func_size_directory structure
 // Does not receive any parameters
 // Does not return anything
 mark_main_end = () => {
@@ -251,7 +251,7 @@ add_id = (id) => {
 	}
 }
 
-// Semantic action that adds an array variable name to the class or global function directory (depending on the previously set variables) and verifies it is not duplicated
+// Semantic action that adds an array variable name to the class or global function directory (depending on the previously set variables), adds its dimension node, gets its virtual addresses, and verifies it is not duplicated
 // Receives the variable name and size of the array
 // Does not return anything
 add_id_array = (id, size) => {
@@ -299,7 +299,7 @@ add_id_array = (id, size) => {
 	}
 }
 
-// Semantic action that adds a matrix variable name to the class or global function directory (depending on the previously set variables) and verifies it is not duplicated
+// Semantic action that adds a matrix variable name to the class or global function directory (depending on the previously set variables), adds its dimension nodes, gets its virtual addresses and verifies it is not duplicated
 // Receives the variable name and size of the matrix (number of rows and columns)
 // Does not return anything
 add_id_matrix = (id, sizeR, sizeC) => {
@@ -1115,7 +1115,7 @@ mark_local_vars_size = () => {
 	}
 }
 
-// Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory
+// Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory, and initializes the temps counters in the func_size_directory helper structure
 // Does not receive any parameters
 // Does not return anything
 mark_func_start = () => {
