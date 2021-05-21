@@ -53,3 +53,13 @@ const test4 = parser.parse(`
     x[0.5][1] = 2.2;
   }`)
 console.log('--> ' + (test4 ? 'yes :)' : 'no :('))
+
+console.log('\nERROR TEST 5 - Simple array declaration with int variable')
+const test5 = parser.parse(`
+	program prog1; 
+    var <- int x; ->
+
+	main() {
+    x[0][1] = 2;
+  }`)
+console.log('--> ' + (test5 ? 'yes :)' : 'no :('))

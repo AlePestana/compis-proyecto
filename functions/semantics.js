@@ -1376,9 +1376,9 @@ reset_func_call_helpers = () => {
 // Does not return anything
 mark_am_start = () => {
 	console.log('inside mark_am_start')
-	console.log('popping from operands stack')
 	const am_id = operands.pop()
-	console.log(am_id)
+
+	// Verify (it has the dimensions attribute filled in the constants directory)
 }
 
 // Semantic action that adds the verify dimension quad, checks if there's a next node and dimension
