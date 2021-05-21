@@ -204,6 +204,7 @@ const test12 = parser.parse(`
     var <- int x; float y; ->
 
     void func surprise (var <- int z; float k; ->)
+    var <- int p[2]; float n[4][5]; ->
     {
         k = 9.5;
         z = 4 + 5 - 5;
