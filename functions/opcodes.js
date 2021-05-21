@@ -26,6 +26,7 @@ operations = {
 	param: 20,
 	end: 21,
 	return: 22,
+	verify: 23,
 }
 
 get_opcode = (string_opcode) => {

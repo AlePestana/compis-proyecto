@@ -19,7 +19,7 @@ const test1 = parser.parse(`
   }`)
 console.log('--> ' + (test1 ? 'yes :)' : 'no :('))
 
-console.log('TEST 2 - Simple matrix declaration with assignment')
+console.log('\nTEST 2 - Simple matrix declaration with assignment')
 const test2 = parser.parse(`
 	program prog1; 
     var <- float y[2][3], p; int x[5][10], z; ->
@@ -31,3 +31,25 @@ const test2 = parser.parse(`
     z = 2;
   }`)
 console.log('--> ' + (test2 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 3 - Simple array declaration with assignment')
+const test3 = parser.parse(`
+	program prog1; 
+    var <- float x[3]; ->
+
+	main() {
+    x[0][1] = 2.2;
+    x[1][0] = 4.4;
+    print(x[1][0]);
+  }`)
+console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
+
+console.log('\nERROR TEST 4 - Simple array declaration with float index number')
+const test4 = parser.parse(`
+	program prog1; 
+    var <- float x[3]; ->
+
+	main() {
+    x[0.5][1] = 2.2;
+  }`)
+console.log('--> ' + (test4 ? 'yes :)' : 'no :('))

@@ -102,7 +102,8 @@ mark_main_start = () => {
 	for (let local_var of local_vars) {
 		let size = 1
 		let dimNode = local_var[1].dimension
-		while (dimNode != null) { // Check if it is array or matrix
+		while (dimNode != null) {
+			// Check if it is array or matrix
 			size *= dimNode.supLimit + 1
 			dimNode = dimNode.nextNode
 		}
@@ -116,7 +117,7 @@ mark_main_start = () => {
 		}
 	}
 
-	func_size_directory = new Map();
+	func_size_directory = new Map()
 	func_size_directory.set('vars_size', vars_size)
 	func_size_directory.set('temps_size', { int: 0, float: 0 })
 }
@@ -146,7 +147,7 @@ add_program_id = (program_id) => {
 	func_directory.set(program_id, {
 		type: 'program',
 		var_directory: new Map(),
-		func_size_directory: new Map()
+		func_size_directory: new Map(),
 	})
 }
 
@@ -1110,7 +1111,8 @@ mark_local_vars_size = () => {
 		for (let local_var of local_vars) {
 			let size = 1
 			let dimNode = local_var[1].dimension
-			while (dimNode != null) { // Check if it is array or matrix
+			while (dimNode != null) {
+				// Check if it is array or matrix
 				size *= dimNode.supLimit + 1
 				dimNode = dimNode.nextNode
 			}
@@ -1170,7 +1172,7 @@ mark_func_end = () => {
 			right_operand: null,
 			result: null,
 		})
-		
+
 		func_directory.get(current_func).func_size_directory = func_size_directory
 		func_size_directory = null
 	}
@@ -1365,6 +1367,39 @@ reset_func_call_helpers = () => {
 	params_count = null
 	params_types = null
 	func_return_exists = null
+}
+
+// -> Array and matrices access(indexing) semantic actions
+
+// Semantic action that marks the start of an array or matrix by pushing to the dimensions and adding a fake bottom to the operators stack
+// Does not receive any parameters
+// Does not return anything
+mark_am_start = () => {
+	console.log('inside mark_am_start')
+	console.log('popping from operands stack')
+	const am_id = operands.pop()
+	console.log(am_id)
+}
+
+// Semantic action that adds the verify dimension quad, checks if there's a next node and dimension
+// Does not receive any parameters
+// Does not return anything
+mark_am_dimension = () => {
+	console.log('inside mark_am_dimension')
+}
+
+// Semantic action that increments the dimension value inside the dimensions stack and moves to the next node
+// Does not receive any parameters
+// Does not return anything
+add_am_dimension = () => {
+	console.log('inside add_am_dimension')
+}
+
+// Semantic action that marks the end of an array or matrix by creating the last necessary quadruple and eliminating the false bottom
+// Does not receive any parameters
+// Does not return anything
+mark_am_end = () => {
+	console.log('inside mark_am_end')
 }
 
 // -> Helper functions
