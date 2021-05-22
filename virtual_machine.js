@@ -277,6 +277,17 @@ async function execute_virtual_machine(virtual_machine_info) {
 				// Read user input
 				result = await receive_user_input()
 				// Validate type ???
+				switch (result.type) {
+					case 'int':
+						console.log('Check is int')
+						break
+					case 'float':
+						console.log('Check is float')
+						break
+					case 'char':
+						console.log('Check is char')
+						break
+				}
 				// Look for address in func_directory
 				address = func_directory
 					.get(current_func)
@@ -286,10 +297,21 @@ async function execute_virtual_machine(virtual_machine_info) {
 				ip++
 				break
 			case 14: // gotoT
-			case 15: // gotoF
-				ip++
+				condition = getOperandValue(quad.left_operand)
+				if (condition == 1) {
+					ip = quad.result
+				} else {
+					ip++
+				}
 				break
-
+			case 15: // gotoF
+				condition = getOperandValue(quad.left_operand)
+				if (condition == 0) {
+					ip = quad.result
+				} else {
+					ip++
+				}
+				break
 			case 16: // goto
 				ip = quad.result
 				break
