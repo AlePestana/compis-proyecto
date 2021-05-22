@@ -30,7 +30,8 @@ let quads = new Queue()
 let operators = new Stack()
 let operands = new Stack()
 let jumps = new Stack()
-let forStack = new Stack()
+let for_stack = new Stack()
+let dimensions_stack = new Stack()
 
 // Additional helpers
 let current_simple_id = null
@@ -38,6 +39,8 @@ let current_func_name = null
 let params_count = null
 let params_types = null
 let func_return_exists = null
+let current_dimension = null
+let current_dimension_list = null
 
 // -> Global semantic actions
 
@@ -261,7 +264,7 @@ add_id_array = (id, size) => {
 
 	const dimNode = {
 		supLimit: size - 1,
-		mValue: 0,
+		mValue: 1,
 		nextNode: null,
 	}
 
@@ -321,7 +324,7 @@ add_id_matrix = (id, sizeR, sizeC) => {
 
 	const colsDimNode = {
 		supLimit: sizeC - 1,
-		mValue: 0,
+		mValue: 1,
 		nextNode: null,
 	}
 
@@ -407,7 +410,8 @@ delete_func_directory = function () {
 	operators = new Stack()
 	operands = new Stack()
 	jumps = new Stack()
-	forStack = new Stack()
+	for_stack = new Stack()
+	dimensions_stack = new Stack()
 }
 
 // Semantic action that deletes the constants directory after the program finishes
@@ -983,7 +987,7 @@ mark_while_end = () => {
 // Does not receive any parameters
 // Does not return anything
 for_start_exp = (control_variable) => {
-	forStack.push(control_variable)
+	for_stack.push(control_variable)
 }
 
 // Semantic action that adds to the operands stack the top of the for stack (the last variable) and the < operator to the operators stack, plus it marks a false bottom on the operators stack
@@ -991,7 +995,7 @@ for_start_exp = (control_variable) => {
 // Does not return anything
 mark_until = () => {
 	jumps.push(quads.count)
-	add_operand(forStack.top(), 'var')
+	add_operand(for_stack.top(), 'var')
 	add_operator('<')
 	start_subexpression()
 }
@@ -1022,7 +1026,7 @@ mark_for_condition = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_for_end = () => {
-	const varFor = forStack.pop()
+	const varFor = for_stack.pop()
 
 	// generate quad --> { varFor = varFor + 1 }
 	add_operand(varFor, 'var')
@@ -1376,9 +1380,41 @@ reset_func_call_helpers = () => {
 // Does not return anything
 mark_am_start = () => {
 	console.log('inside mark_am_start')
-	const am_id = operands.pop()
+	const operand = operands.pop()
+	const address = operand.operand
+	let am_id = null
+	let base_address = null
 
-	// Verify (it has the dimensions attribute filled in the constants directory)
+	if (current_class == null) {
+		// Get id of given address
+		for (let [id, value] of func_directory.get(current_func).var_directory) {
+			if (value.virtual_address == address) {
+				// Found id, checking if it has a dimension (to verify it is indeed an array or matrix)
+				if (value.dimension == null) {
+					console.log(
+						'ERROR - Trying to index a variable that has no dimensions'
+					)
+					throw 'ERROR - Trying to index a variable that has no dimensions'
+				}
+				am_id = id
+				current_dimension_list = value.dimension
+				base_address = value.virtual_address
+				break
+			}
+		}
+
+		current_dimension = 1
+
+		dimensions_stack.push({ am_id, dimension: current_dimension, base_address })
+
+		// Add fake bottom to the operators stack
+		operators.push('[')
+		console.log('for current id ' + am_id)
+		console.log('dimensions_stack')
+		console.log(dimensions_stack)
+		console.log('current_dimension_list')
+		console.log(current_dimension_list)
+	}
 }
 
 // Semantic action that adds the verify dimension quad, checks if there's a next node and dimension
@@ -1386,6 +1422,62 @@ mark_am_start = () => {
 // Does not return anything
 mark_am_dimension = () => {
 	console.log('inside mark_am_dimension')
+
+	// The operands stack will have the result of the expression inside [] as its top
+	const indexing_variable = operands.top()
+
+	if (indexing_variable.type !== 'int') {
+		console.log('ERROR - Trying to index a variable without a valid integer')
+		throw 'ERROR - Trying to index a variable without a valid integer'
+	}
+	console.log('indexing_variable')
+	console.log(indexing_variable)
+
+	// Generate verify dimension quad --> {verify, variable_name, null, upper_limit}
+	const operator = 'verify'
+	const left_operand = indexing_variable.operand
+	const right_operand = null
+	const result = current_dimension_list.supLimit
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
+
+	// Check if it is a matrix
+	if (current_dimension_list.nextNode !== null) {
+		// Generate s1*m1 quad --> {*, indexing_variable, m, temp}
+		const operator = '*'
+		const left_operand = operands.pop().operand
+		const right_operand = current_dimension_list.mValue
+		const scope = current_func == global_func ? 'global' : 'local'
+		const result = virtual_memory.get_address(scope, 'int', 'temp')
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand,
+			right_operand,
+			result,
+		})
+		operands.push({ operand: result, type: 'int' })
+	}
+
+	// Check if it is a matrix
+	if (current_dimension > 1) {
+		// Generate (s1*m1) + s2 quad --> {+, (s1*m1), s2, temp}
+		const operator = '+'
+		const right_operand = operands.pop().operand
+		const left_operand = operands.pop().operand
+		const scope = current_func == global_func ? 'global' : 'local'
+		const result = virtual_memory.get_address(scope, 'int', 'temp')
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand,
+			right_operand,
+			result,
+		})
+		operands.push({ operand: result, type: 'int' })
+	}
 }
 
 // Semantic action that increments the dimension value inside the dimensions stack and moves to the next node
@@ -1393,6 +1485,15 @@ mark_am_dimension = () => {
 // Does not return anything
 add_am_dimension = () => {
 	console.log('inside add_am_dimension')
+	current_dimension++
+	dimensions_stack.data[dimensions_stack.count - 1].dimension =
+		current_dimension
+	current_dimension_list = current_dimension_list.nextNode
+
+	console.log('dimensions_stack')
+	console.log(dimensions_stack)
+	console.log('next node')
+	console.log(current_dimension_list)
 }
 
 // Semantic action that marks the end of an array or matrix by creating the last necessary quadruple and eliminating the false bottom
@@ -1400,6 +1501,33 @@ add_am_dimension = () => {
 // Does not return anything
 mark_am_end = () => {
 	console.log('inside mark_am_end')
+
+	const final_am_aux = operands.pop().operand
+	const base_virtual_address = dimensions_stack.top().base_address
+
+	// Generate final_am_aux (s1*m1 + s2 OR s1) + base_virtual_address quad --> {+, final_am_aux, base_virtual_address, temp}
+	const operator = '+'
+	const left_operand = final_am_aux
+	const right_operand = base_virtual_address
+	const scope = current_func == global_func ? 'global' : 'local'
+	const result = virtual_memory.get_address(scope, 'int', 'temp')
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand,
+		right_operand,
+		result,
+	})
+	operands.push({ operand: result, type: 'int' })
+
+	// Remove false bottom
+	operators.pop()
+
+	// Remove from dimensions stack
+	dimensions_stack.pop()
+
+	// Reset dimension variables
+	current_dimension = null
+	current_dimension_list = null
 }
 
 // -> Helper functions
