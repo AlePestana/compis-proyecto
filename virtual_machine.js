@@ -48,7 +48,7 @@ const isConstant = (address) => {
 	return address >= 25000
 }
 
-// Function that returns the value of a constanst by receiving the constants directory and the address
+// Function that returns the value of a constant by receiving the constants directory and the address
 const getConstant = (map, searchValue) => {
 	for (let [key, value] of map.entries()) {
 		if (value === searchValue) return key
@@ -79,9 +79,9 @@ const getTempVarType = (address) => {
 	}
 }
 
-// Function that gets the type of a variable from the func_directory
-const getVarType = (func_directory, address) => {
-	for (let [, value] of func_directory.entries()) {
+// Function that gets the type of a variable from the var_directory
+const getVarType = (var_directory, address) => {
+	for (let [, value] of var_directory.entries()) {
 		if (value.virtual_address === address) return value.type
 	}
 }
