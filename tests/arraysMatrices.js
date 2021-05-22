@@ -32,17 +32,17 @@ const test2 = parser.parse(`
   }`)
 console.log('--> ' + (test2 ? 'yes :)' : 'no :('))
 
-console.log('\nTEST 3 - Simple array declaration with assignment')
-const test3 = parser.parse(`
-	program prog1; 
-    var <- float x[3]; ->
+console.log('\nERROR TEST 3 - Trying to index an array as a matrix')
+// const test3 = parser.parse(`
+// 	program prog1;
+//     var <- float x[3]; ->
 
-	main() {
-    x[0][1] = 2.2;
-    x[1][0] = 4.4;
-    print(x[1][0]);
-  }`)
-console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
+// 	main() {
+//     x[0][1] = 2.2;
+//     x[1][0] = 4.4;
+//     print(x[1][0]);
+//   }`)
+// console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
 console.log('\nERROR TEST 4 - Simple array declaration with float index number')
 // const test4 = parser.parse(`
@@ -63,3 +63,15 @@ console.log('\nERROR TEST 5 - Indexing variable that has no dimensions')
 //     x[0][1] = 2;
 //   }`)
 // console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 6 - Printing matrix value')
+const test6 = parser.parse(`
+	program prog1; 
+    var <- float x[3][2]; ->
+
+	main() {
+    x[0][1] = 2.2;
+    x[1][0] = 4.4;
+    print(x[1][0]);
+  }`)
+console.log('--> ' + (test6 ? 'yes :)' : 'no :('))

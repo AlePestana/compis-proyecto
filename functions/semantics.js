@@ -1426,57 +1426,66 @@ mark_am_dimension = () => {
 	// The operands stack will have the result of the expression inside [] as its top
 	const indexing_variable = operands.top()
 
-	if (indexing_variable.type !== 'int') {
-		console.log('ERROR - Trying to index a variable without a valid integer')
-		throw 'ERROR - Trying to index a variable without a valid integer'
-	}
-	console.log('indexing_variable')
-	console.log(indexing_variable)
+	if (current_class == null) {
+		if (indexing_variable.type !== 'int') {
+			console.log('ERROR - Trying to index a variable without a valid integer')
+			throw 'ERROR - Trying to index a variable without a valid integer'
+		}
+		console.log('indexing_variable')
+		console.log(indexing_variable)
 
-	// Generate verify dimension quad --> {verify, variable_name, null, upper_limit}
-	const operator = 'verify'
-	const left_operand = indexing_variable.operand
-	const right_operand = null
-	const result = current_dimension_list.supLimit
-	quads.push({
-		operator: get_opcode(operator),
-		left_operand,
-		right_operand,
-		result,
-	})
+		if (current_dimension_list === null) {
+			console.log(
+				'ERROR - Trying to index a variable without the specified dimensions'
+			)
+			throw 'ERROR - Trying to index a variable without the specified dimensions'
+		}
 
-	// Check if it is a matrix
-	if (current_dimension_list.nextNode !== null) {
-		// Generate s1*m1 quad --> {*, indexing_variable, m, temp}
-		const operator = '*'
-		const left_operand = operands.pop().operand
-		const right_operand = current_dimension_list.mValue
-		const scope = current_func == global_func ? 'global' : 'local'
-		const result = virtual_memory.get_address(scope, 'int', 'temp')
+		// Generate verify dimension quad --> {verify, variable_name, null, upper_limit}
+		const operator = 'verify'
+		const left_operand = indexing_variable.operand
+		const right_operand = null
+		const result = current_dimension_list.supLimit
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand,
 			right_operand,
 			result,
 		})
-		operands.push({ operand: result, type: 'int' })
-	}
 
-	// Check if it is a matrix
-	if (current_dimension > 1) {
-		// Generate (s1*m1) + s2 quad --> {+, (s1*m1), s2, temp}
-		const operator = '+'
-		const right_operand = operands.pop().operand
-		const left_operand = operands.pop().operand
-		const scope = current_func == global_func ? 'global' : 'local'
-		const result = virtual_memory.get_address(scope, 'int', 'temp')
-		quads.push({
-			operator: get_opcode(operator),
-			left_operand,
-			right_operand,
-			result,
-		})
-		operands.push({ operand: result, type: 'int' })
+		// Check if it is a matrix
+		if (current_dimension_list.nextNode !== null) {
+			// Generate s1*m1 quad --> {*, indexing_variable, m, temp}
+			const operator = '*'
+			const left_operand = operands.pop().operand
+			const right_operand = current_dimension_list.mValue
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, 'int', 'temp')
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
+			operands.push({ operand: result, type: 'int' })
+		}
+
+		// Check if it is a matrix
+		if (current_dimension > 1) {
+			// Generate (s1*m1) + s2 quad --> {+, (s1*m1), s2, temp}
+			const operator = '+'
+			const right_operand = operands.pop().operand
+			const left_operand = operands.pop().operand
+			const scope = current_func == global_func ? 'global' : 'local'
+			const result = virtual_memory.get_address(scope, 'int', 'temp')
+			quads.push({
+				operator: get_opcode(operator),
+				left_operand,
+				right_operand,
+				result,
+			})
+			operands.push({ operand: result, type: 'int' })
+		}
 	}
 }
 
@@ -1485,15 +1494,17 @@ mark_am_dimension = () => {
 // Does not return anything
 add_am_dimension = () => {
 	console.log('inside add_am_dimension')
-	current_dimension++
-	dimensions_stack.data[dimensions_stack.count - 1].dimension =
-		current_dimension
-	current_dimension_list = current_dimension_list.nextNode
+	if (current_class == null) {
+		current_dimension++
+		dimensions_stack.data[dimensions_stack.count - 1].dimension =
+			current_dimension
+		current_dimension_list = current_dimension_list.nextNode
 
-	console.log('dimensions_stack')
-	console.log(dimensions_stack)
-	console.log('next node')
-	console.log(current_dimension_list)
+		console.log('dimensions_stack')
+		console.log(dimensions_stack)
+		console.log('next node')
+		console.log(current_dimension_list)
+	}
 }
 
 // Semantic action that marks the end of an array or matrix by creating the last necessary quadruple and eliminating the false bottom
@@ -1502,32 +1513,42 @@ add_am_dimension = () => {
 mark_am_end = () => {
 	console.log('inside mark_am_end')
 
-	const final_am_aux = operands.pop().operand
-	const base_virtual_address = dimensions_stack.top().base_address
+	if (current_class == null) {
+		const final_am_aux = operands.pop().operand
+		const base_virtual_address = dimensions_stack.top().base_address
 
-	// Generate final_am_aux (s1*m1 + s2 OR s1) + base_virtual_address quad --> {+, final_am_aux, base_virtual_address, temp}
-	const operator = '+'
-	const left_operand = final_am_aux
-	const right_operand = base_virtual_address
-	const scope = current_func == global_func ? 'global' : 'local'
-	const result = virtual_memory.get_address(scope, 'int', 'temp')
-	quads.push({
-		operator: get_opcode(operator),
-		left_operand,
-		right_operand,
-		result,
-	})
-	operands.push({ operand: result, type: 'int' })
+		// Generate final_am_aux (s1*m1 + s2 OR s1) + base_virtual_address quad --> {+, final_am_aux, base_virtual_address, temp}
+		const operator = '+'
+		const left_operand = final_am_aux
+		const right_operand = base_virtual_address
+		const scope = current_func == global_func ? 'global' : 'local'
+		const result = virtual_memory.get_address(scope, 'int', 'temp')
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand,
+			right_operand,
+			result,
+		})
+		operands.push({ operand: result, type: 'int' })
 
-	// Remove false bottom
-	operators.pop()
+		// Remove false bottom
+		operators.pop()
 
-	// Remove from dimensions stack
-	dimensions_stack.pop()
+		// Remove from dimensions stack
+		dimensions_stack.pop()
 
-	// Reset dimension variables
-	current_dimension = null
-	current_dimension_list = null
+		console.log('+++++++++++++++++++++++ FINAL ARRAY OPS')
+		console.log('operands')
+		console.log(operands)
+		console.log('operators')
+		console.log(operators)
+		console.log('dimensions_stack')
+		console.log(dimensions_stack)
+
+		// Reset dimension variables
+		current_dimension = null
+		current_dimension_list = null
+	}
 }
 
 // -> Helper functions
