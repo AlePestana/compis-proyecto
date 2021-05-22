@@ -365,7 +365,7 @@ const grammar = {
 			],
 		],
 
-		var_name_assignment_keyword: [['var_name', "add_operand($1, 'var')"]],
+		var_name_assignment_keyword: [['var_name', '$$']],
 
 		assignment_operator: [['=', 'add_operator($1)']],
 

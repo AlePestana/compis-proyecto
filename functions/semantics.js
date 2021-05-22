@@ -41,6 +41,7 @@ let params_types = null
 let func_return_exists = null
 let current_dimension = null
 let current_dimension_list = null
+let added_second_dimension = false
 
 // -> Global semantic actions
 
@@ -168,7 +169,7 @@ add_func_id = (func_id) => {
 			throw 'ERROR - Method already exists'
 		}
 		class_directory.get(current_class).method_directory.set(func_id, {
-			type: currentType,
+			type: current_type,
 			var_directory: new Map(),
 		})
 	} else {
@@ -177,15 +178,15 @@ add_func_id = (func_id) => {
 			throw 'ERROR - Function already exists'
 		}
 		func_directory.set(func_id, {
-			type: currentType,
+			type: current_type,
 			var_directory: new Map(),
 		})
-		if (currentType !== 'void') {
+		if (current_type !== 'void') {
 			func_directory.get(global_func).var_directory.set(func_id, {
-				type: currentType,
+				type: current_type,
 				virtual_address: virtual_memory.get_address(
 					'global',
-					currentType,
+					current_type,
 					'perm'
 				),
 			})
@@ -197,7 +198,7 @@ add_func_id = (func_id) => {
 // Receives the type
 // Does not return anything
 set_current_type = (type) => {
-	currentType = type
+	current_type = type
 }
 
 // Semantic action that adds a variable name to the class or global function directory (depending on the previously set variables) and verifies it is not duplicated
@@ -209,10 +210,10 @@ add_id = (id) => {
 		// Adding var in class
 		if (is_attr_dec) {
 			class_directory.get(current_class).attr_directory.set(id, {
-				type: currentType,
+				type: current_type,
 				virtual_address: virtual_memory.get_address(
 					'global',
-					currentType,
+					current_type,
 					'perm'
 				),
 				dimension: null,
@@ -223,10 +224,10 @@ add_id = (id) => {
 				.get(current_class)
 				.method_directory.get(current_func)
 				.var_directory.set(id, {
-					type: currentType,
+					type: current_type,
 					virtual_address: virtual_memory.get_address(
 						'local',
-						currentType,
+						current_type,
 						'perm'
 					),
 					dimension: null,
@@ -236,21 +237,25 @@ add_id = (id) => {
 		// Adding var in func / global var
 		const scope = current_func == global_func ? 'global' : 'local'
 		if (
-			currentType === 'int' ||
-			currentType === 'float' ||
-			currentType === 'char'
+			current_type === 'int' ||
+			current_type === 'float' ||
+			current_type === 'char'
 		) {
 			// Basic type
 			func_directory.get(current_func).var_directory.set(id, {
-				type: currentType,
-				virtual_address: virtual_memory.get_address(scope, currentType, 'perm'),
+				type: current_type,
+				virtual_address: virtual_memory.get_address(
+					scope,
+					current_type,
+					'perm'
+				),
 				dimension: null,
 			})
 		} else {
 			// Instance of a class, do not add virtual memory address
 			func_directory
 				.get(current_func)
-				.var_directory.set(id, { type: currentType })
+				.var_directory.set(id, { type: current_type })
 		}
 	}
 }
@@ -272,10 +277,10 @@ add_id_array = (id, size) => {
 		// Adding var in class
 		if (is_attr_dec) {
 			class_directory.get(current_class).attr_directory.set(id, {
-				type: currentType,
+				type: current_type,
 				virtual_address: virtual_memory.get_continuous_addresses(
 					'global',
-					currentType,
+					current_type,
 					'perm',
 					size
 				),
@@ -287,10 +292,10 @@ add_id_array = (id, size) => {
 				.get(current_class)
 				.method_directory.get(current_func)
 				.var_directory.set(id, {
-					type: currentType,
+					type: current_type,
 					virtual_address: virtual_memory.get_continuous_addresses(
 						'local',
-						currentType,
+						current_type,
 						'perm',
 						size
 					),
@@ -300,10 +305,10 @@ add_id_array = (id, size) => {
 	} else {
 		const scope = current_func == global_func ? 'global' : 'local'
 		func_directory.get(current_func).var_directory.set(id, {
-			type: currentType,
+			type: current_type,
 			virtual_address: virtual_memory.get_continuous_addresses(
 				scope,
-				currentType,
+				current_type,
 				'perm',
 				size
 			),
@@ -340,10 +345,10 @@ add_id_matrix = (id, sizeR, sizeC) => {
 		// Adding var in class
 		if (is_attr_dec) {
 			class_directory.get(current_class).attr_directory.set(id, {
-				type: currentType,
+				type: current_type,
 				virtual_address: virtual_memory.get_continuous_addresses(
 					'global',
-					currentType,
+					current_type,
 					'perm',
 					memSize
 				),
@@ -355,10 +360,10 @@ add_id_matrix = (id, sizeR, sizeC) => {
 				.get(current_class)
 				.method_directory.get(current_func)
 				.var_directory.set(id, {
-					type: currentType,
+					type: current_type,
 					virtual_address: virtual_memory.get_continuous_addresses(
 						'local',
-						currentType,
+						current_type,
 						'perm',
 						memSize
 					),
@@ -368,10 +373,10 @@ add_id_matrix = (id, sizeR, sizeC) => {
 	} else {
 		const scope = current_func == global_func ? 'global' : 'local'
 		func_directory.get(current_func).var_directory.set(id, {
-			type: currentType,
+			type: current_type,
 			virtual_address: virtual_memory.get_continuous_addresses(
 				scope,
-				currentType,
+				current_type,
 				'perm',
 				memSize
 			),
@@ -1384,6 +1389,7 @@ mark_am_start = () => {
 	const address = operand.operand
 	let am_id = null
 	let base_address = null
+	let am_type = null
 
 	if (current_class == null) {
 		// Get id of given address
@@ -1399,13 +1405,19 @@ mark_am_start = () => {
 				am_id = id
 				current_dimension_list = value.dimension
 				base_address = value.virtual_address
+				am_type = value.type
 				break
 			}
 		}
 
 		current_dimension = 1
 
-		dimensions_stack.push({ am_id, dimension: current_dimension, base_address })
+		dimensions_stack.push({
+			am_id,
+			dimension: current_dimension,
+			base_address,
+			type: am_type,
+		})
 
 		// Add fake bottom to the operators stack
 		operators.push('[')
@@ -1453,21 +1465,24 @@ mark_am_dimension = () => {
 			result,
 		})
 
+		// Helper for retrieving appropriate address from virtual_memory
+		const scope = current_func == global_func ? 'global' : 'local'
+		const type = dimensions_stack.top().type
+
 		// Check if it is a matrix
 		if (current_dimension_list.nextNode !== null) {
 			// Generate s1*m1 quad --> {*, indexing_variable, m, temp}
 			const operator = '*'
 			const left_operand = operands.pop().operand
 			const right_operand = current_dimension_list.mValue
-			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, 'int', 'temp')
+			const result = virtual_memory.get_address(scope, type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
 				right_operand,
 				result,
 			})
-			operands.push({ operand: result, type: 'int' })
+			operands.push({ operand: result, type })
 		}
 
 		// Check if it is a matrix
@@ -1476,15 +1491,15 @@ mark_am_dimension = () => {
 			const operator = '+'
 			const right_operand = operands.pop().operand
 			const left_operand = operands.pop().operand
-			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, 'int', 'temp')
+			const result = virtual_memory.get_address(scope, type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
 				right_operand,
 				result,
 			})
-			operands.push({ operand: result, type: 'int' })
+			operands.push({ operand: result, type })
+			added_second_dimension = true
 		}
 	}
 }
@@ -1514,6 +1529,16 @@ mark_am_end = () => {
 	console.log('inside mark_am_end')
 
 	if (current_class == null) {
+		// Verify a matrix was accessed appropriately for its two dimensions (instead of trying to access it as an array)
+		const is_matrix = current_dimension_list.nextNode !== null
+		if (is_matrix && !added_second_dimension) {
+			console.log('inside new if')
+			console.log(current_dimension_list)
+			console.log(
+				'ERROR - Trying to index a variable without the specified dimensions'
+			)
+			throw 'ERROR - Trying to index a variable without the specified dimensions'
+		}
 		const final_am_aux = operands.pop().operand
 		const base_virtual_address = dimensions_stack.top().base_address
 
@@ -1522,14 +1547,15 @@ mark_am_end = () => {
 		const left_operand = final_am_aux
 		const right_operand = base_virtual_address
 		const scope = current_func == global_func ? 'global' : 'local'
-		const result = virtual_memory.get_address(scope, 'int', 'temp')
+		const type = dimensions_stack.top().type
+		const result = virtual_memory.get_address(scope, type, 'temp')
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand,
 			right_operand,
 			result,
 		})
-		operands.push({ operand: result, type: 'int' })
+		operands.push({ operand: result, type })
 
 		// Remove false bottom
 		operators.pop()
@@ -1548,6 +1574,7 @@ mark_am_end = () => {
 		// Reset dimension variables
 		current_dimension = null
 		current_dimension_list = null
+		added_second_dimension = false
 	}
 }
 

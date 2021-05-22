@@ -70,8 +70,18 @@ const test6 = parser.parse(`
     var <- float x[3][2]; ->
 
 	main() {
-    x[0][1] = 2.2;
     x[1][0] = 4.4;
     print(x[1][0]);
   }`)
 console.log('--> ' + (test6 ? 'yes :)' : 'no :('))
+
+console.log('\nERROR TEST 7 - Trying to index a matrix as an array')
+// const test7 = parser.parse(`
+// 	program prog1;
+//     var <- float x[3][1]; ->
+
+// 	main() {
+//     x[0] = 2.2;
+//     print(x[1]);
+//   }`)
+// console.log('--> ' + (test7 ? 'yes :)' : 'no :('))
