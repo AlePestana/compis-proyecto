@@ -854,6 +854,7 @@ assign_exp = () => {
 
 	const operator = operators.pop()
 
+	console.log('assigning expression')
 	console.log(res, left)
 	if (res.type === left.type) {
 		quads.push({
@@ -1384,7 +1385,7 @@ reset_func_call_helpers = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_am_start = () => {
-	console.log('inside mark_am_start')
+	// console.log('inside mark_am_start')
 	const operand = operands.pop()
 	const address = operand.operand
 	let am_id = null
@@ -1421,11 +1422,6 @@ mark_am_start = () => {
 
 		// Add fake bottom to the operators stack
 		operators.push('[')
-		console.log('for current id ' + am_id)
-		console.log('dimensions_stack')
-		console.log(dimensions_stack)
-		console.log('current_dimension_list')
-		console.log(current_dimension_list)
 	}
 }
 
@@ -1433,7 +1429,7 @@ mark_am_start = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_am_dimension = () => {
-	console.log('inside mark_am_dimension')
+	// console.log('inside mark_am_dimension')
 
 	// The operands stack will have the result of the expression inside [] as its top
 	const indexing_variable = operands.top()
@@ -1443,8 +1439,6 @@ mark_am_dimension = () => {
 			console.log('ERROR - Trying to index a variable without a valid integer')
 			throw 'ERROR - Trying to index a variable without a valid integer'
 		}
-		console.log('indexing_variable')
-		console.log(indexing_variable)
 
 		if (current_dimension_list === null) {
 			console.log(
@@ -1457,7 +1451,10 @@ mark_am_dimension = () => {
 		const operator = 'verify'
 		const left_operand = indexing_variable.operand
 		const right_operand = null
-		const result = current_dimension_list.supLimit
+		const result = get_constant_virtual_address(
+			current_dimension_list.supLimit,
+			'int'
+		)
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand,
@@ -1474,7 +1471,10 @@ mark_am_dimension = () => {
 			// Generate s1*m1 quad --> {*, indexing_variable, m, temp}
 			const operator = '*'
 			const left_operand = operands.pop().operand
-			const right_operand = current_dimension_list.mValue
+			const right_operand = get_constant_virtual_address(
+				current_dimension_list.mValue,
+				'int'
+			)
 			const result = virtual_memory.get_address(scope, type, 'temp')
 			quads.push({
 				operator: get_opcode(operator),
@@ -1508,17 +1508,12 @@ mark_am_dimension = () => {
 // Does not receive any parameters
 // Does not return anything
 add_am_dimension = () => {
-	console.log('inside add_am_dimension')
+	// console.log('inside add_am_dimension')
 	if (current_class == null) {
 		current_dimension++
 		dimensions_stack.data[dimensions_stack.count - 1].dimension =
 			current_dimension
 		current_dimension_list = current_dimension_list.nextNode
-
-		console.log('dimensions_stack')
-		console.log(dimensions_stack)
-		console.log('next node')
-		console.log(current_dimension_list)
 	}
 }
 
@@ -1526,14 +1521,12 @@ add_am_dimension = () => {
 // Does not receive any parameters
 // Does not return anything
 mark_am_end = () => {
-	console.log('inside mark_am_end')
+	// console.log('inside mark_am_end')
 
 	if (current_class == null) {
 		// Verify a matrix was accessed appropriately for its two dimensions (instead of trying to access it as an array)
 		const is_matrix = current_dimension_list.nextNode !== null
 		if (is_matrix && !added_second_dimension) {
-			console.log('inside new if')
-			console.log(current_dimension_list)
 			console.log(
 				'ERROR - Trying to index a variable without the specified dimensions'
 			)
@@ -1562,14 +1555,6 @@ mark_am_end = () => {
 
 		// Remove from dimensions stack
 		dimensions_stack.pop()
-
-		console.log('+++++++++++++++++++++++ FINAL ARRAY OPS')
-		console.log('operands')
-		console.log(operands)
-		console.log('operators')
-		console.log(operators)
-		console.log('dimensions_stack')
-		console.log(dimensions_stack)
 
 		// Reset dimension variables
 		current_dimension = null
