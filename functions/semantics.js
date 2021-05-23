@@ -177,14 +177,16 @@ add_func_id = (func_id) => {
 			var_directory: new Map(),
 		})
 		if (currentType !== 'void') {
+			const return_address = virtual_memory.get_address(
+				'global',
+				currentType,
+				'perm'
+			)
 			func_directory.get(global_func).var_directory.set(func_id, {
 				type: currentType,
-				virtual_address: virtual_memory.get_address(
-					'global',
-					currentType,
-					'perm'
-				),
+				virtual_address: return_address,
 			})
+			func_directory.get(func_id).return_address = return_address
 		}
 	}
 }
@@ -1209,6 +1211,8 @@ mark_func_call_start = () => {
 			throw 'ERROR - Function not defined'
 		}
 	}
+
+	operators.push('(')
 }
 
 // Semantic action that marks the start of the params of a function call by creating the era quad and starting the parameter counter
@@ -1309,6 +1313,7 @@ mark_func_call_end = () => {
 			result: func_directory.get(current_func_name).starting_point,
 		})
 	}
+	operators.pop()
 }
 
 // Semantic action that checks that the called function is non void, adds the assignment quad for the return value, and pushes it to the operands stack
