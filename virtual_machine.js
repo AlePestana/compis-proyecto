@@ -45,14 +45,12 @@ const funcs_offsets = {
 	float_temps_offset: 22000,
 }
 
-// Determine the scope of an address
-const getScope = (address) => {
+// Function that checks if an address belongs to the global scope
+const isGlobalVar = (address) => {
 	if (address < 14000) {
-		return 'global'
-	} else if (address < 25000) {
-		return 'local'
+		return true
 	} else {
-		return 'constant'
+		return false
 	}
 }
 
@@ -139,8 +137,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 		if (isConstant(address)) {
 			return getConstant(constants_directory, address)
 		} else {
-			const scope = getScope(address)
-			if (scope === 'global') {
+			if (isGlobalVar(address)) {
 				// Working with data_segment
 				if (isTempVar(address)) {
 					// Look for temp value in corresponding memory (since it must have already been stored)
@@ -170,8 +167,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 	}
 
 	const setMemoryValue = (result, address, duration) => {
-		let scope = getScope(address)
-		if (scope === 'global') {
+		if (isGlobalVar(address)) {
 			// data_segment
 			data_segment[current_func].set(result, address, duration)
 			// console.log('global')
