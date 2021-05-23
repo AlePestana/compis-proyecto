@@ -36,12 +36,8 @@ async function execute() {
 	console.log(
 		'\n\n-------------------------------------------------------------------------------------------'
 	)
-	let result
-	try {
-		result = parser.parse(input)
-	} catch (e) {
-	}
 	
+	const	result = parser.parse(input)
 
 	// If parser does not throw any errors, execute virtual machine
 	if (result) {
