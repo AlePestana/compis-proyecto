@@ -172,11 +172,13 @@ async function execute_virtual_machine(virtual_machine_info) {
 		if (scope === 'global') {
 			// data_segment
 			data_segment[current_func].set(result, address, duration)
-			console.log(data_segment[current_func].memory)
+			// console.log('global')
+			// console.log(data_segment[current_func].memory)
 		} else {
 			// exec_stack
 			exec_stack.top().memory.set(result, address, duration)
-			console.log(exec_stack.top().memory.memory) // LOL
+			// console.log('local')
+			// console.log(exec_stack.top().memory.memory) // LOL
 		}
 	}
 
@@ -303,7 +305,8 @@ async function execute_virtual_machine(virtual_machine_info) {
 				address = quad.result
 				console.log('=')
 				// This will break when assigning values to global variables inside funcs ????
-				setMemoryValue(result, address, 'vars') // assignment is only possible for variables
+				const duration = isTempVar(address) ? 'temps' : 'vars'
+				setMemoryValue(result, address, duration)
 				ip++
 				break
 
@@ -388,7 +391,11 @@ async function execute_virtual_machine(virtual_machine_info) {
 				ip = -1
 				break
 			case 22: // return
-				ip++
+				result = getOperandValue(quad.result)
+				address = func_directory.get(exec_stack.top().name).return_address
+				setMemoryValue(result, address, 'vars')
+				
+				ip = exec_stack.pop().return_address
 				break
 			default:
 				ip = -1
