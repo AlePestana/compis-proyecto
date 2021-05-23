@@ -105,6 +105,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 	let ip = 0 // instruction pointer
 	let current_func = func_directory.entries().next().value[0] // returns the name of the first func inside the current directory
 
+	// Helper structures
+	const func_calls_in_build = new Stack()
+
 	// Create memory map for main
 	// Data segment will have the form -> { main: {}, func1: {}}
 	data_segment[current_func] = new Memory(main_func_offsets)
@@ -316,8 +319,21 @@ async function execute_virtual_machine(virtual_machine_info) {
 				ip = quad.result
 				break
 			case 17: // endfunc
+				ip = exec_stack.pop().return_address
+				break
 			case 18: // era
+				let funcCallMem = new Memory(funcs_offsets)
+				// Here we should probably size the memory according to the func's need?
+				func_calls_in_build.push({ memory: funcCallMem, return_address: null })
+				ip++
+				break
 			case 19: // gosub
+				// dunno what the left operand of the gosub quad is for
+				let func_call_to_push = func_calls_in_build.pop()
+				func_call_to_push.return_address = ip + 1
+				exec_stack.push(func_call_to_push)
+				ip = quad.result
+				break
 			case 20: // param
 				ip++
 				break
