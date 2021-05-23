@@ -48,7 +48,7 @@ const isConstant = (address) => {
 	return address >= 25000
 }
 
-// Function that returns the value of a constanst by receiving the constants directory and the address
+// Function that returns the value of a constant by receiving the constants directory and the address
 const getConstant = (map, searchValue) => {
 	for (let [key, value] of map.entries()) {
 		if (value === searchValue) return key
@@ -79,9 +79,9 @@ const getTempVarType = (address) => {
 	}
 }
 
-// Function that gets the type of a variable from the func_directory
-const getVarType = (func_directory, address) => {
-	for (let [, value] of func_directory.entries()) {
+// Function that gets the type of a variable from the var_directory
+const getVarType = (var_directory, address) => {
+	for (let [, value] of var_directory.entries()) {
 		if (value.virtual_address === address) return value.type
 	}
 }
@@ -277,6 +277,17 @@ async function execute_virtual_machine(virtual_machine_info) {
 				// Read user input
 				result = await receive_user_input()
 				// Validate type ???
+				switch (result.type) {
+					case 'int':
+						console.log('Check is int')
+						break
+					case 'float':
+						console.log('Check is float')
+						break
+					case 'char':
+						console.log('Check is char')
+						break
+				}
 				// Look for address in func_directory
 				address = func_directory
 					.get(current_func)
@@ -286,10 +297,21 @@ async function execute_virtual_machine(virtual_machine_info) {
 				ip++
 				break
 			case 14: // gotoT
-			case 15: // gotoF
-				ip++
+				condition = getOperandValue(quad.left_operand)
+				if (condition == 1) {
+					ip = quad.result
+				} else {
+					ip++
+				}
 				break
-
+			case 15: // gotoF
+				condition = getOperandValue(quad.left_operand)
+				if (condition == 0) {
+					ip = quad.result
+				} else {
+					ip++
+				}
+				break
 			case 16: // goto
 				ip = quad.result
 				break
