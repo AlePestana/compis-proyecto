@@ -1196,7 +1196,7 @@ assign_return = () => {
 
 // -> Funcs call semantic actions
 
-// Semantic action that checks if the function that was called exists in the global function directory and throws otherwise
+// Semantic action that checks if the function that was called exists in the global function directory and throws otherwise, adds fake bottom in operators stack in case it has parameters
 // Does not receive any parameters
 // Does not return anything
 mark_func_call_start = () => {
@@ -1297,7 +1297,7 @@ verify_call_params_size = () => {
 	}
 }
 
-// Semantic action that generates the 'gosub' quad
+// Semantic action that generates the 'gosub' quad, removes fake bottom corresponding to this func's call
 // Does not receive any parameters
 // Does not return anything
 mark_func_call_end = () => {
