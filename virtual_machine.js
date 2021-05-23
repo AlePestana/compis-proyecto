@@ -43,6 +43,17 @@ const funcs_offsets = {
 	float_temps_offset: 22000,
 }
 
+// Determine the scope of an address
+const getScope = (address) => {
+	if (address < 14000) {
+		return 'global'
+	} else if (address < 25000) {
+		return 'local'
+	} else {
+		return 'constant'
+	}
+}
+
 // Function that checks if an address belongs to a constant (all constants are stored after virtual address 25000)
 const isConstant = (address) => {
 	return address >= 25000
@@ -115,17 +126,36 @@ async function execute_virtual_machine(virtual_machine_info) {
 	const getOperandValue = (address) => {
 		if (isConstant(address)) {
 			return getConstant(constants_directory, address)
-		} else if (isTempVar(address)) {
-			// Look for temp value in corresponding memory (since it must have already been stored)
-			const temp_type = getTempVarType(address)
-			return data_segment[current_func].get(address, 'temps', temp_type)
 		} else {
-			const var_type = getVarType(
-				func_directory.get(current_func).var_directory,
-				address
-			)
-			// Look for value in corresponding memory ?????
-			return data_segment[current_func].get(address, 'vars', var_type)
+			const scope = getScope(address)
+			if (scope === 'global') {
+				// Working with data_segment
+				if (isTempVar(address)) {
+					// Look for temp value in corresponding memory (since it must have already been stored)
+					const temp_type = getTempVarType(address)
+					return data_segment[current_func].get(address, 'temps', temp_type)
+				} else {
+					const var_type = getVarType(
+						func_directory.get(current_func).var_directory,
+						address
+					)
+					// Look for value in corresponding memory ?????
+					return data_segment[current_func].get(address, 'vars', var_type)
+				}
+			} else {
+				// Working with exec_stack
+				if (isTempVar(address)) {
+					// Look for temp value in corresponding memory (since it must have already been stored)
+					const temp_type = getTempVarType(address)
+					return exec_stack.top().memory.get(address, 'temps', temp_type)
+				} else {
+					const var_type = getVarType(
+						func_directory.get(exec_stack.top().name).var_directory,
+						address
+					)
+					return exec_stack.top().memory.get(address, 'vars', var_type)
+				}
+			}
 		}
 	}
 
@@ -324,12 +354,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 			case 18: // era
 				let funcCallMem = new Memory(funcs_offsets)
 				// Here we should probably size the memory according to the func's need?
-				func_calls_in_build.push({ memory: funcCallMem, return_address: null })
+				func_calls_in_build.push({ name: null, memory: funcCallMem, return_address: null })
 				ip++
 				break
 			case 19: // gosub
-				// dunno what the left operand of the gosub quad is for
 				let func_call_to_push = func_calls_in_build.pop()
+				func_call_to_push.name = quad.left_operand
 				func_call_to_push.return_address = ip + 1
 				exec_stack.push(func_call_to_push)
 				ip = quad.result
