@@ -10,6 +10,8 @@ const Stack = require('./functions/helpers/stack')
 
 const readline = require('readline')
 
+const debug = false
+
 // Helpers to read user input
 const receive_user_input = () => {
 	const rl = readline.createInterface({
@@ -195,7 +197,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 					getOperandValue(quad.left_operand) +
 					getOperandValue(quad.right_operand)
 				address = quad.result
-				console.log('+')
+				if (debug) {
+					console.log('+')
+				}
 				// Save result on memory
 				setMemoryValue(result, address, 'temps')
 				ip++
@@ -206,7 +210,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand - right_operand
 				address = quad.result
-				console.log('-')
+				if (debug) {
+					console.log('-')
+				}
 				// Save result on memory
 				setMemoryValue(result, address, 'temps')
 				ip++
@@ -217,7 +223,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand * right_operand
 				address = quad.result
-				console.log('*')
+				if (debug) {
+					console.log('*')
+				}
 				// Save result on memory
 				setMemoryValue(result, address, 'temps')
 				ip++
@@ -228,7 +236,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand / right_operand
 				address = quad.result
-				console.log('/')
+				if (debug) {
+					console.log('/')
+				}
 				// Save result on memory
 				setMemoryValue(result, address, 'temps')
 				ip++
@@ -239,7 +249,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand < right_operand ? 1 : 0
 				address = quad.result
-				console.log('<')
+				if (debug) {
+					console.log('<')
+				}
 				// Save result on memory
 				setMemoryValue(result, address, 'temps')
 				ip++
@@ -250,7 +262,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand > right_operand ? 1 : 0
 				address = quad.result
-				console.log('>')
+				if (debug) {
+					console.log('>')
+				}
 				// Save result on memory
 				setMemoryValue(result, address, 'temps')
 				ip++
@@ -261,7 +275,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand == right_operand ? 1 : 0
 				address = quad.result
-				console.log('==')
+				if (debug) {
+					console.log('==')
+				}
 				// Save result on memory
 				setMemoryValue(result, address, 'temps')
 				ip++
@@ -272,7 +288,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand != right_operand ? 1 : 0
 				address = quad.result
-				console.log('!=')
+				if (debug) {
+					console.log('!=')
+				}
 				// Save result on memory
 				setMemoryValue(result, address, 'temps')
 				ip++
@@ -283,7 +301,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand & right_operand ? 1 : 0
 				address = quad.result
-				console.log('&')
+				if (debug) {
+					console.log('&')
+				}
 				// Save result on memory
 				setMemoryValue(result, address, 'temps')
 				ip++
@@ -294,7 +314,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand | right_operand ? 1 : 0
 				address = quad.result
-				console.log('|')
+				if (debug) {
+					console.log('|')
+				}
 				// Save result on memory
 				setMemoryValue(result, address, 'temps')
 				ip++
@@ -303,7 +325,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 			case 11: // =
 				result = getOperandValue(quad.left_operand)
 				address = quad.result
-				console.log('=')
+				if (debug) {
+					console.log('=')
+				}
 				// This will break when assigning values to global variables inside funcs ????
 				const duration = isTempVar(address) ? 'temps' : 'vars'
 				setMemoryValue(result, address, duration)
@@ -394,7 +418,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 				result = getOperandValue(quad.result)
 				address = func_directory.get(exec_stack.top().name).return_address
 				setMemoryValue(result, address, 'vars')
-				
+
 				ip = exec_stack.pop().return_address
 				break
 			default:

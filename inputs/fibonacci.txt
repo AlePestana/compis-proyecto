@@ -13,5 +13,6 @@ var <- int res; ->
 }
 
 main() {
-    print(fibonacci(10));
+  print("Fibonacci of 10");
+  print(fibonacci(10));
 }
