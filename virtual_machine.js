@@ -364,17 +364,24 @@ async function execute_virtual_machine(virtual_machine_info) {
 			case 18: // era
 				let funcCallMem = new Memory(funcs_offsets)
 				// Here we should probably size the memory according to the func's need?
-				func_calls_in_build.push({ name: null, memory: funcCallMem, return_address: null })
+				func_calls_in_build.push({ name: quad.left_operand, memory: funcCallMem, return_address: null })
 				ip++
 				break
 			case 19: // gosub
+				// Dunno what the left operand of the gosub is for
 				let func_call_to_push = func_calls_in_build.pop()
-				func_call_to_push.name = quad.left_operand
 				func_call_to_push.return_address = ip + 1
 				exec_stack.push(func_call_to_push)
 				ip = quad.result
 				break
 			case 20: // param
+				const argument = getOperandValue(quad.left_operand)
+				const paramNum = parseInt(quad.result.slice(5)) // Read after param
+
+				const argumentType = func_directory.get(func_calls_in_build.top().name).params_type_list[paramNum - 1]
+
+				func_calls_in_build.top().memory.add_parameter(argument, argumentType)
+
 				ip++
 				break
 			case 21: // end
