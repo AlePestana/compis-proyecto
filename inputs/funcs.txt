@@ -1,18 +1,19 @@
 program prog1; 
 var <- int x; float y; ->
 
-void func surprise (var <- int z; float k; ->)
-var <- int a; ->
+float func surprise (var <- int z; float k; ->)
+var <- float a; ->
 {
-    k = 9.5 + 1.5;
-    z = 5;
-    a = 8;
+    a = z + k;
+    print(k);
     print("inside func");
+    return a;
 }
 
 main() {
     x = 5 + 5;
     y = 6.5;
-    surprise(x, y);
+    y = surprise(x, y);
+    print(y);
     print("end program");
 }

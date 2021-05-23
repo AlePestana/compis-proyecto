@@ -1,0 +1,17 @@
+program prog1; 
+var <- int x; float y; ->
+
+void func surprise (var <- int limit; ->)
+var <- int a; ->
+{
+    a = limit + 1;
+    print(a);
+    if (a < 5) {
+        surprise(a);
+    }
+}
+
+main() {
+    surprise(0);
+    print("end program");
+}
