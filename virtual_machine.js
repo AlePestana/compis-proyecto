@@ -97,6 +97,17 @@ const getVarType = (var_directory, address) => {
 	}
 }
 
+const setMemoryValue = (result, address, duration) => {
+	let scope = getScope(address)
+	if (scope === 'global') {
+		// data_segment
+		data_segment[current_func].set(result, address, duration)
+	} else {
+		// exec_stack
+		exec_stack.top().memory.set(result, address, duration)
+	}
+}
+
 // Function that executes the virtual machine by creating the data, code, and stack segment
 // Receives the relevant information from the parser (quads, func_directory, and constants_directory)
 // Does not return anything since it performs the necessary operations inside
