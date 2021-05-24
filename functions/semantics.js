@@ -181,14 +181,14 @@ add_func_id = (func_id) => {
 			type: current_type,
 			var_directory: new Map(),
 		})
-		if (currentType !== 'void') {
+		if (current_type !== 'void') {
 			const return_address = virtual_memory.get_address(
 				'global',
-				currentType,
+				current_type,
 				'perm'
 			)
 			func_directory.get(global_func).var_directory.set(func_id, {
-				type: currentType,
+				type: current_type,
 				virtual_address: return_address,
 			})
 			func_directory.get(func_id).return_address = return_address
