@@ -122,10 +122,19 @@ async function execute_virtual_machine(virtual_machine_info) {
 	// Declare all necessary types
 	const code_segment = quads
 	// Create memory map for main
-	const data_segment = new Memory(main_func_offsets)
+	let current_func = func_directory.entries().next().value[0] // returns the name of the first func inside the current directory
+	const main_size_directory =
+		func_directory.get(current_func).func_size_directory
+	const main_func_sizes = {
+		int_vars_count: main_size_directory.get('vars_size').int,
+		float_vars_count: main_size_directory.get('vars_size').float,
+		char_vars_count: main_size_directory.get('vars_size').char,
+		int_temps_count: main_size_directory.get('temps_size').int,
+		float_temps_count: main_size_directory.get('temps_size').float,
+	}
+	const data_segment = new Memory(main_func_sizes, main_func_offsets)
 	const exec_stack = new Stack()
 	let ip = 0 // instruction pointer
-	let current_func = func_directory.entries().next().value[0] // returns the name of the first func inside the current directory
 
 	// Helper structures
 	const func_calls_in_build = new Stack()
@@ -194,6 +203,22 @@ async function execute_virtual_machine(virtual_machine_info) {
 		}
 
 		return total
+	}
+
+	const getFunctionSizes = (size_directory) => {
+		return {
+			int_vars_count:
+				size_directory.get('params_size').int +
+				size_directory.get('local_vars_size').int,
+			float_vars_count:
+				size_directory.get('params_size').float +
+				size_directory.get('local_vars_size').float,
+			char_vars_count:
+				size_directory.get('params_size').char +
+				size_directory.get('local_vars_size').char,
+			int_temps_count: size_directory.get('temps_size').int,
+			float_temps_count: size_directory.get('temps_size').float,
+		}
 	}
 
 	let left_operand, right_operand, result, address
@@ -411,10 +436,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 				}
 				// Add current function size to total size of execution stack
 				exec_stack_size += curr_function_size
-				let func_call_mem = new Memory(funcs_offsets)
-				// Here we should probably size the memory according to the func's need?
+				let curr_function_sizes = getFunctionSizes(
+					func_directory.get(curr_function_name).func_size_directory
+				)
+				let func_call_mem = new Memory(curr_function_sizes, funcs_offsets)
 				func_calls_in_build.push({
-					name: quad.left_operand,
+					name: curr_function_name,
 					memory: func_call_mem,
 					return_address: null,
 				})
@@ -456,16 +483,3 @@ async function execute_virtual_machine(virtual_machine_info) {
 }
 
 module.exports = { execute_virtual_machine }
-
-/*
-Example using the Memory data structure
-const main_memory = new Memory(main_func_offsets)
-console.log('created main memory')
-console.log(main_memory)
-main_memory.push(1, 'vars', 'int')
-main_memory.push(2, 'vars', 'int')
-console.log(main_memory.memory)
-main_memory.update(2, 5000, 'vars', 'int')
-console.log(main_memory.memory)
-console.log(main_memory.get(5001, 'vars', 'int'))
-*/

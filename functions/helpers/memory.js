@@ -10,22 +10,31 @@ function isBetween(x, min, max) {
 }
 
 class Memory {
-	constructor({
-		int_vars_offset,
-		float_vars_offset,
-		char_vars_offset,
-		int_temps_offset,
-		float_temps_offset,
-	}) {
+	constructor(
+		{
+			int_vars_size,
+			float_vars_size,
+			char_vars_size,
+			int_temps_size,
+			float_temps_size,
+		},
+		{
+			int_vars_offset,
+			float_vars_offset,
+			char_vars_offset,
+			int_temps_offset,
+			float_temps_offset,
+		}
+	) {
 		this.memory = {
 			vars: {
-				int: [],
-				float: [],
-				char: [],
+				int: new Array(int_vars_size),
+				float: new Array(float_vars_size),
+				char: new Array(char_vars_size),
 			},
 			temps: {
-				int: [],
-				float: [],
+				int: new Array(int_temps_size),
+				float: new Array(float_temps_size),
 			},
 		}
 		this.int_vars_offset = int_vars_offset
@@ -33,17 +42,28 @@ class Memory {
 		this.char_vars_offset = char_vars_offset
 		this.int_temps_offset = int_temps_offset
 		this.float_temps_offset = float_temps_offset
+		this.int_vars_count = 0
+		this.float_vars_count = 0
+		this.char_vars_count = 0
+		this.int_temps_count = 0
+		this.float_temps_count = 0
 	}
 
 	// Add a value to the memory
-	push(value, scope, type) {
-		this.memory[scope][type].push(value)
-	}
+	// push(value, scope, type) {
+	// 	this.memory[scope][type].push(value)
+	// }
 
 	// Push a parameter value to the memory
 	add_parameter(value, type) {
 		let index = 0
-		while (typeof this.memory['vars'][type][index] != 'undefined') index++
+		if (type === 'int') {
+			index = this.int_vars_count
+		} else if (type === 'float') {
+			index = this.float_vars_count
+		} else {
+			index = this.char_vars_count
+		}
 		this.memory['vars'][type][index] = value
 	}
 
@@ -100,6 +120,23 @@ class Memory {
 		const type = this.get_address_type(address, scope)
 		const index = address - this.get_offset(scope, type)
 		this.memory[scope][type][index] = value
+
+		// Update counters
+		if (scope === 'vars') {
+			if (type === 'int') {
+				this.int_vars_count++
+			} else if (type === 'float') {
+				this.float_vars_count++
+			} else {
+				this.char_vars_count++
+			}
+		} else {
+			if (type === 'int') {
+				this.int_temps_count++
+			} else {
+				this.float_temps_count++
+			}
+		}
 	}
 }
 
