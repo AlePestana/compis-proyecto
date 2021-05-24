@@ -1,0 +1,15 @@
+program prog1;
+var <- int x; float y; ->
+
+main() { 
+  x = 5;
+  y = 1.0;
+  while (y < x) {
+    print("Inside while");
+    y = y * 2;
+  }
+  for (x = 0 until 5) {
+    print("Hey Jude"); 
+  }
+  print("Goodbye");
+}
