@@ -365,7 +365,7 @@ const grammar = {
 			],
 		],
 
-		var_name_assignment_keyword: [['var_name', "add_operand($1, 'var')"]],
+		var_name_assignment_keyword: [['var_name', '$$']],
 
 		assignment_operator: [['=', 'add_operator($1)']],
 
@@ -375,10 +375,24 @@ const grammar = {
 		],
 
 		simple_id: [
+			[
+				'simple_id_keyword starting_am_bracket expression closing_am_bracket',
+				'mark_am_end()',
+			],
+			[
+				'simple_id_keyword starting_am_bracket expression closing_am_bracket starting_matrix_bracket expression closing_am_bracket',
+				'mark_am_end()',
+			],
 			['simple_id_keyword func_call', '$$'],
-			['ID [ expression ]', `add_operand($1, 'var')`],
-			['ID [ expression ] [ expression ]', `add_operand($1, 'var')`],
 		],
+
+		am_id_keyword: [['ID', `add_operand($1, 'var')`]],
+
+		starting_am_bracket: [['[', 'add_simple_id_operand(); mark_am_start()']],
+
+		closing_am_bracket: [[']', 'mark_am_dimension()']],
+
+		starting_matrix_bracket: [['[', 'add_am_dimension()']],
 
 		simple_id_keyword: [['ID', 'set_simple_id($1)']],
 
@@ -390,6 +404,7 @@ const grammar = {
 				'starting_call_params_parenthesis params_call closing_call_params_parenthesis',
 				'mark_func_call_end(); add_func_return(); reset_func_call_helpers()',
 			], // Call a function with a return type
+			// ['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
 		],
 
 		//func_call_id_keyword: [['ID', 'mark_func_call_start()']],
