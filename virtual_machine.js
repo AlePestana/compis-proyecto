@@ -10,6 +10,8 @@ const Stack = require('./functions/helpers/stack')
 
 const readline = require('readline')
 
+const debug = false
+
 // Helpers to read user input
 const receive_user_input = () => {
 	const rl = readline.createInterface({
@@ -41,6 +43,15 @@ const funcs_offsets = {
 	char_vars_offset: 23000,
 	int_temps_offset: 18000,
 	float_temps_offset: 22000,
+}
+
+// Function that checks if an address belongs to the global scope
+const isGlobalVar = (address) => {
+	if (address < 14000) {
+		return true
+	} else {
+		return false
+	}
 }
 
 // Function that checks if an address belongs to a constant (all constants are stored after virtual address 25000)
@@ -86,6 +97,16 @@ const getVarType = (var_directory, address) => {
 	}
 }
 
+const getLocalVarType = (address) => {
+	if (isBetween(address, 14000, 18999)) {
+		return 'int'
+	} else if (isBetween(address, 19000, 22999)) {
+		return 'float'
+	} else {
+		return 'char'
+	}
+}
+
 // Function that executes the virtual machine by creating the data, code, and stack segment
 // Receives the relevant information from the parser (quads, func_directory, and constants_directory)
 // Does not return anything since it performs the necessary operations inside
@@ -105,6 +126,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 	let ip = 0 // instruction pointer
 	let current_func = func_directory.entries().next().value[0] // returns the name of the first func inside the current directory
 
+	// Helper structures
+	const func_calls_in_build = new Stack()
+
 	// Create memory map for main
 	// Data segment will have the form -> { main: {}, func1: {}}
 	data_segment[current_func] = new Memory(main_func_offsets)
@@ -112,17 +136,47 @@ async function execute_virtual_machine(virtual_machine_info) {
 	const getOperandValue = (address) => {
 		if (isConstant(address)) {
 			return getConstant(constants_directory, address)
-		} else if (isTempVar(address)) {
-			// Look for temp value in corresponding memory (since it must have already been stored)
-			const temp_type = getTempVarType(address)
-			return data_segment[current_func].get(address, 'temps', temp_type)
 		} else {
-			const var_type = getVarType(
-				func_directory.get(current_func).var_directory,
-				address
-			)
-			// Look for value in corresponding memory ?????
-			return data_segment[current_func].get(address, 'vars', var_type)
+			if (isGlobalVar(address)) {
+				// Working with data_segment
+				if (isTempVar(address)) {
+					// Look for temp value in corresponding memory (since it must have already been stored)
+					const temp_type = getTempVarType(address)
+					return data_segment[current_func].get(address, 'temps', temp_type)
+				} else {
+					const var_type = getVarType(
+						func_directory.get(current_func).var_directory,
+						address
+					)
+					// Look for value in corresponding memory ?????
+					return data_segment[current_func].get(address, 'vars', var_type)
+				}
+			} else {
+				// Working with exec_stack
+				if (isTempVar(address)) {
+					// Look for temp value in corresponding memory (since it must have already been stored)
+					const temp_type = getTempVarType(address)
+					return exec_stack.top().memory.get(address, 'temps', temp_type)
+				} else {
+					//console.log(exec_stack.top().name)
+					const var_type = getLocalVarType(address)
+					return exec_stack.top().memory.get(address, 'vars', var_type)
+				}
+			}
+		}
+	}
+
+	const setMemoryValue = (result, address, duration) => {
+		if (isGlobalVar(address)) {
+			// data_segment
+			data_segment[current_func].set(result, address, duration)
+			// console.log('global')
+			// console.log(data_segment[current_func].memory)
+		} else {
+			// exec_stack
+			exec_stack.top().memory.set(result, address, duration)
+			// console.log('local')
+			// console.log(exec_stack.top().memory.memory) // LOL
 		}
 	}
 
@@ -139,11 +193,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 					getOperandValue(quad.left_operand) +
 					getOperandValue(quad.right_operand)
 				address = quad.result
+				if (debug) {
+					console.log('+')
+				}
 				// Save result on memory
-				data_segment[current_func].set(result, address, 'temps')
+				setMemoryValue(result, address, 'temps')
 				ip++
-				console.log('+')
-				console.log(data_segment[current_func].memory)
 				break
 
 			case 2: // -
@@ -151,11 +206,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand - right_operand
 				address = quad.result
+				if (debug) {
+					console.log('-')
+				}
 				// Save result on memory
-				data_segment[current_func].set(result, address, 'temps')
+				setMemoryValue(result, address, 'temps')
 				ip++
-				console.log('-')
-				console.log(data_segment[current_func].memory)
 				break
 
 			case 3: // *
@@ -163,11 +219,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand * right_operand
 				address = quad.result
+				if (debug) {
+					console.log('*')
+				}
 				// Save result on memory
-				data_segment[current_func].set(result, address, 'temps')
+				setMemoryValue(result, address, 'temps')
 				ip++
-				console.log('*')
-				console.log(data_segment[current_func].memory)
 				break
 
 			case 4: // /
@@ -175,11 +232,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand / right_operand
 				address = quad.result
+				if (debug) {
+					console.log('/')
+				}
 				// Save result on memory
-				data_segment[current_func].set(result, address, 'temps')
+				setMemoryValue(result, address, 'temps')
 				ip++
-				console.log('/')
-				console.log(data_segment[current_func].memory)
 				break
 
 			case 5: // <
@@ -187,11 +245,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand < right_operand ? 1 : 0
 				address = quad.result
+				if (debug) {
+					console.log('<')
+				}
 				// Save result on memory
-				data_segment[current_func].set(result, address, 'temps')
+				setMemoryValue(result, address, 'temps')
 				ip++
-				console.log('<')
-				console.log(data_segment[current_func].memory)
 				break
 
 			case 6: // >
@@ -199,11 +258,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand > right_operand ? 1 : 0
 				address = quad.result
+				if (debug) {
+					console.log('>')
+				}
 				// Save result on memory
-				data_segment[current_func].set(result, address, 'temps')
+				setMemoryValue(result, address, 'temps')
 				ip++
-				console.log('>')
-				console.log(data_segment[current_func].memory)
 				break
 
 			case 7: // ==
@@ -211,11 +271,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand == right_operand ? 1 : 0
 				address = quad.result
+				if (debug) {
+					console.log('==')
+				}
 				// Save result on memory
-				data_segment[current_func].set(result, address, 'temps')
+				setMemoryValue(result, address, 'temps')
 				ip++
-				console.log('==')
-				console.log(data_segment[current_func].memory)
 				break
 
 			case 8: // !=
@@ -223,11 +284,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand != right_operand ? 1 : 0
 				address = quad.result
+				if (debug) {
+					console.log('!=')
+				}
 				// Save result on memory
-				data_segment[current_func].set(result, address, 'temps')
+				setMemoryValue(result, address, 'temps')
 				ip++
-				console.log('!=')
-				console.log(data_segment[current_func].memory)
 				break
 
 			case 9: // &
@@ -235,11 +297,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand & right_operand ? 1 : 0
 				address = quad.result
+				if (debug) {
+					console.log('&')
+				}
 				// Save result on memory
-				data_segment[current_func].set(result, address, 'temps')
+				setMemoryValue(result, address, 'temps')
 				ip++
-				console.log('&')
-				console.log(data_segment[current_func].memory)
 				break
 
 			case 10: // |
@@ -247,20 +310,23 @@ async function execute_virtual_machine(virtual_machine_info) {
 				right_operand = getOperandValue(quad.right_operand)
 				result = left_operand | right_operand ? 1 : 0
 				address = quad.result
+				if (debug) {
+					console.log('|')
+				}
 				// Save result on memory
-				data_segment[current_func].set(result, address, 'temps')
+				setMemoryValue(result, address, 'temps')
 				ip++
-				console.log('|')
-				console.log(data_segment[current_func].memory)
 				break
 
 			case 11: // =
 				result = getOperandValue(quad.left_operand)
 				address = quad.result
+				if (debug) {
+					console.log('=')
+				}
 				// This will break when assigning values to global variables inside funcs ????
-				data_segment[current_func].set(result, address, 'vars') // assignment is only possible for variables
-				console.log('=')
-				console.log(data_segment[current_func].memory)
+				const duration = isTempVar(address) ? 'temps' : 'vars'
+				setMemoryValue(result, address, duration)
 				ip++
 				break
 
@@ -291,9 +357,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 				// Look for address in func_directory
 				address = func_directory
 					.get(current_func)
-					.var_directory.get(quad.result).virtual_address
+					.var_directory.get(quad.result).virtual_address // Quad should probably also have an address and not a name?
 				// Save result on memory
-				data_segment[current_func].set(result, address, 'vars')
+				setMemoryValue(result, address, 'vars')
 				ip++
 				break
 			case 14: // gotoT
@@ -316,16 +382,40 @@ async function execute_virtual_machine(virtual_machine_info) {
 				ip = quad.result
 				break
 			case 17: // endfunc
+				ip = exec_stack.pop().return_address
+				break
 			case 18: // era
+				let func_call_mem = new Memory(funcs_offsets)
+				// Here we should probably size the memory according to the func's need?
+				func_calls_in_build.push({ name: quad.left_operand, memory: func_call_mem, return_address: null })
+				ip++
+				break
 			case 19: // gosub
+				// Dunno what the left operand of the gosub is for
+				let func_call_to_push = func_calls_in_build.pop()
+				func_call_to_push.return_address = ip + 1
+				exec_stack.push(func_call_to_push)
+				ip = quad.result
+				break
 			case 20: // param
+				const argument = getOperandValue(quad.left_operand)
+				const param_num = parseInt(quad.result.slice(5)) // Read after param
+
+				const argument_type = func_directory.get(func_calls_in_build.top().name).params_type_list[param_num - 1]
+
+				func_calls_in_build.top().memory.add_parameter(argument, argument_type)
+
 				ip++
 				break
 			case 21: // end
 				ip = -1
 				break
 			case 22: // return
-				ip++
+				result = getOperandValue(quad.result)
+				address = func_directory.get(exec_stack.top().name).return_address
+				setMemoryValue(result, address, 'vars')
+
+				ip = exec_stack.pop().return_address
 				break
 			default:
 				ip = -1

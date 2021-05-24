@@ -40,6 +40,13 @@ class Memory {
 		this.memory[scope][type].push(value)
 	}
 
+	// Push a parameter value to the memory
+	add_parameter(value, type) {
+		let index = 0
+		while (typeof this.memory['vars'][type][index] != 'undefined') index++
+		this.memory['vars'][type][index] = value
+	}
+
 	// Get the offset according to scope of variable and type
 	get_offset(scope, type) {
 		if (scope === 'vars') {
