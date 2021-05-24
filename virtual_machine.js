@@ -129,7 +129,10 @@ async function execute_virtual_machine(virtual_machine_info) {
 
 	// Helper structures
 	const func_calls_in_build = new Stack()
+	let exec_stack_size = 0
+	const exec_stack_max_size = 100000
 
+	// Function to look on corresponding memory for a variable's value
 	const getOperandValue = (address) => {
 		if (isConstant(address)) {
 			return getConstant(constants_directory, address)
@@ -163,6 +166,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 		}
 	}
 
+	// Function to set to memory a particular value
 	const setMemoryValue = (result, address, duration) => {
 		if (isGlobalVar(address)) {
 			// data_segment
@@ -171,6 +175,25 @@ async function execute_virtual_machine(virtual_machine_info) {
 			// exec_stack
 			exec_stack.top().memory.set(result, address, duration)
 		}
+	}
+
+	// Function to calculate the total amount needed for a function
+	const getTotalFunctionSize = (func_size_directory) => {
+		let total = 0
+		for (let [, size_directory] of func_size_directory.entries()) {
+			// Add all the values stored for each type of size
+			// Example -->
+			/*
+			{
+				'params_size' => { int: 1, float: 0, char: 0 },
+				'local_vars_size' => { int: 1, float: 0, char: 0 },
+				'temps_size' => { int: 6, float: 0 }
+			} 
+			*/
+			total += Object.values(size_directory).reduce((a, b) => a + b, 0)
+		}
+
+		return total
 	}
 
 	let left_operand, right_operand, result, address
@@ -378,6 +401,16 @@ async function execute_virtual_machine(virtual_machine_info) {
 				ip = exec_stack.pop().return_address
 				break
 			case 18: // era
+				let curr_function_name = quad.left_operand
+				let curr_function_size = getTotalFunctionSize(
+					func_directory.get(curr_function_name).func_size_directory
+				)
+				if (exec_stack_size + curr_function_size > exec_stack_max_size) {
+					console.log('ERROR - Stack overflow')
+					throw 'ERROR - Stack overflow'
+				}
+				// Add current function size to total size of execution stack
+				exec_stack_size += curr_function_size
 				let func_call_mem = new Memory(funcs_offsets)
 				// Here we should probably size the memory according to the func's need?
 				func_calls_in_build.push({
