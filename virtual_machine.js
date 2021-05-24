@@ -121,17 +121,14 @@ async function execute_virtual_machine(virtual_machine_info) {
 
 	// Declare all necessary types
 	const code_segment = quads
-	const data_segment = {}
+	// Create memory map for main
+	const data_segment = new Memory(main_func_offsets)
 	const exec_stack = new Stack()
 	let ip = 0 // instruction pointer
 	let current_func = func_directory.entries().next().value[0] // returns the name of the first func inside the current directory
 
 	// Helper structures
 	const func_calls_in_build = new Stack()
-
-	// Create memory map for main
-	// Data segment will have the form -> { main: {}, func1: {}}
-	data_segment[current_func] = new Memory(main_func_offsets)
 
 	const getOperandValue = (address) => {
 		if (isConstant(address)) {
@@ -142,14 +139,14 @@ async function execute_virtual_machine(virtual_machine_info) {
 				if (isTempVar(address)) {
 					// Look for temp value in corresponding memory (since it must have already been stored)
 					const temp_type = getTempVarType(address)
-					return data_segment[current_func].get(address, 'temps', temp_type)
+					return data_segment.get(address, 'temps', temp_type)
 				} else {
 					const var_type = getVarType(
 						func_directory.get(current_func).var_directory,
 						address
 					)
 					// Look for value in corresponding memory ?????
-					return data_segment[current_func].get(address, 'vars', var_type)
+					return data_segment.get(address, 'vars', var_type)
 				}
 			} else {
 				// Working with exec_stack
@@ -169,14 +166,10 @@ async function execute_virtual_machine(virtual_machine_info) {
 	const setMemoryValue = (result, address, duration) => {
 		if (isGlobalVar(address)) {
 			// data_segment
-			data_segment[current_func].set(result, address, duration)
-			// console.log('global')
-			// console.log(data_segment[current_func].memory)
+			data_segment.set(result, address, duration)
 		} else {
 			// exec_stack
 			exec_stack.top().memory.set(result, address, duration)
-			// console.log('local')
-			// console.log(exec_stack.top().memory.memory) // LOL
 		}
 	}
 
@@ -387,7 +380,11 @@ async function execute_virtual_machine(virtual_machine_info) {
 			case 18: // era
 				let func_call_mem = new Memory(funcs_offsets)
 				// Here we should probably size the memory according to the func's need?
-				func_calls_in_build.push({ name: quad.left_operand, memory: func_call_mem, return_address: null })
+				func_calls_in_build.push({
+					name: quad.left_operand,
+					memory: func_call_mem,
+					return_address: null,
+				})
 				ip++
 				break
 			case 19: // gosub
@@ -401,7 +398,8 @@ async function execute_virtual_machine(virtual_machine_info) {
 				const argument = getOperandValue(quad.left_operand)
 				const param_num = parseInt(quad.result.slice(5)) // Read after param
 
-				const argument_type = func_directory.get(func_calls_in_build.top().name).params_type_list[param_num - 1]
+				const argument_type = func_directory.get(func_calls_in_build.top().name)
+					.params_type_list[param_num - 1]
 
 				func_calls_in_build.top().memory.add_parameter(argument, argument_type)
 
