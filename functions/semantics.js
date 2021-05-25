@@ -1546,7 +1546,7 @@ mark_am_end = () => {
 		const right_operand = base_virtual_address
 		const scope = current_func == global_func ? 'global' : 'local'
 		const type = dimensions_stack.top().type
-		const result = virtual_memory.get_address(scope, type, 'temp')
+		const result = virtual_memory.get_address(scope, type, 'pointer')
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand,
