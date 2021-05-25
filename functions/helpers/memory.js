@@ -17,6 +17,9 @@ class Memory {
 			char_vars_size,
 			int_temps_size,
 			float_temps_size,
+			int_pointers_size,
+			float_pointers_size,
+			char_pointers_size,
 		},
 		{
 			int_vars_offset,
@@ -24,6 +27,9 @@ class Memory {
 			char_vars_offset,
 			int_temps_offset,
 			float_temps_offset,
+			int_pointers_offset,
+			float_pointers_offset,
+			char_pointers_offset,
 		}
 	) {
 		this.memory = {
@@ -36,17 +42,28 @@ class Memory {
 				int: new Array(int_temps_size),
 				float: new Array(float_temps_size),
 			},
+			pointers: {
+				int: new Array(int_pointers_size),
+				float: new Array(float_pointers_size),
+				char: new Array(char_pointers_size),
+			},
 		}
 		this.int_vars_offset = int_vars_offset
 		this.float_vars_offset = float_vars_offset
 		this.char_vars_offset = char_vars_offset
 		this.int_temps_offset = int_temps_offset
 		this.float_temps_offset = float_temps_offset
+		this.int_pointers_offset = int_pointers_offset
+		this.float_pointers_offset = float_pointers_offset
+		this.char_pointers_offset = char_pointers_offset
 		this.int_vars_count = 0
 		this.float_vars_count = 0
 		this.char_vars_count = 0
 		this.int_temps_count = 0
 		this.float_temps_count = 0
+		this.int_pointers_count = 0
+		this.float_pointers_count = 0
+		this.char_pointers_count = 0
 	}
 
 	// Add a value to the memory
@@ -77,11 +94,19 @@ class Memory {
 			} else {
 				return this.char_vars_offset
 			}
-		} else {
+		} else if (scope === 'temps') {
 			if (type === 'int') {
 				return this.int_temps_offset
 			} else {
 				return this.float_temps_offset
+			}
+		} else {
+			if (type === 'int') {
+				return this.int_pointers_offset
+			} else if (type === 'float') {
+				return this.float_pointers_offset
+			} else {
+				return this.char_pointers_offset
 			}
 		}
 	}
@@ -96,7 +121,7 @@ class Memory {
 
 	// Dependending on the provided address, returns the type of variable (according to the scopes and offsets specified)
 	get_address_type(address, scope) {
-		if (scope == 'vars') {
+		if (scope === 'vars') {
 			if (isBetween(address, this.int_vars_offset, this.float_vars_offset)) {
 				return 'int'
 			} else if (
@@ -106,11 +131,27 @@ class Memory {
 			} else {
 				return 'char'
 			}
-		} else {
+		} else if (scope === 'temps') {
 			if (isBetween(address, this.int_temps_offset, this.float_temps_offset)) {
 				return 'int'
 			} else {
 				return 'float'
+			}
+		} else {
+			if (
+				isBetween(address, this.int_pointers_offset, this.float_pointers_offset)
+			) {
+				return 'int'
+			} else if (
+				isBetween(
+					address,
+					this.float_pointers_offset,
+					this.char_pointers_offset
+				)
+			) {
+				return 'float'
+			} else {
+				return 'char'
 			}
 		}
 	}
@@ -130,11 +171,19 @@ class Memory {
 			} else {
 				this.char_vars_count++
 			}
-		} else {
+		} else if (scope === 'temps') {
 			if (type === 'int') {
 				this.int_temps_count++
 			} else {
 				this.float_temps_count++
+			}
+		} else {
+			if (type === 'int') {
+				this.int_pointers_count++
+			} else if (type === 'float') {
+				this.float_pointers_count++
+			} else {
+				this.char_pointers_count++
 			}
 		}
 	}

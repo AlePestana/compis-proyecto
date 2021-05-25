@@ -34,6 +34,9 @@ const main_func_offsets = {
 	char_vars_offset: 12000,
 	int_temps_offset: 8000,
 	float_temps_offset: 11000,
+	int_pointers_offset: 33000,
+	float_pointers_offset: 35000,
+	char_pointers_offset: 37000,
 }
 
 // Determine the offsets for addresses for functions (stored as local on parser)
@@ -43,11 +46,14 @@ const funcs_offsets = {
 	char_vars_offset: 23000,
 	int_temps_offset: 18000,
 	float_temps_offset: 22000,
+	int_pointers_offset: 39000,
+	float_pointers_offset: 41000,
+	char_pointers_offset: 43000,
 }
 
 // Function that checks if an address belongs to the global scope
 const isGlobalVar = (address) => {
-	if (address < 14000) {
+	if (address < 14000 || (address >= 33000 && address <= 38999)) {
 		return true
 	} else {
 		return false
@@ -56,7 +62,12 @@ const isGlobalVar = (address) => {
 
 // Function that checks if an address belongs to a constant (all constants are stored after virtual address 25000)
 const isConstant = (address) => {
-	return address >= 25000
+	return address >= 25000 && address <= 32999
+}
+
+// Function that checks if an address belongs to a pointer (all pointers are stored after virtual address 33000)
+const isPointer = (address) => {
+	return address >= 33000
 }
 
 // Function that returns the value of a constant by receiving the constants directory and the address
@@ -152,12 +163,14 @@ async function execute_virtual_machine(virtual_machine_info) {
 					// Look for temp value in corresponding memory (since it must have already been stored)
 					const temp_type = getTempVarType(address)
 					return data_segment.get(address, 'temps', temp_type)
+				} else if (isPointer(address)) {
+					console.log('its a pointer')
 				} else {
 					const var_type = getVarType(
 						func_directory.get(current_func).var_directory,
 						address
 					)
-					// Look for value in corresponding memory ?????
+					// Look for value in corresponding memory
 					return data_segment.get(address, 'vars', var_type)
 				}
 			} else {
@@ -474,6 +487,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 				setMemoryValue(result, address, 'vars')
 
 				ip = exec_stack.pop().return_address
+				break
+			case 23: // verify
+				ip++
 				break
 			default:
 				ip = -1
