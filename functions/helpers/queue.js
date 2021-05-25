@@ -29,6 +29,10 @@ class Queue {
 			return this.data[0]
 		}
 	}
+
+	get(index) {
+		return this.data[index]
+	}
 }
 
 module.exports = Queue

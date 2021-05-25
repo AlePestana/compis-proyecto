@@ -1,0 +1,19 @@
+program prog1; 
+var <- int x; float y; ->
+
+float func surprise (var <- int z; float k; ->)
+var <- float a; ->
+{
+    a = z + k;
+    print(k);
+    print("inside func");
+    return a;
+}
+
+main() {
+    x = 5 + 5;
+    y = 6.5;
+    y = surprise(x, y);
+    print(y);
+    print("end program");
+}

@@ -33,7 +33,7 @@ const test3 = parser.parse(`
 
     int func myFunc2 (var <- int z; ->)
     var <- char k; ->
-    { }
+    { return 1; }
 	main() {}`)
 // console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
@@ -204,6 +204,7 @@ const test12 = parser.parse(`
     var <- int x; float y; ->
 
     void func surprise (var <- int z; float k; ->)
+    var <- int p[2]; float n[4][5]; ->
     {
         k = 9.5;
         z = 4 + 5 - 5;

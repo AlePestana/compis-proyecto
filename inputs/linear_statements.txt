@@ -1,0 +1,8 @@
+program prog1; 
+var <- int x; ->
+
+main() {
+    print("Before reading user input");
+    read(x);
+    print("User input was", x);
+}

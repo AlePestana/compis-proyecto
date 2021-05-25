@@ -1,0 +1,18 @@
+program prog1; 
+var <- int n; ->
+
+int func fibonacci (var <- int num; ->)
+var <- int res; ->
+{
+  if (num < 2) {
+    res = num;
+  } else {
+    res = fibonacci(num - 1) + fibonacci(num - 2);
+  }
+  return res;
+}
+
+main() {
+  print("Fibonacci of 10");
+  print(fibonacci(10));
+}

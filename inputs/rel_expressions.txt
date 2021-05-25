@@ -1,0 +1,12 @@
+program prog1;
+var <- int op1, op2, op3; ->
+
+main() { 
+    op1 = (5 | 6) & (12 & 8);
+    op2 = 5 == 5.5;
+    op3 = 6.6 > 3;
+    print("op1", op1); 
+    print("op2", op2); 
+    print("op3", op3); 
+    print(6); 
+}
