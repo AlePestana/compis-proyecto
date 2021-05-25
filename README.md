@@ -99,3 +99,29 @@ AS_Documentation in https://docs.google.com/document/d/1jp9XdFYVZX3s2JJBVLnCjyrr
 | input.txt                          |                                    Sample user input program file |
 | AS_Syntax_Diagrams                 |                                Update ArrowScript syntax diagrams |
 | AS_Documentation                   |                           Update ArrowScript formal documentation |
+
+##### 7th delivery
+| Files changed                      |                                         Functionalities delivered |
+| :--------------------------------- | ----------------------------------------------------------------: |
+| functions/debug/reverse_opcodes.js |     Reverse the numeric opcode to string representation for debug |
+| functions/helpers/memory.js        |                                        Define class for VM memory |
+| functions/helpers/queue.js         |                                                    Add get method |
+| functions/opcodes.js               |                          Specify operation opcodes used by arrays |
+| functions/semantics.js             |               Functions for arrays/matrices calls and definitions |
+| functions/virtualMemory.js         |                                        Add addresses for pointers |
+| inputs/arrays.txt                  |                                     Add test program using arrays |
+| inputs/conditionals.txt            |                               Add test program using conditionals |
+| inputs/expressions.txt             |                      Add test program using different expressions |
+| inputs/fibonacci.txt               |                  Add test program calculating recursive fibonacci |
+| inputs/funcs.txt                   |                             Add test program with functions calls |
+| inputs/linear_statements.txt       |                           Add test program with linear statements |
+| inputs/loops.txt                   |                 Add test program with loop statements (while/for) |
+| inputs/recursiveFunc1.txt          |                     Add test program with recursive function call |
+| inputs/rel_expressions.txt         |                      Add test program with relational expressions |
+| inputs/void_func_stack_overflow.txt|                Add test program with infinite recursive func call |
+| parser.js                          |   Add semantic actions to rules for arrays calls and declarations |
+| tests/all.js                       |                                  Include array and matrices tests |
+| tests/arraysMatrices.js            |                                      Add array and matrices tests |
+| tests/expressions.js               |                                          Modify expressions tests |
+| tests/funcs.js                     |                                            Modify functions tests |
+| virtual_machine.js                 |        Execute intermediate for everything except arrays/matrices |
