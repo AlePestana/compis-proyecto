@@ -181,14 +181,14 @@ add_func_id = (func_id) => {
 			type: current_type,
 			var_directory: new Map(),
 		})
-		if (currentType !== 'void') {
+		if (current_type !== 'void') {
 			const return_address = virtual_memory.get_address(
 				'global',
-				currentType,
+				current_type,
 				'perm'
 			)
 			func_directory.get(global_func).var_directory.set(func_id, {
-				type: currentType,
+				type: current_type,
 				virtual_address: return_address,
 			})
 			func_directory.get(func_id).return_address = return_address
@@ -1546,7 +1546,7 @@ mark_am_end = () => {
 		const right_operand = base_virtual_address
 		const scope = current_func == global_func ? 'global' : 'local'
 		const type = dimensions_stack.top().type
-		const result = virtual_memory.get_address(scope, type, 'temp')
+		const result = virtual_memory.get_address(scope, type, 'pointer')
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand,

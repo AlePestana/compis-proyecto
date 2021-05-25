@@ -34,6 +34,9 @@ const main_func_offsets = {
 	char_vars_offset: 12000,
 	int_temps_offset: 8000,
 	float_temps_offset: 11000,
+	int_pointers_offset: 33000,
+	float_pointers_offset: 35000,
+	char_pointers_offset: 37000,
 }
 
 // Determine the offsets for addresses for functions (stored as local on parser)
@@ -43,11 +46,14 @@ const funcs_offsets = {
 	char_vars_offset: 23000,
 	int_temps_offset: 18000,
 	float_temps_offset: 22000,
+	int_pointers_offset: 39000,
+	float_pointers_offset: 41000,
+	char_pointers_offset: 43000,
 }
 
 // Function that checks if an address belongs to the global scope
 const isGlobalVar = (address) => {
-	if (address < 14000) {
+	if (address < 14000 || (address >= 33000 && address <= 38999)) {
 		return true
 	} else {
 		return false
@@ -56,7 +62,12 @@ const isGlobalVar = (address) => {
 
 // Function that checks if an address belongs to a constant (all constants are stored after virtual address 25000)
 const isConstant = (address) => {
-	return address >= 25000
+	return address >= 25000 && address <= 32999
+}
+
+// Function that checks if an address belongs to a pointer (all pointers are stored after virtual address 33000)
+const isPointer = (address) => {
+	return address >= 33000
 }
 
 // Function that returns the value of a constant by receiving the constants directory and the address
@@ -121,18 +132,27 @@ async function execute_virtual_machine(virtual_machine_info) {
 
 	// Declare all necessary types
 	const code_segment = quads
-	const data_segment = {}
+	// Create memory map for main
+	let current_func = func_directory.entries().next().value[0] // returns the name of the first func inside the current directory
+	const main_size_directory =
+		func_directory.get(current_func).func_size_directory
+	const main_func_sizes = {
+		int_vars_count: main_size_directory.get('vars_size').int,
+		float_vars_count: main_size_directory.get('vars_size').float,
+		char_vars_count: main_size_directory.get('vars_size').char,
+		int_temps_count: main_size_directory.get('temps_size').int,
+		float_temps_count: main_size_directory.get('temps_size').float,
+	}
+	const data_segment = new Memory(main_func_sizes, main_func_offsets)
 	const exec_stack = new Stack()
 	let ip = 0 // instruction pointer
-	let current_func = func_directory.entries().next().value[0] // returns the name of the first func inside the current directory
 
 	// Helper structures
 	const func_calls_in_build = new Stack()
+	let exec_stack_size = 0
+	const exec_stack_max_size = 100000
 
-	// Create memory map for main
-	// Data segment will have the form -> { main: {}, func1: {}}
-	data_segment[current_func] = new Memory(main_func_offsets)
-
+	// Function to look on corresponding memory for a variable's value
 	const getOperandValue = (address) => {
 		if (isConstant(address)) {
 			return getConstant(constants_directory, address)
@@ -142,14 +162,16 @@ async function execute_virtual_machine(virtual_machine_info) {
 				if (isTempVar(address)) {
 					// Look for temp value in corresponding memory (since it must have already been stored)
 					const temp_type = getTempVarType(address)
-					return data_segment[current_func].get(address, 'temps', temp_type)
+					return data_segment.get(address, 'temps', temp_type)
+				} else if (isPointer(address)) {
+					console.log('its a pointer')
 				} else {
 					const var_type = getVarType(
 						func_directory.get(current_func).var_directory,
 						address
 					)
-					// Look for value in corresponding memory ?????
-					return data_segment[current_func].get(address, 'vars', var_type)
+					// Look for value in corresponding memory
+					return data_segment.get(address, 'vars', var_type)
 				}
 			} else {
 				// Working with exec_stack
@@ -166,17 +188,49 @@ async function execute_virtual_machine(virtual_machine_info) {
 		}
 	}
 
+	// Function to set to memory a particular value
 	const setMemoryValue = (result, address, duration) => {
 		if (isGlobalVar(address)) {
 			// data_segment
-			data_segment[current_func].set(result, address, duration)
-			// console.log('global')
-			// console.log(data_segment[current_func].memory)
+			data_segment.set(result, address, duration)
 		} else {
 			// exec_stack
 			exec_stack.top().memory.set(result, address, duration)
-			// console.log('local')
-			// console.log(exec_stack.top().memory.memory) // LOL
+		}
+	}
+
+	// Function to calculate the total amount needed for a function
+	const getTotalFunctionSize = (func_size_directory) => {
+		let total = 0
+		for (let [, size_directory] of func_size_directory.entries()) {
+			// Add all the values stored for each type of size
+			// Example -->
+			/*
+			{
+				'params_size' => { int: 1, float: 0, char: 0 },
+				'local_vars_size' => { int: 1, float: 0, char: 0 },
+				'temps_size' => { int: 6, float: 0 }
+			} 
+			*/
+			total += Object.values(size_directory).reduce((a, b) => a + b, 0)
+		}
+
+		return total
+	}
+
+	const getFunctionSizes = (size_directory) => {
+		return {
+			int_vars_count:
+				size_directory.get('params_size').int +
+				size_directory.get('local_vars_size').int,
+			float_vars_count:
+				size_directory.get('params_size').float +
+				size_directory.get('local_vars_size').float,
+			char_vars_count:
+				size_directory.get('params_size').char +
+				size_directory.get('local_vars_size').char,
+			int_temps_count: size_directory.get('temps_size').int,
+			float_temps_count: size_directory.get('temps_size').float,
 		}
 	}
 
@@ -385,9 +439,25 @@ async function execute_virtual_machine(virtual_machine_info) {
 				ip = exec_stack.pop().return_address
 				break
 			case 18: // era
-				let func_call_mem = new Memory(funcs_offsets)
-				// Here we should probably size the memory according to the func's need?
-				func_calls_in_build.push({ name: quad.left_operand, memory: func_call_mem, return_address: null })
+				let curr_function_name = quad.left_operand
+				let curr_function_size = getTotalFunctionSize(
+					func_directory.get(curr_function_name).func_size_directory
+				)
+				if (exec_stack_size + curr_function_size > exec_stack_max_size) {
+					console.log('ERROR - Stack overflow')
+					throw 'ERROR - Stack overflow'
+				}
+				// Add current function size to total size of execution stack
+				exec_stack_size += curr_function_size
+				let curr_function_sizes = getFunctionSizes(
+					func_directory.get(curr_function_name).func_size_directory
+				)
+				let func_call_mem = new Memory(curr_function_sizes, funcs_offsets)
+				func_calls_in_build.push({
+					name: curr_function_name,
+					memory: func_call_mem,
+					return_address: null,
+				})
 				ip++
 				break
 			case 19: // gosub
@@ -401,7 +471,8 @@ async function execute_virtual_machine(virtual_machine_info) {
 				const argument = getOperandValue(quad.left_operand)
 				const param_num = parseInt(quad.result.slice(5)) // Read after param
 
-				const argument_type = func_directory.get(func_calls_in_build.top().name).params_type_list[param_num - 1]
+				const argument_type = func_directory.get(func_calls_in_build.top().name)
+					.params_type_list[param_num - 1]
 
 				func_calls_in_build.top().memory.add_parameter(argument, argument_type)
 
@@ -417,6 +488,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 
 				ip = exec_stack.pop().return_address
 				break
+			case 23: // verify
+				ip++
+				break
 			default:
 				ip = -1
 				break
@@ -425,16 +499,3 @@ async function execute_virtual_machine(virtual_machine_info) {
 }
 
 module.exports = { execute_virtual_machine }
-
-/*
-Example using the Memory data structure
-const main_memory = new Memory(main_func_offsets)
-console.log('created main memory')
-console.log(main_memory)
-main_memory.push(1, 'vars', 'int')
-main_memory.push(2, 'vars', 'int')
-console.log(main_memory.memory)
-main_memory.update(2, 5000, 'vars', 'int')
-console.log(main_memory.memory)
-console.log(main_memory.get(5001, 'vars', 'int'))
-*/

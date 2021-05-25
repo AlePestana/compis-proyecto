@@ -1,0 +1,18 @@
+program prog1; 
+var <- int x; float y; ->
+
+void func surprise (var <- int z; float k; ->)
+var <- float a; ->
+{
+    while(x == z) {
+        surprise(z, k);
+        print("inside surprise func");
+    }
+}
+
+main() {
+    x = 5 + 5;
+    y = 6.5;
+    surprise(x, y);
+    print("ending program");
+}

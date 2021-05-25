@@ -16,6 +16,11 @@ virutal_memory_addresses = {
 				limit: 8999,
 				count: null,
 			},
+			pointer: {
+				start: 33000,
+				limit: 34999,
+				count: null,
+			},
 		},
 		float: {
 			perm: {
@@ -28,11 +33,21 @@ virutal_memory_addresses = {
 				limit: 11999,
 				count: null,
 			},
+			pointer: {
+				start: 35000,
+				limit: 36999,
+				count: null,
+			},
 		},
 		char: {
 			perm: {
 				start: 12000,
 				limit: 13999,
+				count: null,
+			},
+			pointer: {
+				start: 37000,
+				limit: 38999,
 				count: null,
 			},
 			// We cannot create a temporary char variable (semantic cube operations)
@@ -50,6 +65,11 @@ virutal_memory_addresses = {
 				limit: 18999,
 				count: null,
 			},
+			pointer: {
+				start: 39000,
+				limit: 40999,
+				count: null,
+			},
 		},
 		float: {
 			perm: {
@@ -62,11 +82,21 @@ virutal_memory_addresses = {
 				limit: 22999,
 				count: null,
 			},
+			pointer: {
+				start: 41000,
+				limit: 42999,
+				count: null,
+			},
 		},
 		char: {
 			perm: {
 				start: 23000,
 				limit: 24999,
+				count: null,
+			},
+			pointer: {
+				start: 43000,
+				limit: 44999,
 				count: null,
 			},
 		},
@@ -138,13 +168,13 @@ get_address = (scope, type, duration) => {
 }
 
 // Ask for a number of continuous memory addresses
-get_continuous_addresses = (scope, type, duration, number_addresses) =>  {
+get_continuous_addresses = (scope, type, duration, number_addresses) => {
 	const base_address = get_address(scope, type, duration)
 	const last_address = base_address + (number_addresses - 1)
-	if (last_address <= virutal_memory_addresses[scope][type][duration].limit)  {
+	if (last_address <= virutal_memory_addresses[scope][type][duration].limit) {
 		virutal_memory_addresses[scope][type][duration].count = last_address + 1
 		return base_address
-	}  else {
+	} else {
 		throw `ERROR - Too many variables of SCOPE: ${scope}, TYPE: ${type}, DURATION: ${duration}`
 	}
 }
