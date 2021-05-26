@@ -93,7 +93,7 @@ insert_goto_main_quad = () => {
 	})
 }
 
-// Semantic action that fills the initial goto (main) with the next quad counter and calculates the program's global variables' size, and creates the empty structure for the temp vars
+// Semantic action that fills the initial goto (main) with the next quad counter and calculates the program's global variables' size, and creates the empty structure for the temp and pointer vars
 // Does not receive any parameters
 // Does not return anything
 mark_main_start = () => {
@@ -124,6 +124,7 @@ mark_main_start = () => {
 	func_size_directory = new Map()
 	func_size_directory.set('vars_size', vars_size)
 	func_size_directory.set('temps_size', { int: 0, float: 0 })
+	func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
 }
 
 // Semantic action that adds the final end quad, assigns the size_directory to main in the func_directory, and resets the helper func_size_directory structure
@@ -1142,13 +1143,14 @@ mark_local_vars_size = () => {
 	}
 }
 
-// Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory, and initializes the temps counters in the func_size_directory helper structure
+// Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory, and initializes the temps and pointers counters in the func_size_directory helper structure
 // Does not receive any parameters
 // Does not return anything
 mark_func_start = () => {
 	// console.log('inside mark_func_start')
 	// Mark where the current function starts
 	func_size_directory.set('temps_size', { int: 0, float: 0 })
+	func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
 
 	if (current_class == null) {
 		func_directory.get(current_func).starting_point = quads.count
@@ -1549,10 +1551,13 @@ mark_am_end = () => {
 		// Generate final_am_aux (s1*m1 + s2 OR s1) + base_virtual_address quad --> {+, final_am_aux, base_virtual_address, temp}
 		const operator = '+'
 		const left_operand = final_am_aux
-		const right_operand = base_virtual_address
+		const right_operand = get_constant_virtual_address(base_virtual_address, 'int')
 		const scope = current_func == global_func ? 'global' : 'local'
 		const type = dimensions_stack.top().type
 		const result = virtual_memory.get_address(scope, type, 'pointer')
+
+		func_size_directory.get('pointers_size')[type]++
+
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand,

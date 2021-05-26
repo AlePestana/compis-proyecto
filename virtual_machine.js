@@ -101,6 +101,17 @@ const getTempVarType = (address) => {
 	}
 }
 
+// Function that returns the type of a pointer var by checking the memory ranges designated for pointers
+const getPointerVarType = (address) => {
+	if (isBetween(address, 33000, 34999) || isBetween(address, 39000, 40999)) {
+		return 'int'
+	} else if (isBetween(address, 35000, 36999) || isBetween(address, 41000, 42999)) {
+		return 'float'
+	} else {
+		return 'char'
+	}
+}
+
 // Function that gets the type of a variable from the var_directory
 const getVarType = (var_directory, address) => {
 	for (let [, value] of var_directory.entries()) {
@@ -164,7 +175,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 					const temp_type = getTempVarType(address)
 					return data_segment.get(address, 'temps', temp_type)
 				} else if (isPointer(address)) {
-					console.log('its a pointer')
+					const pointer_type = getPointerVarType(address)
+					const actual_address = getPointingAddress(address, pointer_type, 'global')
+					return data_segment.get(actual_address, 'vars', pointer_type)
 				} else {
 					const var_type = getVarType(
 						func_directory.get(current_func).var_directory,
@@ -179,12 +192,26 @@ async function execute_virtual_machine(virtual_machine_info) {
 					// Look for temp value in corresponding memory (since it must have already been stored)
 					const temp_type = getTempVarType(address)
 					return exec_stack.top().memory.get(address, 'temps', temp_type)
+				} else if (isPointer(address)) {
+					const pointer_type = getPointerVarType(address)
+					const actual_address = getPointingAddress(address, pointer_type, 'local')
+					return exec_stack.top().memory.get(actual_address, 'vars', pointer_type)
 				} else {
 					//console.log(exec_stack.top().name)
 					const var_type = getLocalVarType(address)
 					return exec_stack.top().memory.get(address, 'vars', var_type)
 				}
 			}
+		}
+	}
+
+	// Function that gets the address that the pointer is pointing to
+	const getPointingAddress = (address, pointer_type, scope) => {
+		// Just return the address, not the value
+		if (scope === 'global') {		
+			return data_segment.get(address, 'pointers', pointer_type)
+		} else {
+			return exec_stack.top().memory.get(address, 'pointers', pointer_type)
 		}
 	}
 
@@ -210,6 +237,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 				'params_size' => { int: 1, float: 0, char: 0 },
 				'local_vars_size' => { int: 1, float: 0, char: 0 },
 				'temps_size' => { int: 6, float: 0 }
+				'pointers_size' => { int: 1, float: 2, char: 0 }
 			} 
 			*/
 			total += Object.values(size_directory).reduce((a, b) => a + b, 0)
@@ -234,7 +262,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 		}
 	}
 
-	let left_operand, right_operand, result, address
+	let left_operand, right_operand, result, address, duration
 
 	// Execute code_segment
 	while (ip != -1) {
@@ -244,14 +272,14 @@ async function execute_virtual_machine(virtual_machine_info) {
 				left_operand = getOperandValue(quad.left_operand)
 				right_operand = getOperandValue(quad.right_operand)
 				result =
-					getOperandValue(quad.left_operand) +
-					getOperandValue(quad.right_operand)
+					left_operand + right_operand
 				address = quad.result
 				if (debug) {
 					console.log('+')
 				}
 				// Save result on memory
-				setMemoryValue(result, address, 'temps')
+				duration = isPointer(address) ? 'pointers' : 'temps'
+				setMemoryValue(result, address, duration)
 				ip++
 				break
 
@@ -379,7 +407,24 @@ async function execute_virtual_machine(virtual_machine_info) {
 					console.log('=')
 				}
 				// This will break when assigning values to global variables inside funcs ????
-				const duration = isTempVar(address) ? 'temps' : 'vars'
+				if (isTempVar(address)) {
+					duration = 'temps'
+				} else if (isPointer(address)) {
+					duration = 'pointers'
+				} else {
+					duration = 'vars'
+				}
+
+				if (duration === 'pointers') {
+					// First get the actual address
+					const pointer_type = getPointerVarType(address)
+					const scope = isGlobalVar ? 'global' : 'local'
+					address = getPointingAddress(address, pointer_type, scope)
+					// The final address must be a var
+					duration = 'vars'
+				}
+
+				// Set memory value
 				setMemoryValue(result, address, duration)
 				ip++
 				break

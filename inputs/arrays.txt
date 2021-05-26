@@ -4,6 +4,11 @@ program prog1;
 main() {
     y[1] = 2.2;
     p = y[1];
+    print(p);
     x[4] = 1;
-    z = 2;
+    x[2] = 4;
+    for (z = 0 until 5) {
+        print(z);
+        print(x[z]);
+    }
 }
