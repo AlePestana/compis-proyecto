@@ -123,23 +123,23 @@ console.log('--> ' + (test16 ? 'yes :)' : 'no :('))
 
 // Expressions inside classes
 console.log('\nTEST 17 - Multiplication expression inside class method')
-const test17 = parser.parse(`
-  program prog1;
+// const test17 = parser.parse(`
+//   program prog1;
 
-  class Person {
-    attributes <- float x; ->
-    methods <-
-      int func mult(var <- int y; ->)
-      {
-        return x * y;
-      }
-    ->
-  }
+//   class Person {
+//     attributes <- float x; ->
+//     methods <-
+//       int func mult(var <- int y; ->)
+//       {
+//         return x * y;
+//       }
+//     ->
+//   }
 
-  var <- float y; Person person1; ->
+//   var <- float y; Person person1; ->
 
-  main() {}`)
-console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
+//   main() {}`)
+// console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
 
 // Expressions inside funcs
 console.log('\nTEST 18 - Multiplication expression inside func')
@@ -180,3 +180,18 @@ console.log('\nERROR TEST 21 - Mixed OR expression')
 // 	var <- int x; ->
 // 	main() { x = 10 / 5 | 2 + 8; }`)
 // console.log('--> ' + (test21 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 22 - Expression involving negative numbers')
+const test22 = parser.parse(`
+	program prog1; 
+    var <- float z; ->
+	
+	float func myFunc1 (var <- int x; ->)
+    var <- float y; ->
+    { return z / y * x; }
+
+	main() {
+		print(-1);
+		print(-(myFunc1(2)));
+	}`)
+console.log('--> ' + (test22 ? 'yes :)' : 'no :('))
