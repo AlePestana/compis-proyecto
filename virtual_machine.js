@@ -162,6 +162,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 	const func_calls_in_build = new Stack()
 	let exec_stack_size = 0
 	const exec_stack_max_size = 100000
+	let duration
 
 	// Function to look on corresponding memory for a variable's value
 	const getOperandValue = (address) => {
@@ -278,7 +279,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 					console.log('+')
 				}
 				// Save result on memory
-				const duration = isPointer(address) ? 'pointers' : 'temps'
+				duration = isPointer(address) ? 'pointers' : 'temps'
 				setMemoryValue(result, address, duration)
 				ip++
 				break
@@ -407,7 +408,6 @@ async function execute_virtual_machine(virtual_machine_info) {
 					console.log('=')
 				}
 				// This will break when assigning values to global variables inside funcs ????
-				let duration
 				if (isTempVar(address)) {
 					duration = 'temps'
 				} else if (isPointer(address)) {
