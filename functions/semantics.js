@@ -1190,10 +1190,16 @@ mark_func_end = () => {
 	}
 }
 
-// Semantic action that verifies that a return expression matches the function's type and generates the 'return' quad
+// Semantic action that verifies that a return expression is within a function, that it matches the function's type and generates the 'return' quad
 // Does not receive any parameters
 // Does not return anything
 assign_return = () => {
+	console.log(current_func)
+	if (current_func === global_func) {
+		console.log('ERROR - Return statement can only be inside a function')
+		throw 'ERROR - Return statement can only be inside a function'
+	}
+
 	const operator = 'return'
 	const result = operands.pop()
 

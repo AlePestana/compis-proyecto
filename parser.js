@@ -216,11 +216,11 @@ const grammar = {
 
 		func: [
 			[
-				'void_keyword FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace func_statements closing_func_brace',
+				'void_keyword FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace statements closing_func_brace',
 				'finish_func_dec(); $$',
 			],
 			[
-				'simple_type FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace func_statements closing_func_brace',
+				'simple_type FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace statements closing_func_brace',
 				'finish_func_dec(); $$',
 			],
 		],
@@ -245,12 +245,7 @@ const grammar = {
 
 		closing_func_brace: [['}', 'mark_func_end()']],
 
-		func_statements: [['statements return_statement', '$$']],
-
-		return_statement: [
-			['return_expression ; func_statements', '$$'],
-			['', '$$'],
-		],
+		return_statement: [['return_expression ;', '$$']],
 
 		return_expression: [['RETURN expression', 'assign_return()']],
 
@@ -265,6 +260,7 @@ const grammar = {
 			['io', '$$'],
 			['control', '$$'],
 			['iteration', '$$'],
+			['return_statement', '$$']
 		],
 
 		opening_main_bracket: [['{', 'mark_main_start();']],
