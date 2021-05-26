@@ -571,6 +571,36 @@ add_operand = (operand, type) => {
 	operands.push({ operand, type })
 }
 
+// Semantic action that adds a quad to get the negative value of a factor when the negation is required
+// Does not receive any parameters
+// Does not return anything
+add_negative_operand = () => {
+	const right = operands.pop()
+	const right_operand = right.operand
+	const left_operand = get_constant_virtual_address(0, 'int')
+	const operator = '-'
+
+	const result_type = oracle('int', right.type, operator)
+
+	if (result_type !== 'error') {
+		const scope = current_func == global_func ? 'global' : 'local'
+		const result = virtual_memory.get_address(scope, result_type, 'temp')
+
+		func_size_directory.get('temps_size')[result_type]++
+
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand,
+			right_operand,
+			result,
+		})
+		operands.push({ operand: result, type: result_type })
+	} else {
+		console.log('ERROR - Type mismatch')
+		throw 'ERROR - Type mismatch'
+	}
+}
+
 // Semantic action that adds an operator to the operators stack
 // Receives the operator
 // Does not return anything

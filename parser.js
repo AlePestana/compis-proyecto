@@ -329,7 +329,7 @@ const grammar = {
 		sub_operator: [['-', 'add_operator($1)']],
 
 		// term
-		term: [['factor mult_div_operation', '$$']],
+		term: [['neg_factor mult_div_operation', '$$']],
 
 		mult_div_operation: [
 			['mult_operator right_factor mult_div_operation', '$$'],
@@ -337,11 +337,16 @@ const grammar = {
 			['', 'add_mult_div_operation()'],
 		],
 
-		right_factor: [['factor', 'add_mult_div_operation()']],
+		right_factor: [['neg_factor', 'add_mult_div_operation()']],
 
 		mult_operator: [['*', 'add_operator($1)']],
 
 		div_operator: [['/', 'add_operator($1)']],
+
+		neg_factor: [
+			['- factor', 'add_negative_operand()'],
+			['factor', '$$']
+		],
 
 		factor: [
 			['left_parenthesis expression right_parenthesis', '$$'],
