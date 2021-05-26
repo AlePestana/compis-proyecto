@@ -237,7 +237,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 				'params_size' => { int: 1, float: 0, char: 0 },
 				'local_vars_size' => { int: 1, float: 0, char: 0 },
 				'temps_size' => { int: 6, float: 0 }
-				'pointers_size' => { int: 1, float: 2 }
+				'pointers_size' => { int: 1, float: 2, char: 0 }
 			} 
 			*/
 			total += Object.values(size_directory).reduce((a, b) => a + b, 0)
