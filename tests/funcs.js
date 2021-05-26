@@ -338,30 +338,30 @@ console.log(
 console.log(
 	'\n\nERROR TEST 18 - Return statement outside of function'
 )
-const test18 = parser.parse(`
-program prog1; 
-var <- int x, y; float a; ->
+// const test18 = parser.parse(`
+// program prog1; 
+// var <- int x, y; float a; ->
 
-void func surprise1(var <- int z; ->)
-var <- int k; ->
-{
-    print("inside surprise1 function");
-    print("end surprise 1");
-}
+// void func surprise1(var <- int z; ->)
+// var <- int k; ->
+// {
+//     print("inside surprise1 function");
+//     print("end surprise 1");
+// }
 
-int func surprise2(var <- float z; ->)
-var <- float k; ->
-{
-    print("inside surprise2 function");
-    print("end surprise 2");
-    return 1;
-}
+// int func surprise2(var <- float z; ->)
+// var <- float k; ->
+// {
+//     print("inside surprise2 function");
+//     print("end surprise 2");
+//     return 1;
+// }
 
-main() {
-    x = 5;
-    y = 6;
-    surprise1(x);
-    return surprise2(a);
-    print("end program");
-}`)
-console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
+// main() {
+//     x = 5;
+//     y = 6;
+//     surprise1(x);
+//     return surprise2(a);
+//     print("end program");
+// }`)
+// console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
