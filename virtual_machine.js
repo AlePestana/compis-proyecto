@@ -162,7 +162,6 @@ async function execute_virtual_machine(virtual_machine_info) {
 	const func_calls_in_build = new Stack()
 	let exec_stack_size = 0
 	const exec_stack_max_size = 100000
-	let duration
 
 	// Function to look on corresponding memory for a variable's value
 	const getOperandValue = (address) => {
@@ -263,7 +262,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 		}
 	}
 
-	let left_operand, right_operand, result, address
+	let left_operand, right_operand, result, address, duration
 
 	// Execute code_segment
 	while (ip != -1) {
