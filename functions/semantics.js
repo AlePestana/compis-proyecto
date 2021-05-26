@@ -124,7 +124,7 @@ mark_main_start = () => {
 	func_size_directory = new Map()
 	func_size_directory.set('vars_size', vars_size)
 	func_size_directory.set('temps_size', { int: 0, float: 0 })
-	func_size_directory.set('pointers_size', { int: 0, float: 0 })
+	func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
 }
 
 // Semantic action that adds the final end quad, assigns the size_directory to main in the func_directory, and resets the helper func_size_directory structure
@@ -1150,7 +1150,7 @@ mark_func_start = () => {
 	// console.log('inside mark_func_start')
 	// Mark where the current function starts
 	func_size_directory.set('temps_size', { int: 0, float: 0 })
-	func_size_directory.set('pointers_size', { int: 0, float: 0 })
+	func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
 
 	if (current_class == null) {
 		func_directory.get(current_func).starting_point = quads.count
