@@ -10,10 +10,25 @@ var <- float a; ->
     return a;
 }
 
+float func surprise2 (var <- int z; float k; ->)
+{
+    print("inside func 2");
+    print(z, k);
+    return k;
+}
+
+void func hi (var <- int a; ->)
+{
+    print("inside hi");
+    print("received", a);
+}
+
 main() {
     x = 5 + 5;
     y = 6.5;
-    y = surprise(x, y);
+    y = surprise(10, 8.5);
     print(y);
     print("end program");
+    hi(8);
+    y = surprise2(2, 6.7);
 }

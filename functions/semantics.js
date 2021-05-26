@@ -1208,6 +1208,9 @@ mark_func_end = () => {
 		// Release temp params_directory
 		params_directory = null
 
+		// Release local addresses from memory
+		virtual_memory.reset_local_addresses()
+
 		// Generate quad -> ENDFUNC, null, null, null
 		const operator = 'endfunc'
 		quads.push({
@@ -1581,7 +1584,10 @@ mark_am_end = () => {
 		// Generate final_am_aux (s1*m1 + s2 OR s1) + base_virtual_address quad --> {+, final_am_aux, base_virtual_address, temp}
 		const operator = '+'
 		const left_operand = final_am_aux
-		const right_operand = get_constant_virtual_address(base_virtual_address, 'int')
+		const right_operand = get_constant_virtual_address(
+			base_virtual_address,
+			'int'
+		)
 		const scope = current_func == global_func ? 'global' : 'local'
 		const type = dimensions_stack.top().type
 		const result = virtual_memory.get_address(scope, type, 'pointer')
