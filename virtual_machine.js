@@ -464,12 +464,26 @@ async function execute_virtual_machine(virtual_machine_info) {
 						console.log('Check is char')
 						break
 				}
-				// Look for address in func_directory
-				address = func_directory
-					.get(current_func)
-					.var_directory.get(quad.result).virtual_address // Quad should probably also have an address and not a name?
+				address = quad.result
+
+				if (isTempVar(address)) {
+					duration = 'temps'
+				} else if (isPointer(address)) {
+					duration = 'pointers'
+				} else {
+					duration = 'vars'
+				}
+
+				if (duration === 'pointers') {
+					// First get the actual address
+					const pointer_type = getPointerVarType(address)
+					const scope = isGlobalVar(address) ? 'global' : 'local'
+					address = getPointingAddress(address, pointer_type, scope)
+					// The final address must be a var
+					duration = 'vars'
+				}
 				// Save result on memory
-				setMemoryValue(result, address, 'vars')
+				setMemoryValue(result, address, duration)
 				ip++
 				break
 			case 14: // gotoT
