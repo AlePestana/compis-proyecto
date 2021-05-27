@@ -856,9 +856,6 @@ read_var = (variable) => {
 		const operator = 'read'
 		const result = operands.pop().operand
 
-		console.log('variable inside read')
-		console.log(result)
-
 		const left_operand = null
 		const right_operand = null
 
