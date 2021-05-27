@@ -1320,20 +1320,32 @@ add_call_param = () => {
 			throw 'ERROR - Number of parameters required does not match'
 		}
 
+		// Check parameter type
 		if (current_argument.type !== params_types[params_count - 1]) {
 			console.log('ERROR - Parameter type does not match')
 			throw 'ERROR - Parameter type does not match'
-		} else {
-			const operator = 'param'
-			const left_operand = current_argument.operand
-			const result = 'param' + params_count
-			quads.push({
-				operator: get_opcode(operator),
-				left_operand: left_operand,
-				right_operand: null,
-				result: result,
-			})
 		}
+
+		// Check parameter is not an array or matrix
+		// If it's not in the function directory it means it's a constant, so it's fine
+		for (let [, value] of func_directory.get(current_func).var_directory) {
+			if (value.virtual_address === current_argument.operand) {
+				if (value.dimension !== null) {
+					console.log('ERROR - Parameter type does not match')
+					throw 'ERROR - Parameter type does not match'
+				}
+			}
+		}
+
+		const operator = 'param'
+		const left_operand = current_argument.operand
+		const result = 'param' + params_count
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: left_operand,
+			right_operand: null,
+			result: result,
+		})
 	}
 }
 
