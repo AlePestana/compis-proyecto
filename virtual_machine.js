@@ -429,7 +429,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 				if (duration === 'pointers') {
 					// First get the actual address
 					const pointer_type = getPointerVarType(address)
-					const scope = isGlobalVar ? 'global' : 'local'
+					const scope = isGlobalVar(address) ? 'global' : 'local'
 					address = getPointingAddress(address, pointer_type, scope)
 					// The final address must be a var
 					duration = 'vars'

@@ -887,8 +887,6 @@ assign_exp = () => {
 
 	const operator = operators.pop()
 
-	console.log('assigning expression')
-	console.log(res, left)
 	if (res.type === left.type) {
 		quads.push({
 			operator: get_opcode(operator),
@@ -1449,13 +1447,15 @@ mark_am_start = () => {
 	let am_id = null
 	let base_address = null
 	let am_type = null
+	let found_in_local_func = false,
+		is_global = false
 
 	if (current_class == null) {
-		// Get id of given address
+		// Get id of given address by checking local scope
 		for (let [id, value] of func_directory.get(current_func).var_directory) {
-			if (value.virtual_address == address) {
+			if (value.virtual_address === address) {
 				// Found id, checking if it has a dimension (to verify it is indeed an array or matrix)
-				if (value.dimension == null) {
+				if (value.dimension === null) {
 					console.log(
 						'ERROR - Trying to index a variable that has no dimensions'
 					)
@@ -1465,7 +1465,30 @@ mark_am_start = () => {
 				current_dimension_list = value.dimension
 				base_address = value.virtual_address
 				am_type = value.type
+				found_in_local_func = true
 				break
+			}
+		}
+
+		// If it wasn't found in local scope, get id of given address by checking global scope
+		if (!found_in_local_func) {
+			for (let [id, value] of func_directory.get(global_func).var_directory) {
+				if (value.virtual_address === address) {
+					// Found id, checking if it has a dimension (to verify it is indeed an array or matrix)
+					if (value.dimension === null) {
+						console.log(
+							'ERROR - Trying to index a variable that has no dimensions'
+						)
+						throw 'ERROR - Trying to index a variable that has no dimensions'
+					}
+					am_id = id
+					current_dimension_list = value.dimension
+					base_address = value.virtual_address
+					am_type = value.type
+					// Setting a global array or matrix value inside of a function
+					is_global = true
+					break
+				}
 			}
 		}
 
@@ -1476,6 +1499,7 @@ mark_am_start = () => {
 			dimension: current_dimension,
 			base_address,
 			type: am_type,
+			is_global,
 		})
 
 		// Add fake bottom to the operators stack
@@ -1592,6 +1616,7 @@ mark_am_end = () => {
 		}
 		const final_am_aux = operands.pop().operand
 		const base_virtual_address = dimensions_stack.top().base_address
+		const is_global_am = dimensions_stack.top().is_global
 
 		// Generate final_am_aux (s1*m1 + s2 OR s1) + base_virtual_address quad --> {+, final_am_aux, base_virtual_address, temp}
 		const operator = '+'
@@ -1600,7 +1625,11 @@ mark_am_end = () => {
 			base_virtual_address,
 			'int'
 		)
-		const scope = current_func == global_func ? 'global' : 'local'
+		const scope = is_global_am
+			? 'global'
+			: current_func == global_func
+			? 'global'
+			: 'local'
 		const type = dimensions_stack.top().type
 		const result = virtual_memory.get_address(scope, type, 'pointer')
 
