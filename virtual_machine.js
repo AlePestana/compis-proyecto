@@ -427,7 +427,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 				if (debug) {
 					console.log('=')
 				}
-				// This will break when assigning values to global variables inside funcs ????
+				// This will break when assigning values to global variables inside funcs
 				if (isTempVar(address)) {
 					duration = 'temps'
 				} else if (isPointer(address)) {
