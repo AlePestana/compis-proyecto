@@ -547,7 +547,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 				let index = getOperandValue(quad.left_operand)
 				let upper_bound = getOperandValue(quad.result)
 
-				if (index > upper_bound) {
+				if (index > upper_bound || index < 0) {
 					console.log('ERROR - Index out of bounds')
 					throw 'ERROR - Index out of bounds'
 				}
