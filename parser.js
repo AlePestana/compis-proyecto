@@ -260,7 +260,7 @@ const grammar = {
 			['io', '$$'],
 			['control', '$$'],
 			['iteration', '$$'],
-			['return_statement', '$$']
+			['return_statement', '$$'],
 		],
 
 		opening_main_bracket: [['{', 'mark_main_start();']],
@@ -345,7 +345,7 @@ const grammar = {
 
 		neg_factor: [
 			['- factor', 'add_negative_operand()'],
-			['factor', '$$']
+			['factor', '$$'],
 		],
 
 		factor: [

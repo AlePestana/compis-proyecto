@@ -1,0 +1,21 @@
+program prog1; 
+var <- int x[3]; float y[2][2]; ->
+
+void func hi (var <- int a; ->)
+var <- int x[5]; ->
+{
+    x[0] = 5;
+    print("printing local x");
+    print(x[0]);
+    print("assigning global array inside function");
+    y[0][0] = x[0] / a;
+    print("inside func");
+    print(y[0][0]);
+}
+
+
+main() {
+    x[0] = 3;
+    hi(5);
+    print(y[0][0]);
+}
