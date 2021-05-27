@@ -115,13 +115,18 @@ const getPointerVarType = (address) => {
 	}
 }
 
-// Function that gets the type of a variable from the var_directory
-const getVarType = (var_directory, address) => {
-	for (let [, value] of var_directory.entries()) {
-		if (value.virtual_address === address) return value.type
+// Function that gets the type of a global variable
+const getVarType = (address) => {
+	if (isBetween(address, 5000, 7999)) {
+		return 'int'
+	} else if (isBetween(address, 9000, 10999)) {
+		return 'float'
+	} else if (isBetween(address, 12000, 13999)) {
+		return 'char'
 	}
 }
 
+// Function that gets the type of local variable
 const getLocalVarType = (address) => {
 	if (isBetween(address, 14000, 18999)) {
 		return 'int'
@@ -129,6 +134,28 @@ const getLocalVarType = (address) => {
 		return 'float'
 	} else {
 		return 'char'
+	}
+}
+
+// Function that gets the type for any given address
+const getType = (address) => {
+	if (isGlobalVar(address)) {
+		if (isTempVar(address)) {
+			return getTempVarType(address)
+		} else if (isPointer(address)) {
+			return getPointerVarType(address)
+		} else {
+			return getVarType(address)
+		}
+	} else {
+		// it's local
+		if (isTempVar(address)) {
+			return getTempVarType(address)
+		} else if (isPointer(address)) {
+			return getPointerVarType(address)
+		} else {
+			return getLocalVarType(address)
+		}
 	}
 }
 
@@ -171,25 +198,17 @@ async function execute_virtual_machine(virtual_machine_info) {
 		if (isConstant(address)) {
 			return getConstant(constants_directory, address)
 		} else {
+			const type = getType(address)
 			if (isGlobalVar(address)) {
 				// Working with data_segment
 				if (isTempVar(address)) {
 					// Look for temp value in corresponding memory (since it must have already been stored)
-					const temp_type = getTempVarType(address)
-					return data_segment.get(address, 'temps', temp_type)
+					return data_segment.get(address, 'temps', type)
 				} else if (isPointer(address)) {
-					const pointer_type = getPointerVarType(address)
-					const actual_address = getPointingAddress(
-						address,
-						pointer_type,
-						'global'
-					)
-					return data_segment.get(actual_address, 'vars', pointer_type)
+					const actual_address = getPointingAddress(address, type, 'global')
+					return data_segment.get(actual_address, 'vars', type)
 				} else {
-					const var_type = getVarType(
-						func_directory.get(current_func).var_directory,
-						address
-					)
+					const var_type = getVarType(address)
 					// Look for value in corresponding memory
 					return data_segment.get(address, 'vars', var_type)
 				}
@@ -197,21 +216,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 				// Working with exec_stack
 				if (isTempVar(address)) {
 					// Look for temp value in corresponding memory (since it must have already been stored)
-					const temp_type = getTempVarType(address)
-					return exec_stack.top().memory.get(address, 'temps', temp_type)
+					return exec_stack.top().memory.get(address, 'temps', type)
 				} else if (isPointer(address)) {
-					const pointer_type = getPointerVarType(address)
-					const actual_address = getPointingAddress(
-						address,
-						pointer_type,
-						'local'
-					)
-					return exec_stack
-						.top()
-						.memory.get(actual_address, 'vars', pointer_type)
+					const actual_address = getPointingAddress(address, type, 'local')
+					return exec_stack.top().memory.get(actual_address, 'vars', type)
 				} else {
-					const var_type = getLocalVarType(address)
-					return exec_stack.top().memory.get(address, 'vars', var_type)
+					return exec_stack.top().memory.get(address, 'vars', type)
 				}
 			}
 		}
@@ -451,20 +461,36 @@ async function execute_virtual_machine(virtual_machine_info) {
 				break
 			case 13: // read
 				// Read user input
-				result = await receive_user_input()
-				// Validate type ???
-				switch (result.type) {
+				result = await receive_user_input() // this is of type string
+
+				// Validate type of input according to variable type
+				address = quad.result
+				let type = getType(address)
+
+				// Get type of variable we're reading to
+				switch (type) {
 					case 'int':
-						console.log('Check is int')
+						const int_number = Number.parseInt(result)
+						// has to be != instead of !==, otherwise it errors out
+						if (Number.isNaN(int_number) || result != int_number) {
+							console.log('ERROR - Input type mismatch')
+							throw 'ERROR - Input type mismatch'
+						}
 						break
 					case 'float':
-						console.log('Check is float')
+						const float_number = Number.parseFloat(result)
+						if (Number.isNaN(float_number) || result != float_number) {
+							console.log('ERROR - Input type mismatch')
+							throw 'ERROR - Input type mismatch'
+						}
 						break
 					case 'char':
-						console.log('Check is char')
+						if (result.length !== 1) {
+							console.log('ERROR - Input type mismatch')
+							throw 'ERROR - Input type mismatch'
+						}
 						break
 				}
-				address = quad.result
 
 				if (isTempVar(address)) {
 					duration = 'temps'
@@ -476,9 +502,8 @@ async function execute_virtual_machine(virtual_machine_info) {
 
 				if (duration === 'pointers') {
 					// First get the actual address
-					const pointer_type = getPointerVarType(address)
 					const scope = isGlobalVar(address) ? 'global' : 'local'
-					address = getPointingAddress(address, pointer_type, scope)
+					address = getPointingAddress(address, type, scope)
 					// The final address must be a var
 					duration = 'vars'
 				}
