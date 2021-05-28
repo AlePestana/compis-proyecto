@@ -32,22 +32,33 @@ class Memory {
 			char_pointers_offset,
 		}
 	) {
-		this.memory = {
-			vars: {
-				int: new Array(int_vars_size),
-				float: new Array(float_vars_size),
-				char: new Array(char_vars_size),
-			},
-			temps: {
-				int: new Array(int_temps_size),
-				float: new Array(float_temps_size),
-			},
-			pointers: {
-				int: new Array(int_pointers_size),
-				float: new Array(float_pointers_size),
-				char: new Array(char_pointers_size),
-			},
-		}
+		// Memory array
+		this.memory = [
+			// vars
+			[
+				new Array(int_vars_size),
+				new Array(float_vars_size),
+				new Array(char_vars_size),
+			],
+			// temps
+			[new Array(int_temps_size), new Array(float_temps_size)],
+			// pointers
+			[
+				new Array(int_pointers_size),
+				new Array(float_pointers_size),
+				new Array(char_pointers_size),
+			],
+		]
+
+		// Indexes
+		this.vars = 0
+		this.temps = 1
+		this.pointers = 2
+		this.int = 0
+		this.float = 1
+		this.char = 2
+
+		// Offsets
 		this.int_vars_offset = int_vars_offset
 		this.float_vars_offset = float_vars_offset
 		this.char_vars_offset = char_vars_offset
@@ -56,6 +67,8 @@ class Memory {
 		this.int_pointers_offset = int_pointers_offset
 		this.float_pointers_offset = float_pointers_offset
 		this.char_pointers_offset = char_pointers_offset
+
+		// Counters
 		this.int_vars_count = 0
 		this.float_vars_count = 0
 		this.char_vars_count = 0
@@ -66,14 +79,34 @@ class Memory {
 		this.char_pointers_count = 0
 	}
 
-	// Add a value to the memory
-	// push(value, scope, type) {
-	// 	this.memory[scope][type].push(value)
-	// }
+	// Get the index for each corresponding type
+	get_type_index(type) {
+		if (type === 'int') {
+			return this.int
+		} else if (type === 'float') {
+			return this.float
+		} else {
+			return this.char
+		}
+	}
+
+	// Get the index for each corresponding scope
+	get_scope_index(scope) {
+		if (scope === 'vars') {
+			return this.vars
+		} else if (scope === 'temps') {
+			return this.temps
+		} else {
+			return this.pointers
+		}
+	}
 
 	// Push a parameter value to the memory
 	add_parameter(value, type) {
 		let index = 0
+		const scope_index = this.vars
+		const type_index = this.get_type_index(type)
+
 		if (type === 'int') {
 			index = this.int_vars_count
 		} else if (type === 'float') {
@@ -81,7 +114,8 @@ class Memory {
 		} else {
 			index = this.char_vars_count
 		}
-		this.memory['vars'][type][index] = value
+
+		this.memory[scope_index][type_index][index] = value
 	}
 
 	// Get the offset according to scope of variable and type
@@ -112,11 +146,14 @@ class Memory {
 	}
 
 	// Get a value from an address
-	// Scope = vars or temp
+	// Scope = vars, temps or pointers
 	// Type = int, float or char
 	get(address, scope, type) {
 		const index = address - this.get_offset(scope, type)
-		return this.memory[scope][type][index]
+		const scope_index = this.get_scope_index(scope)
+		const type_index = this.get_type_index(type)
+
+		return this.memory[scope_index][type_index][index]
 	}
 
 	// Dependending on the provided address, returns the type of variable (according to the scopes and offsets specified)
@@ -159,8 +196,11 @@ class Memory {
 	// Update the value from a given address
 	set(value, address, scope) {
 		const type = this.get_address_type(address, scope)
+		const scope_index = this.get_scope_index(scope)
+		const type_index = this.get_type_index(type)
 		const index = address - this.get_offset(scope, type)
-		this.memory[scope][type][index] = value
+
+		this.memory[scope_index][type_index][index] = value
 
 		// Update counters
 		if (scope === 'vars') {
