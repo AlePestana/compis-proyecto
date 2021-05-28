@@ -1,0 +1,15 @@
+program prog1; 
+var <- int a, x[5]; ->
+
+main() {
+    a = 0;
+    print("Before reading user input for array");
+    while(a < 5) {
+        read(x[a]);
+        a = a + 1;
+    }
+    
+    for(a = 0 until 5) {
+        print("User input was", x[a]);
+    }
+}

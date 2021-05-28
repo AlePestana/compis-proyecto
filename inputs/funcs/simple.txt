@@ -1,0 +1,16 @@
+program prog1; 
+var <- float x; ->
+
+void func hi() 
+{
+    print("Assigning value to global var inside func");
+    x = 8.8;
+    print("Global var value", x);
+}
+
+main() {
+    x = 5.5;
+    print("Global var value before func", x);
+    hi();
+    print("Globar var value after func", x);
+}
