@@ -4,16 +4,12 @@
 // Output: funcs
 // Used by: semantics.js
 class_virutal_memory_addresses = {
+  // For attributes
 	global: {
 		int: {
 			perm: {
 				start: 5000,
 				limit: 7999,
-				count: null,
-			},
-			temp: {
-				start: 8000,
-				limit: 8999,
 				count: null,
 			},
 			pointer: {
@@ -26,11 +22,6 @@ class_virutal_memory_addresses = {
 			perm: {
 				start: 9000,
 				limit: 10999,
-				count: null,
-			},
-			temp: {
-				start: 11000,
-				limit: 11999,
 				count: null,
 			},
 			pointer: {
@@ -53,6 +44,7 @@ class_virutal_memory_addresses = {
 			// We cannot create a temporary char variable (semantic cube operations)
 		},
 	},
+  // For methods
 	local: {
 		int: {
 			perm: {
@@ -102,43 +94,16 @@ class_virutal_memory_addresses = {
 		},
 		// We cannot create a temporary char variable (semantic cube operations)
 	},
-	constant: {
-		int: {
-			start: 25000,
-			limit: 26999,
-			count: null,
-		},
-		float: {
-			start: 27000,
-			limit: 28999,
-			count: null,
-		},
-		char: {
-			start: 29000,
-			limit: 30999,
-			count: null,
-		},
-		string: {
-			start: 31000,
-			limit: 32000,
-			count: null,
-		},
-	},
 }
 
 // Initialize/reset counters
 initialize_counters = () => {
 	for (const scope in class_virutal_memory_addresses) {
 		for (const type in class_virutal_memory_addresses[scope]) {
-			if (scope != 'constant') {
-				for (const duration in class_virutal_memory_addresses[scope][type]) {
-					class_virutal_memory_addresses[scope][type][duration].count =
-            class_virutal_memory_addresses[scope][type][duration].start
-				}
-			} else {
-				class_virutal_memory_addresses[scope][type].count =
-          class_virutal_memory_addresses[scope][type].start
-			}
+			for (const duration in class_virutal_memory_addresses[scope][type]) {
+        class_virutal_memory_addresses[scope][type][duration].count =
+          class_virutal_memory_addresses[scope][type][duration].start
+      }
 		}
 	}
 }
@@ -149,17 +114,9 @@ initialize_counters() // Initialize for first time
 
 // Ask for a virtual memory address
 get_address = (scope, type, duration) => {
-	let count
-	let limit
-	if (scope != 'constant') {
-		count = class_virutal_memory_addresses[scope][type][duration].count
-		limit = class_virutal_memory_addresses[scope][type][duration].limit
-		class_virutal_memory_addresses[scope][type][duration].count++ // Prepare for next var
-	} else {
-		count = class_virutal_memory_addresses[scope][type].count
-		limit = class_virutal_memory_addresses[scope][type].limit
-		class_virutal_memory_addresses[scope][type].count++ // Prepare for next var
-	}
+	const count = class_virutal_memory_addresses[scope][type][duration].count
+  const limit = class_virutal_memory_addresses[scope][type][duration].limit
+  class_virutal_memory_addresses[scope][type][duration].count++ // Prepare for next var
 	if (count <= limit) {
 		return count
 	} else {
@@ -208,13 +165,6 @@ is_local_temp_address = (address) => {
 	console.log('returning false')
 	return false
 }
-
-// console.log(get_address('global', 'int', 'perm'))
-// console.log(get_address('global', 'int', 'perm'))
-// console.log(get_address('local', 'int', 'perm'))
-// console.log(get_address('local', 'int', 'perm'))
-// reset_local_addresses()
-// console.log(get_address('local', 'int', 'perm'))
 
 module.exports = {
 	initialize_counters,
