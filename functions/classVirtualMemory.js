@@ -3,8 +3,8 @@
 // Inputs: does not receive parameters
 // Output: funcs
 // Used by: semantics.js
-class_virutal_memory_addresses = {
-  // For attributes
+class_virtual_memory_addresses = {
+	// For attributes
 	global: {
 		int: {
 			perm: {
@@ -41,10 +41,9 @@ class_virutal_memory_addresses = {
 				limit: 38999,
 				count: null,
 			},
-			// We cannot create a temporary char variable (semantic cube operations)
 		},
 	},
-  // For methods
+	// For methods
 	local: {
 		int: {
 			perm: {
@@ -98,25 +97,23 @@ class_virutal_memory_addresses = {
 
 // Initialize/reset counters
 initialize_counters = () => {
-	for (const scope in class_virutal_memory_addresses) {
-		for (const type in class_virutal_memory_addresses[scope]) {
-			for (const duration in class_virutal_memory_addresses[scope][type]) {
-        class_virutal_memory_addresses[scope][type][duration].count =
-          class_virutal_memory_addresses[scope][type][duration].start
-      }
+	for (const scope in class_virtual_memory_addresses) {
+		for (const type in class_virtual_memory_addresses[scope]) {
+			for (const duration in class_virtual_memory_addresses[scope][type]) {
+				class_virtual_memory_addresses[scope][type][duration].count =
+					class_virtual_memory_addresses[scope][type][duration].start
+			}
 		}
 	}
 }
 
 initialize_counters() // Initialize for first time
 
-// console.log(JSON.stringify(virutal_memory_addresses)) // debug
-
 // Ask for a virtual memory address
 get_address = (scope, type, duration) => {
-	const count = class_virutal_memory_addresses[scope][type][duration].count
-  const limit = class_virutal_memory_addresses[scope][type][duration].limit
-  class_virutal_memory_addresses[scope][type][duration].count++ // Prepare for next var
+	const count = class_virtual_memory_addresses[scope][type][duration].count
+	const limit = class_virtual_memory_addresses[scope][type][duration].limit
+	class_virtual_memory_addresses[scope][type][duration].count++ // Prepare for next var
 	if (count <= limit) {
 		return count
 	} else {
@@ -128,8 +125,11 @@ get_address = (scope, type, duration) => {
 get_continuous_addresses = (scope, type, duration, number_addresses) => {
 	const base_address = get_address(scope, type, duration)
 	const last_address = base_address + (number_addresses - 1)
-	if (last_address <= class_virutal_memory_addresses[scope][type][duration].limit) {
-		class_virutal_memory_addresses[scope][type][duration].count = last_address + 1
+	if (
+		last_address <= class_virtual_memory_addresses[scope][type][duration].limit
+	) {
+		class_virtual_memory_addresses[scope][type][duration].count =
+			last_address + 1
 		return base_address
 	} else {
 		throw `ERROR - Too many variables of SCOPE: ${scope}, TYPE: ${type}, DURATION: ${duration}`
@@ -138,10 +138,10 @@ get_continuous_addresses = (scope, type, duration, number_addresses) => {
 
 // Erase local scope virtual memory
 reset_local_addresses = () => {
-	for (const type in class_virutal_memory_addresses.local) {
-		for (const duration in class_virutal_memory_addresses.local[type]) {
-			class_virutal_memory_addresses.local[type][duration].count =
-        class_virutal_memory_addresses.local[type][duration].start
+	for (const type in class_virtual_memory_addresses.local) {
+		for (const duration in class_virtual_memory_addresses.local[type]) {
+			class_virtual_memory_addresses.local[type][duration].count =
+				class_virtual_memory_addresses.local[type][duration].start
 		}
 	}
 }
@@ -153,8 +153,8 @@ function isBetween(x, min, max) {
 
 // Function to check if an address belongs to any listed addresses of those specified as temp
 is_local_temp_address = (address) => {
-	const local_int = class_virutal_memory_addresses.local.int.temp
-	const local_float = class_virutal_memory_addresses.local.float.temp
+	const local_int = class_virtual_memory_addresses.local.int.temp
+	const local_float = class_virtual_memory_addresses.local.float.temp
 	if (
 		isBetween(address, local_int.start, local_int.limit) ||
 		isBetween(address, local_float.start, local_float.limit) ||
