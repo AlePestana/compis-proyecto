@@ -1,0 +1,13 @@
+program prog1; 
+
+class Person {
+    attributes <- int age; ->
+    methods <- ->
+}
+
+var <- Person person1, person2; ->
+
+main() {
+    person1.age = 20 + 5;
+    print(person1.age);
+}

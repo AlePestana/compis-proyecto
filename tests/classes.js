@@ -47,22 +47,16 @@ const test3 = parser.parse(`
   program prog1; 
 
   class Person {
-    attributes <- int x; ->
-    methods <- 
-      int func one(var <- int x; ->)
-      {
-        return (x - 1);
-      }
-    ->
+    attributes <- int age; ->
+    methods <- ->
   }
 
-  var <- float y[2]; Person person1; ->
+  var <- Person person1; ->
 
-  void func myFunc1 (var <- int x; ->)
-  var <- float y; ->
-  { }
-
-  main() {}`)
+  main() {
+    person1.age = 5;
+    print(person1.age);
+  }`)
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
 console.log('\n\nERROR TEST 4 - Class with attribute of another fake class')

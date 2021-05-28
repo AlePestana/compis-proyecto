@@ -11,7 +11,7 @@ const oracle = require('./cube')
 const get_opcode = require('./opcodes')
 
 // Virtual Memory Addresses
-const virtual_memory = require('./virtualMemory')
+const VirtualMemory = require('./virtualMemory')
 
 // Helper structures
 const Stack = require('./helpers/stack.js')
@@ -34,14 +34,25 @@ let for_stack = new Stack()
 let dimensions_stack = new Stack()
 
 // Additional helpers
+let virtual_memory = null
 let current_simple_id = null
+
+// Funcs helpers
 let current_func_name = null
 let params_count = null
 let params_types = null
 let func_return_exists = null
+
+// Array and matrix helpers
 let current_dimension = null
 let current_dimension_list = null
 let added_second_dimension = false
+
+// Class helpers
+let object_count = 0
+// Array to store all objects declared with the form -> [ {person1: 45000}, {person2: 45001} ]
+let object_array = []
+let current_object = null
 
 // -> Global semantic actions
 
@@ -68,6 +79,8 @@ constants_directory = null
 // Does not return anything
 create_func_directory = function () {
 	func_directory = new Map()
+	virtual_memory = new VirtualMemory()
+	virtual_memory.initialize_counters()
 }
 
 // Semantic action that creates a new empty instance of the constants directory
@@ -454,10 +467,15 @@ create_class_directory = () => {
 add_class_id = (class_id) => {
 	current_class = class_id
 
+	// Create a virtual memory object instance for the class and initialize counters
+	class_virtual_memory = new VirtualMemory()
+	class_virtual_memory.initialize_counters()
+
 	class_directory.set(class_id, {
 		type: 'class',
 		attr_directory: new Map(),
 		method_directory: new Map(),
+		base_virtual_address: virtual_memory.get_class_address(),
 	})
 }
 
@@ -480,6 +498,7 @@ finish_attr_dec = () => {
 // Does not return anything
 finish_class_dec = () => {
 	current_class = null
+	class_virtual_memory = null
 }
 
 // Semantic action that deletes the class directory after the program finishes
@@ -1129,6 +1148,10 @@ mark_params_size = () => {
 			}
 		}
 		func_size_directory.set('params_size', params_size)
+	} else {
+		func_size_directory = new Map()
+		console.log('hi class dir')
+		console.log(class_directory.get('Person'))
 	}
 }
 
@@ -1177,10 +1200,10 @@ mark_local_vars_size = () => {
 mark_func_start = () => {
 	// console.log('inside mark_func_start')
 	// Mark where the current function starts
-	func_size_directory.set('temps_size', { int: 0, float: 0 })
-	func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
 
 	if (current_class == null) {
+		func_size_directory.set('temps_size', { int: 0, float: 0 })
+		func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
 		func_directory.get(current_func).starting_point = quads.count
 	}
 }
