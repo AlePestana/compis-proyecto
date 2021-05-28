@@ -854,7 +854,7 @@ read_var = (variable) => {
 	// if variable is within scope
 	if (is_var_in_scope(variable)) {
 		const operator = 'read'
-		const result = variable
+		const result = operands.pop().operand
 
 		const left_operand = null
 		const right_operand = null

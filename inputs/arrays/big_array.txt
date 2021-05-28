@@ -1,0 +1,8 @@
+program prog1; 
+var <- int x; float y[200000000000]; ->
+
+main() {
+    print("Before reading user input");
+    read(x);
+    print("User input was", x);
+}
