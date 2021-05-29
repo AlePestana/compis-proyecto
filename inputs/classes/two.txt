@@ -1,0 +1,18 @@
+program prog1; 
+
+  class Person {
+    attributes <- int age; float height; ->
+    methods <- ->
+  }
+
+  class Animal {
+    attributes <- int age; float height; ->
+    methods <- ->
+  }
+
+  var <- Person person1, person2; Animal animal1, animal2; ->
+
+  main() {
+    person1.age = 5;
+    print(person1.age);
+  }

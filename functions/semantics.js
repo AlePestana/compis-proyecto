@@ -49,10 +49,11 @@ let current_dimension_list = null
 let added_second_dimension = false
 
 // Class helpers
+let current_class = null
+let current_object = null
 let object_count = 0
 // Array to store all objects declared with the form -> [ {person1: 45000}, {person2: 45001} ]
 let object_array = []
-let current_object = null
 
 // -> Global semantic actions
 
@@ -227,13 +228,13 @@ add_id = (id) => {
 		if (is_attr_dec) {
 			class_directory.get(current_class).attr_directory.set(id, {
 				type: current_type,
-				virtual_address: virtual_memory.get_address(
+				virtual_address: class_virtual_memory.get_address(
 					'global',
 					current_type,
 					'perm'
 				),
 				dimension: null,
-			}) // ???
+			})
 		} else {
 			// Is method declaration
 			class_directory
@@ -241,7 +242,7 @@ add_id = (id) => {
 				.method_directory.get(current_func)
 				.var_directory.set(id, {
 					type: current_type,
-					virtual_address: virtual_memory.get_address(
+					virtual_address: class_virtual_memory.get_address(
 						'local',
 						current_type,
 						'perm'
@@ -274,6 +275,26 @@ add_id = (id) => {
 				.var_directory.set(id, { type: current_type })
 		}
 	}
+}
+
+add_compound_id = (id) => {
+	// Update current_class to the type being added
+	current_class = current_type
+	// Obtain address of the current class and add the object that's used
+	const current_class_address =
+		class_directory.get(current_class).base_virtual_address
+	const object_address = current_class_address + object_count++
+	current_object = { id, address: object_address, class: current_class }
+	object_array.push(current_object)
+
+	// Generate object_era quad with the form -> { object_era, object_name, address, null }
+	const operator = 'eraobject'
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: id,
+		right_operand: object_address,
+		result: null,
+	})
 }
 
 // Semantic action that adds an array variable name to the class or global function directory (depending on the previously set variables), adds its dimension node, gets its virtual addresses, and verifies it is not duplicated
@@ -458,7 +479,6 @@ reset_virtual_memory = () => {
 // Does not return anything
 create_class_directory = () => {
 	class_directory = new Map()
-	current_class = null
 }
 
 // Semantic action that adds a class name to the class directory, sets the current class variable and creates new instances of both attribute and methods directory for the object
@@ -498,7 +518,18 @@ finish_attr_dec = () => {
 // Does not return anything
 finish_class_dec = () => {
 	current_class = null
+	// Reset virtual memory and number of objects of current class
 	class_virtual_memory = null
+	object_count = 0
+}
+
+// Semantic action that resets the object count from the current class to 0
+// Does not receive any parameters
+// Does not return anything
+finish_compound_id_list = () => {
+	object_count = 0
+	current_object = null
+	current_class = null
 }
 
 // Semantic action that deletes the class directory after the program finishes
@@ -524,6 +555,7 @@ set_simple_id = (id) => {
 // Does not return anything
 add_simple_id_operand = () => {
 	add_operand(current_simple_id, 'var')
+	console.log('inside add_simple_id_operand')
 	current_simple_id = null
 }
 
@@ -531,50 +563,73 @@ add_simple_id_operand = () => {
 // Receives the operand and its type (which only specifies if it's a variable or not)
 // Does not return anything
 add_operand = (operand, type) => {
-	if (type === 'var') {
-		if (current_class != null) {
-			const is_inside_class_method =
-				class_directory
+	if (type === 'object') {
+		current_class = current_object.class
+		const is_inside_class_method =
+			class_directory
+				.get(current_class)
+				?.method_directory?.get(current_func)
+				?.var_directory?.get(operand) != null
+		// If variable is not inside the function variables, then it must be part of the class' attributes
+		type = is_inside_class_method
+			? class_directory
 					.get(current_class)
-					.method_directory.get(current_func)
-					.var_directory.get(operand) != null
-			// If variable is not inside the function variables, then it must be part of the class' attributes
-			type = is_inside_class_method
-				? class_directory
-						.get(current_class)
-						.method_directory.get(current_func)
-						.var_directory.get(operand).type
-				: class_directory.get(current_class).attr_directory.get(operand).type
-			operand = is_inside_class_method
-				? class_directory
-						.get(current_class)
-						.method_directory.get(current_func)
-						.var_directory.get(operand).virtual_address
-				: class_directory.get(current_class).attr_directory.get(operand)
-						.virtual_address
+					?.method_directory?.get(current_func)
+					?.var_directory?.get(operand)?.type
+			: class_directory.get(current_class)?.attr_directory?.get(operand)?.type
+		operand = is_inside_class_method
+			? class_directory
+					.get(current_class)
+					?.method_directory?.get(current_func)
+					?.var_directory?.get(operand)?.virtual_address
+			: class_directory.get(current_class)?.attr_directory?.get(operand)
+					?.virtual_address
+		current_class = null
+	} else if (type === 'var') {
+		// if (current_object != null) {
+		// console.log('inside current_object != null with id ' + operand)
+		// const is_inside_class_method =
+		// 	class_directory
+		// 		.get(current_class)
+		// 		.method_directory?.get(current_func)
+		// 		?.var_directory?.get(operand) != null
+		// // If variable is not inside the function variables, then it must be part of the class' attributes
+		// type = is_inside_class_method
+		// 	? class_directory
+		// 			.get(current_class)
+		// 			.method_directory.get(current_func)
+		// 			.var_directory.get(operand).type
+		// 	: class_directory.get(current_class).attr_directory.get(operand).type
+		// operand = is_inside_class_method
+		// 	? class_directory
+		// 			.get(current_class)
+		// 			.method_directory.get(current_func)
+		// 			.var_directory.get(operand).virtual_address
+		// 	: class_directory.get(current_class).attr_directory.get(operand)
+		// 			.virtual_address
+		// } else {
+		// Search in current var_directory
+		const is_inside_current_func =
+			func_directory.get(current_func).var_directory.get(operand) != null
+
+		// If not found, search in global scope
+		const is_inside_global_scope =
+			func_directory.get(global_func).var_directory.get(operand) != null
+
+		if (is_inside_current_func) {
+			type = func_directory.get(current_func).var_directory.get(operand).type
+			operand = func_directory
+				.get(current_func)
+				.var_directory.get(operand).virtual_address
+		} else if (is_inside_global_scope) {
+			type = func_directory.get(global_func).var_directory.get(operand).type
+			operand = func_directory
+				.get(global_func)
+				.var_directory.get(operand).virtual_address
 		} else {
-			// Search in current var_directory
-			const is_inside_current_func =
-				func_directory.get(current_func).var_directory.get(operand) != null
-
-			// If not found, search in global scope
-			const is_inside_global_scope =
-				func_directory.get(global_func).var_directory.get(operand) != null
-
-			if (is_inside_current_func) {
-				type = func_directory.get(current_func).var_directory.get(operand).type
-				operand = func_directory
-					.get(current_func)
-					.var_directory.get(operand).virtual_address
-			} else if (is_inside_global_scope) {
-				type = func_directory.get(global_func).var_directory.get(operand).type
-				operand = func_directory
-					.get(global_func)
-					.var_directory.get(operand).virtual_address
-			} else {
-				type = 'undefined'
-			}
+			type = 'undefined'
 		}
+		// }
 	} else {
 		// It is a constant
 		switch (type) {
@@ -894,8 +949,6 @@ read_var = (variable) => {
 // Does not receive any parameters
 // Does not return anything
 assign_exp = () => {
-	// console.log('inside assign_exp')
-
 	const res = operands.pop()
 	const result = res.operand
 
@@ -1677,6 +1730,22 @@ mark_am_end = () => {
 		current_dimension_list = null
 		added_second_dimension = false
 	}
+}
+
+// -> Object creation and usage semantic actions
+
+mark_object = (object) => {
+	current_object = object_array.filter(({ id }) => id === object)[0] // Grab first object that matches
+
+	// Generate object quad with the form -> { object, object_name, address, null }
+	// It lets the VM know which is the current object, so its attributes and methods can be associated with it
+	const operator = 'object'
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: current_object.address,
+		right_operand: null,
+		result: null,
+	})
 }
 
 // -> Helper functions

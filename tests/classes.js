@@ -47,15 +47,17 @@ const test3 = parser.parse(`
   program prog1; 
 
   class Person {
-    attributes <- int age; ->
+    attributes <- int age; float height; ->
     methods <- ->
   }
 
-  var <- Person person1; ->
+  var <- Person person1, person2; ->
 
   main() {
-    person1.age = 5;
+    person1.age = 15 + 5;
     print(person1.age);
+    person2.height = 1.5;
+    print(person2.height);
   }`)
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
 
