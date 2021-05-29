@@ -107,11 +107,15 @@ insert_goto_main_quad = () => {
 	})
 }
 
-// Semantic action that fills the initial goto (main) with the next quad counter and calculates the program's global variables' size, and creates the empty structure for the temp and pointer vars
+// Semantic action that fills the initial goto (main) with the next quad counter
+fill_goto_main_quad = () => {
+	quads.data[0].result = quads.count
+}
+
+// Semantic action that fills the calculates the program's global variables' size, and creates the empty structure for the temp and pointer vars
 // Does not receive any parameters
 // Does not return anything
 mark_main_start = () => {
-	quads.data[0].result = quads.count
 	let vars_size = { int: 0, float: 0, char: 0 }
 
 	// Turn current variable directory into array in order to be able to iterate over it
@@ -556,7 +560,6 @@ set_simple_id = (id) => {
 // Does not return anything
 add_simple_id_operand = () => {
 	add_operand(current_simple_id, 'var')
-	console.log('inside add_simple_id_operand')
 	current_simple_id = null
 }
 

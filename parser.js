@@ -126,7 +126,7 @@ const grammar = {
 
 		classes: [
 			['class classes', '$$'],
-			['', '$$'],
+			['', 'fill_goto_main_quad()'],
 		],
 
 		class: [
@@ -138,7 +138,6 @@ const grammar = {
 				'CLASS class_id_keyword EXTENDS ID { attributes methods }',
 				'finish_class_dec(); $$',
 			],
-			['', '$$'],
 		],
 
 		class_id_keyword: [['ID', 'add_class_id($1)']],
