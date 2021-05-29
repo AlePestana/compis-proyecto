@@ -105,7 +105,10 @@ const getTempVarType = (address) => {
 const getPointerVarType = (address) => {
 	if (isBetween(address, 33000, 34999) || isBetween(address, 39000, 40999)) {
 		return 'int'
-	} else if (isBetween(address, 35000, 36999) || isBetween(address, 41000, 42999)) {
+	} else if (
+		isBetween(address, 35000, 36999) ||
+		isBetween(address, 41000, 42999)
+	) {
 		return 'float'
 	} else {
 		return 'char'
@@ -176,7 +179,11 @@ async function execute_virtual_machine(virtual_machine_info) {
 					return data_segment.get(address, 'temps', temp_type)
 				} else if (isPointer(address)) {
 					const pointer_type = getPointerVarType(address)
-					const actual_address = getPointingAddress(address, pointer_type, 'global')
+					const actual_address = getPointingAddress(
+						address,
+						pointer_type,
+						'global'
+					)
 					return data_segment.get(actual_address, 'vars', pointer_type)
 				} else {
 					const var_type = getVarType(
@@ -194,10 +201,15 @@ async function execute_virtual_machine(virtual_machine_info) {
 					return exec_stack.top().memory.get(address, 'temps', temp_type)
 				} else if (isPointer(address)) {
 					const pointer_type = getPointerVarType(address)
-					const actual_address = getPointingAddress(address, pointer_type, 'local')
-					return exec_stack.top().memory.get(actual_address, 'vars', pointer_type)
+					const actual_address = getPointingAddress(
+						address,
+						pointer_type,
+						'local'
+					)
+					return exec_stack
+						.top()
+						.memory.get(actual_address, 'vars', pointer_type)
 				} else {
-					//console.log(exec_stack.top().name)
 					const var_type = getLocalVarType(address)
 					return exec_stack.top().memory.get(address, 'vars', var_type)
 				}
@@ -208,7 +220,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 	// Function that gets the address that the pointer is pointing to
 	const getPointingAddress = (address, pointer_type, scope) => {
 		// Just return the address, not the value
-		if (scope === 'global') {		
+		if (scope === 'global') {
 			return data_segment.get(address, 'pointers', pointer_type)
 		} else {
 			return exec_stack.top().memory.get(address, 'pointers', pointer_type)
@@ -271,8 +283,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 			case 1: // +
 				left_operand = getOperandValue(quad.left_operand)
 				right_operand = getOperandValue(quad.right_operand)
-				result =
-					left_operand + right_operand
+				result = left_operand + right_operand
 				address = quad.result
 				if (debug) {
 					console.log('+')
@@ -418,7 +429,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 				if (duration === 'pointers') {
 					// First get the actual address
 					const pointer_type = getPointerVarType(address)
-					const scope = isGlobalVar ? 'global' : 'local'
+					const scope = isGlobalVar(address) ? 'global' : 'local'
 					address = getPointingAddress(address, pointer_type, scope)
 					// The final address must be a var
 					duration = 'vars'
@@ -514,11 +525,10 @@ async function execute_virtual_machine(virtual_machine_info) {
 				break
 			case 20: // param
 				const argument = getOperandValue(quad.left_operand)
-				const param_num = parseInt(quad.result.slice(5)) // Read after param
+				const param_num = parseInt(quad.result.slice(5)) // Read after param\
 
 				const argument_type = func_directory.get(func_calls_in_build.top().name)
 					.params_type_list[param_num - 1]
-
 				func_calls_in_build.top().memory.add_parameter(argument, argument_type)
 
 				ip++
@@ -534,6 +544,13 @@ async function execute_virtual_machine(virtual_machine_info) {
 				ip = exec_stack.pop().return_address
 				break
 			case 23: // verify
+				let index = getOperandValue(quad.left_operand)
+				let upper_bound = getOperandValue(quad.result)
+
+				if (index > upper_bound || index < 0) {
+					console.log('ERROR - Index out of bounds')
+					throw 'ERROR - Index out of bounds'
+				}
 				ip++
 				break
 			default:

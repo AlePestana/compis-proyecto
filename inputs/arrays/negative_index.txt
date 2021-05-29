@@ -1,0 +1,7 @@
+program prog1; 
+    var <- float y[2], p; int x[5], z; ->
+
+main() {
+    z = -1;
+    y[z] = 2.2;
+}
