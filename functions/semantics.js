@@ -438,6 +438,7 @@ delete_func_directory = function () {
 		quads,
 		func_directory,
 		constants_directory,
+		class_directory,
 	}
 	console.log('Func directory before exit')
 	console.log(func_directory)
@@ -959,7 +960,8 @@ assign_exp = () => {
 
 	const operator = operators.pop()
 
-	if (res.type === left.type) {
+	// Allow the assignment of a float variable with an integer
+	if (res.type === left.type || (left.type === 'float' && res.type === 'int')) {
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand: result,
