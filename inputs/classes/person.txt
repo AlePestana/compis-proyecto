@@ -1,13 +1,18 @@
 program prog1; 
 
 class Person {
-    attributes <- int age; ->
+    attributes <- int age; float height; ->
     methods <- ->
 }
 
-var <- Person person1, person2; ->
+var <- float x; Person person1, person2; ->
 
 main() {
-    person1.age = 20 + 5;
-    print(person1.age);
+    person1.age = 15 + 5;
+    print("person1 age", person1.age);
+    x = person1.age + 2;
+    print("x", x);
+    person2.height = 1.53;
+    print("person2 height", person2.height);
+    print("x", x);
 }

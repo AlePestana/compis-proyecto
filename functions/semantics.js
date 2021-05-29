@@ -54,6 +54,7 @@ let current_object = null
 let object_count = 0
 // Array to store all objects declared with the form -> [ {person1: 45000}, {person2: 45001} ]
 let object_array = []
+let class_size_directory = null
 
 // -> Global semantic actions
 
@@ -503,7 +504,10 @@ add_class_id = (class_id) => {
 		attr_directory: new Map(),
 		method_directory: new Map(),
 		base_virtual_address: virtual_memory.get_class_address(),
+		class_size_directory: new Map(),
 	})
+
+	class_size_directory = new Map()
 }
 
 // Semantic action that sets the flag to mark that attribute declarations for a class has started
@@ -517,13 +521,28 @@ start_attributes_dec = () => {
 // Does not receive any parameters
 // Does not return anything
 finish_attr_dec = () => {
+	const attributes_size = { int: 0, float: 0, char: 0 }
+
+	for (let [attribute, value] of class_directory.get(current_class)
+		?.attr_directory) {
+		if (value.type === 'int') {
+			attributes_size.int += 1
+		} else if (value.type === 'float') {
+			attributes_size.float += 1
+		} else if (value.type === 'char') {
+			attributes_size.char += 1
+		}
+	}
+	class_size_directory.set('vars_size', attributes_size)
 	is_attr_dec = false
 }
 
-// Semantic action that sets the flag to mark that a class declaration has ended by setting the current class variable to null
+// Semantic action that sets the flag to mark that a class declaration has ended by setting the current class variable to null and filling its size directory
 // Does not receive any parameters
 // Does not return anything
 finish_class_dec = () => {
+	class_directory.get(current_class).class_size_directory = class_size_directory
+	console.log(class_directory.get(current_class).class_size_directory)
 	current_class = null
 	// Reset virtual memory and number of objects of current class
 	class_virtual_memory = null
@@ -1210,8 +1229,6 @@ mark_params_size = () => {
 		func_size_directory.set('params_size', params_size)
 	} else {
 		func_size_directory = new Map()
-		console.log('hi class dir')
-		console.log(class_directory.get('Person'))
 	}
 }
 

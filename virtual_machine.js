@@ -169,7 +169,8 @@ async function execute_virtual_machine(virtual_machine_info) {
 	}
 
 	// Retrieve relevant information from parser
-	const { quads, func_directory, constants_directory } = virtual_machine_info
+	const { quads, func_directory, constants_directory, class_directory } =
+		virtual_machine_info
 
 	// Declare all necessary types
 	const code_segment = quads
@@ -193,6 +194,10 @@ async function execute_virtual_machine(virtual_machine_info) {
 	let exec_stack_size = 0
 	const exec_stack_max_size = 100000
 
+	// Class helpers
+	const object_array = []
+	let current_object = null
+
 	// Function to look on corresponding memory for a variable's value
 	const getOperandValue = (address) => {
 		if (isConstant(address)) {
@@ -209,6 +214,13 @@ async function execute_virtual_machine(virtual_machine_info) {
 					return data_segment.get(actual_address, 'vars', type)
 				} else {
 					const var_type = getVarType(address)
+					if (current_object !== null) {
+						const index = object_array.findIndex(
+							(object) => object.address === current_object
+						)
+						current_object = null
+						return object_array[index].memory.get(address, 'vars', var_type)
+					}
 					// Look for value in corresponding memory
 					return data_segment.get(address, 'vars', var_type)
 				}
@@ -238,13 +250,27 @@ async function execute_virtual_machine(virtual_machine_info) {
 	}
 
 	// Function to set to memory a particular value
-	const setMemoryValue = (result, address, duration) => {
-		if (isGlobalVar(address)) {
-			// data_segment
-			data_segment.set(result, address, duration)
+	const setMemoryValue = (result, address, duration, scope) => {
+		if (scope === 'object') {
+			if (isGlobalVar(address)) {
+				// Find current_object in object_array to get its memory
+				const index = object_array.findIndex(
+					({ address }) => address === current_object
+				)
+				object_array[index].memory.set(result, address, duration)
+				current_object = null
+			} else {
+				// For an object's method exec_stack
+				// exec_stack.top().memory.set(result, address, duration)
+			}
 		} else {
-			// exec_stack
-			exec_stack.top().memory.set(result, address, duration)
+			if (isGlobalVar(address)) {
+				// data_segment
+				data_segment.set(result, address, duration)
+			} else {
+				// exec_stack
+				exec_stack.top().memory.set(result, address, duration)
+			}
 		}
 	}
 
@@ -270,17 +296,40 @@ async function execute_virtual_machine(virtual_machine_info) {
 
 	const getFunctionSizes = (size_directory) => {
 		return {
-			int_vars_count:
+			int_vars_size:
 				size_directory.get('params_size').int +
 				size_directory.get('local_vars_size').int,
-			float_vars_count:
+			float_vars_size:
 				size_directory.get('params_size').float +
 				size_directory.get('local_vars_size').float,
-			char_vars_count:
+			char_vars_size:
 				size_directory.get('params_size').char +
 				size_directory.get('local_vars_size').char,
-			int_temps_count: size_directory.get('temps_size').int,
-			float_temps_count: size_directory.get('temps_size').float,
+			int_temps_size: size_directory.get('temps_size').int,
+			float_temps_size: size_directory.get('temps_size').float,
+		}
+	}
+
+	const getClassSizes = (address) => {
+		// Look for the class_size_directory stored in the class_directory from the given address
+		let size_directory = null
+		for (let [class_name, value] of class_directory) {
+			// Get first two digits --> from 45000 to 45, since those are the ones that match between the class address and an object's address
+			const class_address = value.base_virtual_address / 1000
+			const object_address = Math.floor(address / 1000) // round to bottom, otherwise it'll output 45.001
+			if (class_address === object_address) {
+				size_directory = value.class_size_directory
+				break
+			}
+		}
+		// Since classes only store their attributes, they do not have temps
+		// Temps are only present in a class's methods
+		return {
+			int_vars_size: size_directory.get('vars_size').int,
+			float_vars_size: size_directory.get('vars_size').float,
+			char_vars_size: size_directory.get('vars_size').char,
+			int_temps_size: 0,
+			float_temps_size: 0,
 		}
 	}
 
@@ -427,7 +476,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 				if (debug) {
 					console.log('=')
 				}
-				// This will break when assigning values to global variables inside funcs
+
 				if (isTempVar(address)) {
 					duration = 'temps'
 				} else if (isPointer(address)) {
@@ -445,8 +494,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 					duration = 'vars'
 				}
 
+				// Check if assigning to an object's attribute
+
+				const scope = current_object !== null ? 'object' : 'global'
+
 				// Set memory value
-				setMemoryValue(result, address, duration)
+				setMemoryValue(result, address, duration, scope)
 				ip++
 				break
 
@@ -534,22 +587,22 @@ async function execute_virtual_machine(virtual_machine_info) {
 				ip = exec_stack.pop().return_address
 				break
 			case 18: // era
-				let curr_function_name = quad.left_operand
-				let curr_function_size = getTotalFunctionSize(
-					func_directory.get(curr_function_name).func_size_directory
+				let current_function_name = quad.left_operand
+				let current_function_size = getTotalFunctionSize(
+					func_directory.get(current_function_name).func_size_directory
 				)
-				if (exec_stack_size + curr_function_size > exec_stack_max_size) {
+				if (exec_stack_size + current_function_size > exec_stack_max_size) {
 					console.log('ERROR - Stack overflow')
 					throw 'ERROR - Stack overflow'
 				}
 				// Add current function size to total size of execution stack
-				exec_stack_size += curr_function_size
-				let curr_function_sizes = getFunctionSizes(
-					func_directory.get(curr_function_name).func_size_directory
+				exec_stack_size += current_function_size
+				let current_function_sizes = getFunctionSizes(
+					func_directory.get(current_function_name).func_size_directory
 				)
-				let func_call_mem = new Memory(curr_function_sizes, funcs_offsets)
+				let func_call_mem = new Memory(current_function_sizes, funcs_offsets)
 				func_calls_in_build.push({
-					name: curr_function_name,
+					name: current_function_name,
 					memory: func_call_mem,
 					return_address: null,
 				})
@@ -590,6 +643,20 @@ async function execute_virtual_machine(virtual_machine_info) {
 					console.log('ERROR - Index out of bounds')
 					throw 'ERROR - Index out of bounds'
 				}
+				ip++
+				break
+			case 24: // eraobject
+				left_operand = quad.left_operand // address
+				const current_class_sizes = getClassSizes(left_operand)
+				object_array.push({
+					address: left_operand,
+					memory: new Memory(current_class_sizes, main_func_offsets),
+				})
+				ip++
+				break
+			case 25: // object
+				// Set current object to the address sent
+				current_object = quad.left_operand
 				ip++
 				break
 			default:
