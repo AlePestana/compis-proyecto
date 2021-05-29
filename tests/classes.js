@@ -56,7 +56,7 @@ const test3 = parser.parse(`
   main() {
     person1.age = 15 + 5;
     print(person1.age);
-    person2.height = 1.5;
+    person2.height = 1;
     print(person2.height);
   }`)
 console.log('--> ' + (test3 ? 'yes :)' : 'no :('))
@@ -111,3 +111,66 @@ main() {}`
 // const test5 = parser.parse(program5)
 // console.log('--> ' + (test5 ? 'yes :)' : 'no :('))
 // Syntax catches this error
+
+console.log('\n\nERROR TEST 6 - Too many classes defined (+11)')
+const program6 = `
+program prog1; 
+
+class Person {
+  attributes <- int age; float height; ->
+  methods <- ->
+}
+
+class Animal {
+  attributes <- int age; float height; ->
+  methods <- ->
+}
+
+class Object {
+  attributes <- int age; float height; ->
+  methods <- ->
+}
+
+class Car {
+  attributes <- int age; float height; ->
+  methods <- ->
+}
+
+class Industry {
+  attributes <- int age; float height; ->
+  methods <- ->
+}
+
+class Job {
+  attributes <- int age; float height; ->
+  methods <- ->
+}
+
+class Vehicle {
+  attributes <- int age; float height; ->
+  methods <- ->
+}
+
+class Student {
+  attributes <- int age; float height; ->
+  methods <- ->
+}
+
+class Teacher {
+  attributes <- int age; float height; ->
+  methods <- ->
+}
+
+class Anything {
+  attributes <- int age; float height; ->
+  methods <- ->
+}
+
+class Bye {
+  attributes <- int age; float height; ->
+  methods <- ->
+}
+
+main() {}`
+// const test6 = parser.parse(program6)
+// console.log('--> ' + (test6 ? 'yes :)' : 'no :('))
