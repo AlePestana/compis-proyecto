@@ -108,6 +108,8 @@ insert_goto_main_quad = () => {
 }
 
 // Semantic action that fills the initial goto (main) with the next quad counter
+// Does not receive any parameters
+// Does not return anything
 fill_goto_main_quad = () => {
 	quads.data[0].result = quads.count
 }
@@ -1739,6 +1741,9 @@ mark_am_end = () => {
 
 // -> Object creation and usage semantic actions
 
+// Semantic action that sets the current_object variable and adds the object quad
+// Receives the name of the object
+// Does not return anything
 mark_object = (object) => {
 	current_object = object_array.filter(({ id }) => id === object)[0] // Grab first object that matches
 
