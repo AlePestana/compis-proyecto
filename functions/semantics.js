@@ -1227,7 +1227,6 @@ mark_func_end = () => {
 // Does not receive any parameters
 // Does not return anything
 assign_return = () => {
-	console.log(current_func)
 	if (current_func === global_func) {
 		console.log('ERROR - Return statement can only be inside a function')
 		throw 'ERROR - Return statement can only be inside a function'
@@ -1522,9 +1521,7 @@ mark_am_dimension = () => {
 			throw 'ERROR - Trying to index a variable without a valid integer'
 		}
 
-		console.log(current_dimension_stack.data)
 		if (current_dimension_stack.top() === null) {
-			console.log(current_dimension_stack.top());
 			console.log(
 				'ERROR - Trying to index a variable without the specified dimensions'
 			)
