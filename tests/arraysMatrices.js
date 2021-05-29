@@ -105,13 +105,14 @@ console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
 console.log('\nTEST 9 - Printing matrix value within function')
 const test9 = parser.parse(`
 program prog1; 
-var <- int x[3], y[2], z, res; ->
+var <- int x[3], y[2], p[2], z, res; ->
 
 main() {
 y[0] = 1;
 x[y[0]] = 2;
 z = 0;
-res = x[y[z][2]];
+p[1] = 0;
+res = x[y[p[1]]];
 print(res);
 }`)
 console.log('--> ' + (test9 ? 'yes :)' : 'no :('))

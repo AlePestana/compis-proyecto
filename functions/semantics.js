@@ -1462,7 +1462,6 @@ mark_am_start = () => {
 					throw 'ERROR - Trying to index a variable that has no dimensions'
 				}
 				am_id = id
-				current_dimension_stack.push('(');
 				current_dimension_stack.push(value.dimension)
 				base_address = value.virtual_address
 				am_type = value.type
@@ -1525,7 +1524,7 @@ mark_am_dimension = () => {
 		}
 
 		console.log(current_dimension_stack.data)
-		if (current_dimension_stack.top() === null || current_dimension_stack.top() === '(') {
+		if (current_dimension_stack.top() === null) {
 			console.log(current_dimension_stack.top());
 			console.log(
 				'ERROR - Trying to index a variable without the specified dimensions'
@@ -1656,7 +1655,6 @@ mark_am_end = () => {
 		// Reset dimension variables
 		current_dimension = null
 		current_dimension_stack.pop() // pop dimension
-		current_dimension_stack.pop() // pop fake bottom
 		added_second_dimension = false
 	}
 }
