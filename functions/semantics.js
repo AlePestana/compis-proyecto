@@ -1482,7 +1482,6 @@ mark_am_start = () => {
 						throw 'ERROR - Trying to index a variable that has no dimensions'
 					}
 					am_id = id
-					current_dimension_stack.push('(');
 					current_dimension_stack.push(value.dimension)
 					base_address = value.virtual_address
 					am_type = value.type
