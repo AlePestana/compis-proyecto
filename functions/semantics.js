@@ -287,12 +287,12 @@ add_compound_id = (id) => {
 	current_object = { id, address: object_address, class: current_class }
 	object_array.push(current_object)
 
-	// Generate object_era quad with the form -> { object_era, object_name, address, null }
+	// Generate object_era quad with the form -> { object_era, object_address, object_name, null }
 	const operator = 'eraobject'
 	quads.push({
 		operator: get_opcode(operator),
-		left_operand: id,
-		right_operand: object_address,
+		left_operand: object_address,
+		right_operand: id,
 		result: null,
 	})
 }
