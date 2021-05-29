@@ -29,7 +29,6 @@ operations = {
 	verify: 23,
 	eraobject: 24,
 	object: 25,
-	endobject: 26,
 }
 
 get_opcode = (string_opcode) => {
