@@ -1,0 +1,12 @@
+program prog1; 
+var <- int n; ->
+
+int func sum (var <- int num1, num2; ->)
+{
+  return num1 + num2;
+}
+
+main() {
+  n = sum(sum(1, 2), 3);
+  print(n);
+}
