@@ -8,5 +8,6 @@ int func sum (var <- int num1, num2; ->)
 
 main() {
   n = sum(sum(1, 2), 3);
+  print("Result is");
   print(n);
 }
