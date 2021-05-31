@@ -65,6 +65,7 @@ const grammar = {
 			['{digits}\\.{digits}', "return 'FLOAT_CTE'"],
 			['{digits}', "return 'INT_CTE'"],
 			['\\"({letters}|{digits}|{blank})+\\"', "return 'STRING_CTE'"],
+			['\\<-({letters}|{digits}|{blank})+\\->', "return 'COMMENT'"],
 
 			['\\<-', "return '<-'"],
 			['\\->', "return '->'"],
@@ -110,7 +111,7 @@ const grammar = {
 
 		program: [
 			[
-				'program_keyword program_id_keyword ; classes dec_vars funcs MAIN ( ) opening_main_bracket statements closing_main_bracket EOF',
+				'comment program_keyword program_id_keyword ; comment classes comment dec_vars comment funcs comment MAIN ( ) opening_main_bracket statements closing_main_bracket comment EOF',
 				'delete_func_directory(); delete_class_directory(); delete_constants_directory(); reset_virtual_memory(); $$ = true',
 			],
 		],
@@ -259,6 +260,7 @@ const grammar = {
 		],
 
 		statement: [
+			['comment', '$$'],
 			['assignment', '$$'],
 			['void_func_call', '$$'],
 			['io', '$$'],
@@ -509,6 +511,11 @@ const grammar = {
 		closing_for_parenthesis: [[')', 'mark_for_condition()']],
 
 		closing_main_bracket: [['}', 'mark_main_end()']],
+
+		comment: [
+			['COMMENT', '$$'],
+			['', '$$'],
+		],
 	},
 }
 
