@@ -6,13 +6,19 @@ program prog1;
   }
 
   class Animal {
-    attributes <- int age; float height; ->
+    attributes <- int years; float spots; ->
     methods <- ->
   }
 
   var <- Person person1, person2; Animal animal1, animal2; ->
 
   main() {
-    person1.age = 5;
-    print(person1.age);
+    person1.age = 15 + 5;
+    print("person1 age", person1.age);
+    animal1.years = person1.age + 2;
+    print("animal1 years", animal1.years);
+    person2.height = 3 / 2;
+    print("person2 height", person2.height);
+    animal2.spots = animal1.years + person2.height;
+    print("animal2 spots", animal2.spots);
   }
