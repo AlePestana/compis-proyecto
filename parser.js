@@ -126,7 +126,7 @@ const grammar = {
 
 		classes: [
 			['class classes', '$$'],
-			['', 'fill_goto_main_quad()'],
+			['', '$$'],
 		],
 
 		class: [

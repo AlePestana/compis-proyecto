@@ -108,17 +108,11 @@ insert_goto_main_quad = () => {
 	})
 }
 
-// Semantic action that fills the initial goto (main) with the next quad counter
-// Does not receive any parameters
-// Does not return anything
-fill_goto_main_quad = () => {
-	quads.data[0].result = quads.count
-}
-
-// Semantic action that fills the calculates the program's global variables' size, and creates the empty structure for the temp and pointer vars
+// Semantic action that fills the initial goto (main) with the next quad counter and calculates the program's global variables' size, and creates the empty structure for the temp and pointer vars
 // Does not receive any parameters
 // Does not return anything
 mark_main_start = () => {
+	quads.data[0].result = quads.count
 	let vars_size = { int: 0, float: 0, char: 0 }
 
 	// Turn current variable directory into array in order to be able to iterate over it
