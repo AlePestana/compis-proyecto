@@ -67,7 +67,7 @@ const isConstant = (address) => {
 
 // Function that checks if an address belongs to a pointer (all pointers are stored after virtual address 33000)
 const isPointer = (address) => {
-	return address >= 33000
+	return address >= 33000 && address <= 44999
 }
 
 // Function that returns the value of a constant by receiving the constants directory and the address
@@ -159,6 +159,11 @@ const getType = (address) => {
 	}
 }
 
+// Function that checks if an address belongs to an object by verifying if it has decimal points
+const isObjectAddress = (address) => {
+	return address % 1 != 0
+}
+
 // Function that executes the virtual machine by creating the data, code, and stack segment
 // Receives the relevant information from the parser (quads, func_directory, and constants_directory)
 // Does not return anything since it performs the necessary operations inside
@@ -174,7 +179,6 @@ async function execute_virtual_machine(virtual_machine_info) {
 
 	// Declare all necessary types
 	const code_segment = quads
-	// Create memory map for main
 	let current_func = func_directory.entries().next().value[0] // returns the name of the first func inside the current directory
 	const main_size_directory =
 		func_directory.get(current_func).func_size_directory
@@ -185,6 +189,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 		int_temps_count: main_size_directory.get('temps_size').int,
 		float_temps_count: main_size_directory.get('temps_size').float,
 	}
+	// Create memory for main
 	const data_segment = new Memory(main_func_sizes, main_func_offsets)
 	const exec_stack = new Stack()
 	let ip = 0 // instruction pointer
@@ -197,11 +202,39 @@ async function execute_virtual_machine(virtual_machine_info) {
 	// Class helpers
 	const object_array = []
 	let current_object = null
+	// Create memory for each object for each class inside the class_directory by pushing to the objects array
+	for (let [class_name, class_value] of class_directory) {
+		const current_class_sizes = {
+			int_vars_size: class_value.class_size_directory.get('vars_size').int,
+			float_vars_size: class_value.class_size_directory.get('vars_size').float,
+			char_vars_size: class_value.class_size_directory.get('vars_size').char,
+			int_temps_size: 0,
+			float_temps_size: 0,
+		}
+		const object_count = class_value.class_size_directory.get('objects_size')
+		for (let i = 0; i < object_count; i++) {
+			object_array.push({
+				address: class_value.base_virtual_address + i,
+				memory: new Memory(current_class_sizes, main_func_offsets),
+			})
+		}
+	}
 
 	// Function to look on corresponding memory for a variable's value
 	const getOperandValue = (address) => {
 		if (isConstant(address)) {
 			return getConstant(constants_directory, address)
+		} else if (isObjectAddress(address)) {
+			// Save the object's address before looking for attribute's address
+			const object_address = Math.floor(address) // only interested in the non decimal part
+			// Obtain decimal part (since that's the actual address of the attribute)
+			address = Math.floor((address % 1) * 10000)
+
+			const index = object_array.findIndex(
+				(object) => object.address === object_address
+			)
+			const var_type = getVarType(address)
+			return object_array[index].memory.get(address, 'vars', var_type)
 		} else {
 			const type = getType(address)
 			if (isGlobalVar(address)) {
@@ -214,13 +247,6 @@ async function execute_virtual_machine(virtual_machine_info) {
 					return data_segment.get(actual_address, 'vars', type)
 				} else {
 					const var_type = getVarType(address)
-					if (current_object !== null) {
-						const index = object_array.findIndex(
-							(object) => object.address === current_object
-						)
-						current_object = null
-						return object_array[index].memory.get(address, 'vars', var_type)
-					}
 					// Look for value in corresponding memory
 					return data_segment.get(address, 'vars', var_type)
 				}
@@ -250,15 +276,18 @@ async function execute_virtual_machine(virtual_machine_info) {
 	}
 
 	// Function to set to memory a particular value
-	const setMemoryValue = (result, address, duration, scope) => {
-		if (scope === 'object') {
+	const setMemoryValue = (result, address, duration) => {
+		if (isObjectAddress(address)) {
+			// Save the object's address before looking for attribute's address
+			const object_address = Math.floor(address) // only interested in the non decimal part
+			// Obtain decimal part (since that's the actual address of the attribute)
+			address = Math.floor((address % 1) * 10000)
 			if (isGlobalVar(address)) {
 				// Find current_object in object_array to get its memory
 				const index = object_array.findIndex(
-					({ address }) => address === current_object
+					(object) => object.address === object_address
 				)
 				object_array[index].memory.set(result, address, duration)
-				current_object = null
 			} else {
 				// For an object's method exec_stack
 				// exec_stack.top().memory.set(result, address, duration)
@@ -307,29 +336,6 @@ async function execute_virtual_machine(virtual_machine_info) {
 				size_directory.get('local_vars_size').char,
 			int_temps_size: size_directory.get('temps_size').int,
 			float_temps_size: size_directory.get('temps_size').float,
-		}
-	}
-
-	const getClassSizes = (address) => {
-		// Look for the class_size_directory stored in the class_directory from the given address
-		let size_directory = null
-		for (let [class_name, value] of class_directory) {
-			// Get first two digits --> from 45000 to 45, since those are the ones that match between the class address and an object's address
-			const class_address = value.base_virtual_address / 1000
-			const object_address = Math.floor(address / 1000) // round to bottom, otherwise it'll output 45.001
-			if (class_address === object_address) {
-				size_directory = value.class_size_directory
-				break
-			}
-		}
-		// Since classes only store their attributes, they do not have temps
-		// Temps are only present in a class's methods
-		return {
-			int_vars_size: size_directory.get('vars_size').int,
-			float_vars_size: size_directory.get('vars_size').float,
-			char_vars_size: size_directory.get('vars_size').char,
-			int_temps_size: 0,
-			float_temps_size: 0,
 		}
 	}
 
@@ -494,12 +500,8 @@ async function execute_virtual_machine(virtual_machine_info) {
 					duration = 'vars'
 				}
 
-				// Check if assigning to an object's attribute
-
-				const scope = current_object !== null ? 'object' : 'global'
-
 				// Set memory value
-				setMemoryValue(result, address, duration, scope)
+				setMemoryValue(result, address, duration)
 				ip++
 				break
 
@@ -643,20 +645,6 @@ async function execute_virtual_machine(virtual_machine_info) {
 					console.log('ERROR - Index out of bounds')
 					throw 'ERROR - Index out of bounds'
 				}
-				ip++
-				break
-			case 24: // eraobject
-				left_operand = quad.left_operand // address
-				const current_class_sizes = getClassSizes(left_operand)
-				object_array.push({
-					address: left_operand,
-					memory: new Memory(current_class_sizes, main_func_offsets),
-				})
-				ip++
-				break
-			case 25: // object
-				// Set current object to the address sent
-				current_object = quad.left_operand
 				ip++
 				break
 			default:
