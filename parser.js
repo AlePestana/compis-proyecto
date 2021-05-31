@@ -66,6 +66,9 @@ const grammar = {
 			['{digits}', "return 'INT_CTE'"],
 			['\\"({letters}|{digits}|{blank})+\\"', "return 'STRING_CTE'"],
 
+			// Comments
+			['\\<--({letters}|{digits}|{blank})+\\-->', '/* ignore comments*/'],
+
 			['\\<-', "return '<-'"],
 			['\\->', "return '->'"],
 
@@ -100,9 +103,6 @@ const grammar = {
 
 			['[{blank}{tab}{newline}{whitespace}]', "return 'WS'"],
 			['$', "return 'EOF'"],
-
-			// Comments
-			['\\<-({letters}|{digits}|{blank})+\\->', '/* ignore comments*/'],
 
 			['.', "return 'error'"],
 		],
