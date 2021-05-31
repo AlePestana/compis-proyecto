@@ -282,9 +282,9 @@ add_id = (id) => {
 // Receives the object's name
 // Does not return anything
 add_compound_id = (id) => {
-	is_id_duplicated(id)
 	// Update current_class to the type being added
 	current_class = current_type
+	is_id_duplicated(id)
 	// Obtain address of the current class and add the object that's used
 	const current_class_address =
 		class_directory.get(current_class).base_virtual_address
@@ -1763,13 +1763,23 @@ const is_id_duplicated = (id) => {
 				}
 			}
 		}
-	} else {
-		// We are in a func var/param or global var declaration
-		// Check if id already exists
-		if (func_directory.get(current_func).var_directory.has(id)) {
-			console.log('ERROR - Variable already exists')
-			throw 'ERROR - Variable already exists'
+	}
+
+	// Always check if it's either in the current func_directory or inside the objects array
+
+	// It's a new instance of an object
+	object_array.forEach((current_object) => {
+		if (current_object.id === id) {
+			console.log('ERROR - Object already exists')
+			throw 'ERROR - Object already exists'
 		}
+	})
+
+	// We are in a func var/param or global var declaration
+	// Check if id already exists
+	if (func_directory.get(current_func).var_directory.has(id)) {
+		console.log('ERROR - Variable already exists')
+		throw 'ERROR - Variable already exists'
 	}
 }
 
