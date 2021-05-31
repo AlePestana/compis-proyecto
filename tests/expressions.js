@@ -195,3 +195,13 @@ const test22 = parser.parse(`
 		print(-(myFunc1(2)));
 	}`)
 console.log('--> ' + (test22 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 23 - Assigning a char')
+const test23 = parser.parse(`
+	program prog1;
+	var <- char x; ->
+	main() { 
+		x = "h"; 
+		print("printing a char", x);
+	}`)
+console.log('--> ' + (test23 ? 'yes :)' : 'no :('))

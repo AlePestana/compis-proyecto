@@ -1,0 +1,7 @@
+program prog1;
+var <- char x; ->
+
+main() { 
+    x = "h"; 
+    print("printing a char", x);
+}
