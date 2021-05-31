@@ -112,6 +112,7 @@ insert_goto_main_quad = () => {
 mark_main_start = () => {
 	quads.data[0].result = quads.count
 	let vars_size = { int: 0, float: 0, char: 0 }
+	let objects_size = {}
 
 	// Turn current variable directory into array in order to be able to iterate over it
 	const local_vars = Array.from(func_directory.get(global_func).var_directory)
@@ -131,6 +132,12 @@ mark_main_start = () => {
 			vars_size.float += size
 		} else if (local_var[1].type === 'char') {
 			vars_size.char += size
+		} else {
+			// Check if we already have another object of the same type
+			if (!objects_size[local_var[1].type]) {
+				objects_size[local_var[1].type] = 0
+			}
+			objects_size[local_var[1].type]++
 		}
 	}
 
@@ -138,6 +145,7 @@ mark_main_start = () => {
 	func_size_directory.set('vars_size', vars_size)
 	func_size_directory.set('temps_size', { int: 0, float: 0 })
 	func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
+	func_size_directory.set('objects_size', objects_size)
 }
 
 // Semantic action that adds the final end quad, assigns the size_directory to main in the func_directory, and resets the helper func_size_directory structure
@@ -539,9 +547,6 @@ finish_class_dec = () => {
 // Does not receive any parameters
 // Does not return anything
 finish_compound_id_list = () => {
-	class_directory
-		.get(current_class)
-		?.class_size_directory?.set('objects_size', object_count)
 	object_count = 0
 	current_object = null
 	current_class = null

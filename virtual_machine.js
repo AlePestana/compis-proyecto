@@ -211,7 +211,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 			int_temps_size: 0,
 			float_temps_size: 0,
 		}
-		const object_count = class_value.class_size_directory.get('objects_size')
+		const object_count = func_directory
+			.get(current_func)
+			.func_size_directory.get('objects_size')[class_name]
 		for (let i = 0; i < object_count; i++) {
 			object_array.push({
 				address: class_value.base_virtual_address + i,
