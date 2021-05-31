@@ -23,7 +23,6 @@ const grammar = {
 		},
 		rules: [
 			['\\s+', '/* skip whitespace */'],
-			['\\<-({letters}|{digits}|{blank})+\\->', '/* ignore comments*/'],
 
 			// General reserved words
 			['program', "return 'PROGRAM'"],
@@ -101,6 +100,9 @@ const grammar = {
 
 			['[{blank}{tab}{newline}{whitespace}]', "return 'WS'"],
 			['$', "return 'EOF'"],
+
+			// Comments
+			['\\<-({letters}|{digits}|{blank})+\\->', '/* ignore comments*/'],
 
 			['.', "return 'error'"],
 		],
