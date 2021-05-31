@@ -27,8 +27,6 @@ reverse_operations = {
 	21: 'end',
 	22: 'return',
 	23: 'verify',
-	24: 'eraobject',
-	25: 'object',
 }
 
 get_string_opcode = (num_opcode) => {

@@ -199,7 +199,7 @@ const grammar = {
 		var_matrix: [['ID [ INT_CTE ] [ INT_CTE ]', 'add_id_matrix($1, $3, $6)']],
 
 		compound_id_list: [
-			[', compound_id_dec compound_id_list', 'finish_compound_id_list()'],
+			[', compound_id_dec compound_id_list', '$$'],
 			['', 'finish_compound_id_list()'],
 		],
 

@@ -278,7 +278,11 @@ add_id = (id) => {
 	}
 }
 
+// Semantic action that adds an object's name to the class directory
+// Receives the object's name
+// Does not return anything
 add_compound_id = (id) => {
+	is_id_duplicated(id)
 	// Update current_class to the type being added
 	current_class = current_type
 	// Obtain address of the current class and add the object that's used
@@ -287,15 +291,6 @@ add_compound_id = (id) => {
 	const object_address = current_class_address + object_count++
 	current_object = { id, address: object_address, class: current_class }
 	object_array.push(current_object)
-
-	// Generate object_era quad with the form -> { object_era, object_address, object_name, null }
-	const operator = 'eraobject'
-	quads.push({
-		operator: get_opcode(operator),
-		left_operand: object_address,
-		right_operand: id,
-		result: null,
-	})
 }
 
 // Semantic action that adds an array variable name to the class or global function directory (depending on the previously set variables), adds its dimension node, gets its virtual addresses, and verifies it is not duplicated
@@ -536,17 +531,18 @@ finish_attr_dec = () => {
 // Does not return anything
 finish_class_dec = () => {
 	class_directory.get(current_class).class_size_directory = class_size_directory
-	console.log(class_directory.get(current_class).class_size_directory)
 	current_class = null
 	// Reset virtual memory and number of objects of current class
 	class_virtual_memory = null
-	object_count = 0
 }
 
-// Semantic action that resets the object count from the current class to 0
+// Semantic action that adds the object_count to the class's size directory and resets the object count from the current class to 0
 // Does not receive any parameters
 // Does not return anything
 finish_compound_id_list = () => {
+	class_directory
+		.get(current_class)
+		?.class_size_directory?.set('objects_size', object_count)
 	object_count = 0
 	current_object = null
 	current_class = null
@@ -596,37 +592,22 @@ add_operand = (operand, type) => {
 					?.method_directory?.get(current_func)
 					?.var_directory?.get(operand)?.type
 			: class_directory.get(current_class)?.attr_directory?.get(operand)?.type
-		operand = is_inside_class_method
+		let operand_address = is_inside_class_method
 			? class_directory
 					.get(current_class)
 					?.method_directory?.get(current_func)
 					?.var_directory?.get(operand)?.virtual_address
 			: class_directory.get(current_class)?.attr_directory?.get(operand)
 					?.virtual_address
+
+		const len = Math.ceil(Math.log10(operand_address + 1))
+		operand_address = operand_address / Math.pow(10, len)
+
+		// Get the direction of an attribute of an object as --> 45001.9
+		operand = parseFloat(current_object.address) + operand_address
+		current_object = null
 		current_class = null
 	} else if (type === 'var') {
-		// if (current_object != null) {
-		// console.log('inside current_object != null with id ' + operand)
-		// const is_inside_class_method =
-		// 	class_directory
-		// 		.get(current_class)
-		// 		.method_directory?.get(current_func)
-		// 		?.var_directory?.get(operand) != null
-		// // If variable is not inside the function variables, then it must be part of the class' attributes
-		// type = is_inside_class_method
-		// 	? class_directory
-		// 			.get(current_class)
-		// 			.method_directory.get(current_func)
-		// 			.var_directory.get(operand).type
-		// 	: class_directory.get(current_class).attr_directory.get(operand).type
-		// operand = is_inside_class_method
-		// 	? class_directory
-		// 			.get(current_class)
-		// 			.method_directory.get(current_func)
-		// 			.var_directory.get(operand).virtual_address
-		// 	: class_directory.get(current_class).attr_directory.get(operand)
-		// 			.virtual_address
-		// } else {
 		// Search in current var_directory
 		const is_inside_current_func =
 			func_directory.get(current_func).var_directory.get(operand) != null
@@ -1752,21 +1733,11 @@ mark_am_end = () => {
 
 // -> Object creation and usage semantic actions
 
-// Semantic action that sets the current_object variable and adds the object quad
+// Semantic action that sets the current_object variable
 // Receives the name of the object
 // Does not return anything
 mark_object = (object) => {
 	current_object = object_array.filter(({ id }) => id === object)[0] // Grab first object that matches
-
-	// Generate object quad with the form -> { object, object_name, address, null }
-	// It lets the VM know which is the current object, so its attributes and methods can be associated with it
-	const operator = 'object'
-	quads.push({
-		operator: get_opcode(operator),
-		left_operand: current_object.address,
-		right_operand: null,
-		result: null,
-	})
 }
 
 // -> Helper functions
