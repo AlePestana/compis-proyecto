@@ -183,11 +183,12 @@ async function execute_virtual_machine(virtual_machine_info) {
 	const main_size_directory =
 		func_directory.get(current_func).func_size_directory
 	const main_func_sizes = {
-		int_vars_count: main_size_directory.get('vars_size').int,
-		float_vars_count: main_size_directory.get('vars_size').float,
-		char_vars_count: main_size_directory.get('vars_size').char,
-		int_temps_count: main_size_directory.get('temps_size').int,
-		float_temps_count: main_size_directory.get('temps_size').float,
+		int_vars_size: main_size_directory.get('vars_size').int,
+		float_vars_size: main_size_directory.get('vars_size').float,
+		char_vars_size: main_size_directory.get('vars_size').char,
+		int_temps_size: main_size_directory.get('temps_size').int,
+		float_temps_size: main_size_directory.get('temps_size').float,
+		objects_size: main_size_directory.get('objects_size'),
 	}
 	// Create memory for main
 	const data_segment = new Memory(main_func_sizes, main_func_offsets)
@@ -201,24 +202,27 @@ async function execute_virtual_machine(virtual_machine_info) {
 
 	// Class helpers
 	const object_array = []
-	let current_object = null
 	// Create memory for each object for each class inside the class_directory by pushing to the objects array
 	for (let [class_name, class_value] of class_directory) {
 		const current_class_sizes = {
 			int_vars_size: class_value.class_size_directory.get('vars_size').int,
 			float_vars_size: class_value.class_size_directory.get('vars_size').float,
 			char_vars_size: class_value.class_size_directory.get('vars_size').char,
-			int_temps_size: 0,
-			float_temps_size: 0,
 		}
 		const object_count = func_directory
 			.get(current_func)
-			.func_size_directory.get('objects_size')[class_name]
+			.func_size_directory.get('objects_size')[class_value.base_virtual_address]
 		for (let i = 0; i < object_count; i++) {
+			const object_address = class_value.base_virtual_address + i
 			object_array.push({
-				address: class_value.base_virtual_address + i,
+				address: object_address,
 				memory: new Memory(current_class_sizes, main_func_offsets),
 			})
+			data_segment.add_object(
+				object_address,
+				current_class_sizes,
+				main_func_offsets
+			)
 		}
 	}
 

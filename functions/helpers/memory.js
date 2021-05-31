@@ -12,14 +12,15 @@ function isBetween(x, min, max) {
 class Memory {
 	constructor(
 		{
-			int_vars_size,
-			float_vars_size,
-			char_vars_size,
-			int_temps_size,
-			float_temps_size,
-			int_pointers_size,
-			float_pointers_size,
-			char_pointers_size,
+			int_vars_size = 0,
+			float_vars_size = 0,
+			char_vars_size = 0,
+			int_temps_size = 0,
+			float_temps_size = 0,
+			int_pointers_size = 0,
+			float_pointers_size = 0,
+			char_pointers_size = 0,
+			objects_size = 0,
 		},
 		{
 			int_vars_offset,
@@ -48,12 +49,17 @@ class Memory {
 				new Array(float_pointers_size),
 				new Array(char_pointers_size),
 			],
+			// classes
+			// objects_size is an object with the form --> { 46000: 2, 45000: 1 }
+			new Array(Object.keys(objects_size).length),
+			,
 		]
 
 		// Indexes
 		this.vars = 0
 		this.temps = 1
 		this.pointers = 2
+		this.objects = 3
 		this.int = 0
 		this.float = 1
 		this.char = 2
@@ -67,6 +73,7 @@ class Memory {
 		this.int_pointers_offset = int_pointers_offset
 		this.float_pointers_offset = float_pointers_offset
 		this.char_pointers_offset = char_pointers_offset
+		this.objects_offset = 45000
 
 		// Counters
 		this.int_vars_count = 0
@@ -77,6 +84,14 @@ class Memory {
 		this.int_pointers_count = 0
 		this.float_pointers_count = 0
 		this.char_pointers_count = 0
+
+		// Initialize empty object memory spaces
+		for (let [class_address, object_count] of Object.entries(objects_size)) {
+			// 45000 --> 45
+			class_address = parseInt(class_address) // parse as int since object keys are considered strings
+			const index = class_address / 1000 - this.objects_offset / 1000
+			this.memory[this.objects][index] = new Array(object_count)
+		}
 	}
 
 	// Get the index for each corresponding type
@@ -229,6 +244,20 @@ class Memory {
 				this.char_pointers_count++
 			}
 		}
+	}
+
+	// Add an object inside the corresponding class array
+	add_object(object_address, class_sizes, offsets) {
+		// 45001 --> 45.001 --> 45
+		const class_address = Math.floor(object_address / 1000)
+
+		const class_index = class_address - this.objects_offset / 1000
+		const object_index = object_address - class_address * 1000 // so we can do 46001-46000 = 1
+
+		this.memory[this.objects][class_index][object_index] = new Memory(
+			class_sizes,
+			offsets
+		)
 	}
 }
 

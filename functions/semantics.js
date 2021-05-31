@@ -133,11 +133,12 @@ mark_main_start = () => {
 		} else if (local_var[1].type === 'char') {
 			vars_size.char += size
 		} else {
+			const class_address = Math.floor(local_var[1].address / 1000) * 1000
 			// Check if we already have another object of the same type
-			if (!objects_size[local_var[1].type]) {
-				objects_size[local_var[1].type] = 0
+			if (!objects_size[class_address]) {
+				objects_size[class_address] = 0
 			}
-			objects_size[local_var[1].type]++
+			objects_size[class_address]++
 		}
 	}
 
