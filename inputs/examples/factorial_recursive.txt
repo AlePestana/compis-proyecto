@@ -1,12 +1,16 @@
+<- Factorial example using a recursive function ->
 program factorialRecursive; 
 var <- int n; ->
 
+<- Function that calculates the factorial of a number ->
 int func factorial (var <- int num; ->)
 {
+    <- base case ->
     if (num == 0 | num == 1) {
-      return 1;
+        return 1;
     } else {
-      return num * factorial(num - 1);
+        <- recursive case ->
+        return num * factorial(num - 1);
     }
 }
 

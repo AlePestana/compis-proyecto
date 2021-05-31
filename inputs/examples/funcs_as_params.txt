@@ -1,6 +1,8 @@
+<- Funcs example using a function call as a param ->
 program prog1; 
 var <- int n; ->
 
+<- Function that calculates the sum of a number ->
 int func sum (var <- int num1, num2; ->)
 {
   return num1 + num2;
