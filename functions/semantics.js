@@ -52,8 +52,6 @@ let added_second_dimension = false
 let current_class = null
 let current_object = null
 let object_count = 0
-// Array to store all objects declared with the form -> [ {person1: 45000}, {person2: 45001} ]
-let object_array = []
 let class_size_directory = null
 
 // -> Global semantic actions
@@ -289,8 +287,9 @@ add_compound_id = (id) => {
 	const current_class_address =
 		class_directory.get(current_class).base_virtual_address
 	const object_address = current_class_address + object_count++
-	current_object = { id, address: object_address, class: current_class }
-	object_array.push(current_object)
+	func_directory
+		.get(global_func)
+		.var_directory.set(id, { type: current_type, address: object_address })
 }
 
 // Semantic action that adds an array variable name to the class or global function directory (depending on the previously set variables), adds its dimension node, gets its virtual addresses, and verifies it is not duplicated
@@ -579,7 +578,7 @@ add_simple_id_operand = () => {
 // Does not return anything
 add_operand = (operand, type) => {
 	if (type === 'object') {
-		current_class = current_object.class
+		current_class = current_object.type
 		const is_inside_class_method =
 			class_directory
 				.get(current_class)
@@ -1749,7 +1748,7 @@ mark_am_end = () => {
 // Receives the name of the object
 // Does not return anything
 mark_object = (object) => {
-	current_object = object_array.filter(({ id }) => id === object)[0] // Grab first object that matches
+	current_object = func_directory.get(global_func).var_directory.get(object)
 }
 
 // -> Helper functions
@@ -1776,16 +1775,6 @@ const is_id_duplicated = (id) => {
 			}
 		}
 	}
-
-	// Always check if it's either in the current func_directory or inside the objects array
-
-	// It's a new instance of an object
-	object_array.forEach((current_object) => {
-		if (current_object.id === id) {
-			console.log('ERROR - Object already exists')
-			throw 'ERROR - Object already exists'
-		}
-	})
 
 	// We are in a func var/param or global var declaration
 	// Check if id already exists
