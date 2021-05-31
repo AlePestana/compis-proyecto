@@ -1,0 +1,10 @@
+program prog1; 
+    var <- int x[3], y[2], z, res; ->
+
+main() {
+    y[0] = 1;
+    x[y[0]] = 2;
+    z = 0;
+    res = x[y[z]];
+    print(res);
+}

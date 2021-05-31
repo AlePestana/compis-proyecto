@@ -40,7 +40,7 @@ let params_count = null
 let params_types = null
 let func_return_exists = null
 let current_dimension = null
-let current_dimension_list = null
+let current_dimension_stack = new Stack()
 let added_second_dimension = false
 
 // -> Global semantic actions
@@ -1227,7 +1227,6 @@ mark_func_end = () => {
 // Does not receive any parameters
 // Does not return anything
 assign_return = () => {
-	console.log(current_func)
 	if (current_func === global_func) {
 		console.log('ERROR - Return statement can only be inside a function')
 		throw 'ERROR - Return statement can only be inside a function'
@@ -1462,7 +1461,7 @@ mark_am_start = () => {
 					throw 'ERROR - Trying to index a variable that has no dimensions'
 				}
 				am_id = id
-				current_dimension_list = value.dimension
+				current_dimension_stack.push(value.dimension)
 				base_address = value.virtual_address
 				am_type = value.type
 				found_in_local_func = true
@@ -1482,7 +1481,7 @@ mark_am_start = () => {
 						throw 'ERROR - Trying to index a variable that has no dimensions'
 					}
 					am_id = id
-					current_dimension_list = value.dimension
+					current_dimension_stack.push(value.dimension)
 					base_address = value.virtual_address
 					am_type = value.type
 					// Setting a global array or matrix value inside of a function
@@ -1522,7 +1521,7 @@ mark_am_dimension = () => {
 			throw 'ERROR - Trying to index a variable without a valid integer'
 		}
 
-		if (current_dimension_list === null) {
+		if (current_dimension_stack.top() === null) {
 			console.log(
 				'ERROR - Trying to index a variable without the specified dimensions'
 			)
@@ -1534,7 +1533,7 @@ mark_am_dimension = () => {
 		const left_operand = indexing_variable.operand
 		const right_operand = null
 		const result = get_constant_virtual_address(
-			current_dimension_list.supLimit,
+			current_dimension_stack.top().supLimit,
 			'int'
 		)
 		quads.push({
@@ -1549,12 +1548,12 @@ mark_am_dimension = () => {
 		const type = dimensions_stack.top().type
 
 		// Check if it is a matrix
-		if (current_dimension_list.nextNode !== null) {
+		if (current_dimension_stack.top().nextNode !== null) {
 			// Generate s1*m1 quad --> {*, indexing_variable, m, temp}
 			const operator = '*'
 			const left_operand = operands.pop().operand
 			const right_operand = get_constant_virtual_address(
-				current_dimension_list.mValue,
+				current_dimension_stack.top().mValue,
 				'int'
 			)
 			const result = virtual_memory.get_address(scope, type, 'temp')
@@ -1595,7 +1594,7 @@ add_am_dimension = () => {
 		current_dimension++
 		dimensions_stack.data[dimensions_stack.count - 1].dimension =
 			current_dimension
-		current_dimension_list = current_dimension_list.nextNode
+		current_dimension_stack.push(current_dimension_stack.pop().nextNode)
 	}
 }
 
@@ -1607,7 +1606,7 @@ mark_am_end = () => {
 
 	if (current_class == null) {
 		// Verify a matrix was accessed appropriately for its two dimensions (instead of trying to access it as an array)
-		const is_matrix = current_dimension_list.nextNode !== null
+		const is_matrix = current_dimension_stack.top().nextNode !== null
 		if (is_matrix && !added_second_dimension) {
 			console.log(
 				'ERROR - Trying to index a variable without the specified dimensions'
@@ -1651,7 +1650,7 @@ mark_am_end = () => {
 
 		// Reset dimension variables
 		current_dimension = null
-		current_dimension_list = null
+		current_dimension_stack.pop() // pop dimension
 		added_second_dimension = false
 	}
 }

@@ -97,7 +97,22 @@ const test8 = parser.parse(`
 
 	main() {
     x[1][0] = 4.4;
-    myFunc1();
+    myFunc1(2);
     print(x[1][0]);
   }`)
 console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 9 - Printing matrix value within function')
+const test9 = parser.parse(`
+program prog1; 
+var <- int x[3], y[2], p[2], z, res; ->
+
+main() {
+y[0] = 1;
+x[y[0]] = 2;
+z = 0;
+p[1] = 0;
+res = x[y[p[1]]];
+print(res);
+}`)
+console.log('--> ' + (test9 ? 'yes :)' : 'no :('))
