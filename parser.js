@@ -66,6 +66,9 @@ const grammar = {
 			['{digits}', "return 'INT_CTE'"],
 			['\\"({letters}|{digits}|{blank})+\\"', "return 'STRING_CTE'"],
 
+			// Comments
+			['\\<--({letters}|{digits}|{blank})+\\-->', '/* ignore comments*/'],
+
 			['\\<-', "return '<-'"],
 			['\\->', "return '->'"],
 
@@ -125,6 +128,11 @@ const grammar = {
 		program_id_keyword: [['ID', 'add_program_id($1)']],
 
 		classes: [
+			['class classes', '$$'],
+			['', '$$'],
+		],
+
+		class: [
 			[
 				'CLASS class_id_keyword { attributes methods }',
 				'finish_class_dec(); $$',
@@ -133,7 +141,6 @@ const grammar = {
 				'CLASS class_id_keyword EXTENDS ID { attributes methods }',
 				'finish_class_dec(); $$',
 			],
-			['', '$$'],
 		],
 
 		class_id_keyword: [['ID', 'add_class_id($1)']],
@@ -196,10 +203,10 @@ const grammar = {
 
 		compound_id_list: [
 			[', compound_id_dec compound_id_list', '$$'],
-			['', '$$'],
+			['', 'finish_compound_id_list()'],
 		],
 
-		compound_id_dec: [['var_id', '$$']],
+		compound_id_dec: [['ID', 'add_compound_id($1)']],
 
 		simple_type: [
 			['INT', 'set_current_type($1)'],
@@ -350,8 +357,8 @@ const grammar = {
 
 		factor: [
 			['left_parenthesis expression right_parenthesis', '$$'],
-			['INT_CTE', `add_operand($1, 'int')`],
 			['FLOAT_CTE', `add_operand($1, 'float')`],
+			['INT_CTE', `add_operand($1, 'int')`],
 			['var_name', '$$'],
 		],
 
@@ -387,8 +394,6 @@ const grammar = {
 			['simple_id_keyword func_call', '$$'],
 		],
 
-		am_id_keyword: [['ID', `add_operand($1, 'var')`]],
-
 		starting_am_bracket: [['[', 'add_simple_id_operand(); mark_am_start()']],
 
 		closing_am_bracket: [[']', 'mark_am_dimension()']],
@@ -397,7 +402,7 @@ const grammar = {
 
 		simple_id_keyword: [['ID', 'set_simple_id($1)']],
 
-		compound_id: [['ID . simple_id', `add_operand($1, 'var')`]], // Objects
+		compound_id: [['ID . ID', `mark_object($1); add_operand($3, 'object')`]], // Objects
 
 		func_call: [
 			['', 'add_simple_id_operand()'], // If only a simple id is provided, add it to the operands stack and reset the current_simple_id variable to null

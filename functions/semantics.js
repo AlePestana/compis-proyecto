@@ -11,7 +11,7 @@ const oracle = require('./cube')
 const get_opcode = require('./opcodes')
 
 // Virtual Memory Addresses
-const virtual_memory = require('./virtualMemory')
+const VirtualMemory = require('./virtualMemory')
 
 // Helper structures
 const Stack = require('./helpers/stack.js')
@@ -34,14 +34,25 @@ let for_stack = new Stack()
 let dimensions_stack = new Stack()
 
 // Additional helpers
+let virtual_memory = null
 let current_simple_id = null
+
+// Funcs helpers
 let current_func_name_stack = new Stack()
 let params_count_stack = new Stack()
 let params_types_stack = new Stack()
 let func_return_exists = null
+
+// Array and matrix helpers
 let current_dimension_stack = new Stack()
 let current_dimension_list_stack = new Stack()
 let added_second_dimension = false
+
+// Class helpers
+let current_class = null
+let current_object = null
+let object_count = 0
+let class_size_directory = null
 
 // -> Global semantic actions
 
@@ -68,6 +79,8 @@ constants_directory = null
 // Does not return anything
 create_func_directory = function () {
 	func_directory = new Map()
+	virtual_memory = new VirtualMemory()
+	virtual_memory.initialize_counters()
 }
 
 // Semantic action that creates a new empty instance of the constants directory
@@ -99,6 +112,7 @@ insert_goto_main_quad = () => {
 mark_main_start = () => {
 	quads.data[0].result = quads.count
 	let vars_size = { int: 0, float: 0, char: 0 }
+	let objects_size = {}
 
 	// Turn current variable directory into array in order to be able to iterate over it
 	const local_vars = Array.from(func_directory.get(global_func).var_directory)
@@ -118,6 +132,13 @@ mark_main_start = () => {
 			vars_size.float += size
 		} else if (local_var[1].type === 'char') {
 			vars_size.char += size
+		} else {
+			const class_address = Math.floor(local_var[1].address / 1000) * 1000
+			// Check if we already have another object of the same type
+			if (!objects_size[class_address]) {
+				objects_size[class_address] = 0
+			}
+			objects_size[class_address]++
 		}
 	}
 
@@ -125,6 +146,7 @@ mark_main_start = () => {
 	func_size_directory.set('vars_size', vars_size)
 	func_size_directory.set('temps_size', { int: 0, float: 0 })
 	func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
+	func_size_directory.set('objects_size', objects_size)
 }
 
 // Semantic action that adds the final end quad, assigns the size_directory to main in the func_directory, and resets the helper func_size_directory structure
@@ -214,13 +236,13 @@ add_id = (id) => {
 		if (is_attr_dec) {
 			class_directory.get(current_class).attr_directory.set(id, {
 				type: current_type,
-				virtual_address: virtual_memory.get_address(
+				virtual_address: class_virtual_memory.get_address(
 					'global',
 					current_type,
 					'perm'
 				),
 				dimension: null,
-			}) // ???
+			})
 		} else {
 			// Is method declaration
 			class_directory
@@ -228,7 +250,7 @@ add_id = (id) => {
 				.method_directory.get(current_func)
 				.var_directory.set(id, {
 					type: current_type,
-					virtual_address: virtual_memory.get_address(
+					virtual_address: class_virtual_memory.get_address(
 						'local',
 						current_type,
 						'perm'
@@ -261,6 +283,22 @@ add_id = (id) => {
 				.var_directory.set(id, { type: current_type })
 		}
 	}
+}
+
+// Semantic action that adds an object's name to the class directory
+// Receives the object's name
+// Does not return anything
+add_compound_id = (id) => {
+	// Update current_class to the type being added
+	current_class = current_type
+	is_id_duplicated(id)
+	// Obtain address of the current class and add the object that's used
+	const current_class_address =
+		class_directory.get(current_class).base_virtual_address
+	const object_address = current_class_address + object_count++
+	func_directory
+		.get(global_func)
+		.var_directory.set(id, { type: current_type, address: object_address })
 }
 
 // Semantic action that adds an array variable name to the class or global function directory (depending on the previously set variables), adds its dimension node, gets its virtual addresses, and verifies it is not duplicated
@@ -404,6 +442,7 @@ delete_func_directory = function () {
 		quads,
 		func_directory,
 		constants_directory,
+		class_directory,
 	}
 	console.log('Func directory before exit')
 	console.log(func_directory)
@@ -445,7 +484,6 @@ reset_virtual_memory = () => {
 // Does not return anything
 create_class_directory = () => {
 	class_directory = new Map()
-	current_class = null
 }
 
 // Semantic action that adds a class name to the class directory, sets the current class variable and creates new instances of both attribute and methods directory for the object
@@ -454,11 +492,19 @@ create_class_directory = () => {
 add_class_id = (class_id) => {
 	current_class = class_id
 
+	// Create a virtual memory object instance for the class and initialize counters
+	class_virtual_memory = new VirtualMemory()
+	class_virtual_memory.initialize_counters()
+
 	class_directory.set(class_id, {
 		type: 'class',
 		attr_directory: new Map(),
 		method_directory: new Map(),
+		base_virtual_address: virtual_memory.get_class_address(),
+		class_size_directory: new Map(),
 	})
+
+	class_size_directory = new Map()
 }
 
 // Semantic action that sets the flag to mark that attribute declarations for a class has started
@@ -472,13 +518,38 @@ start_attributes_dec = () => {
 // Does not receive any parameters
 // Does not return anything
 finish_attr_dec = () => {
+	const attributes_size = { int: 0, float: 0, char: 0 }
+
+	for (let [attribute, value] of class_directory.get(current_class)
+		?.attr_directory) {
+		if (value.type === 'int') {
+			attributes_size.int += 1
+		} else if (value.type === 'float') {
+			attributes_size.float += 1
+		} else if (value.type === 'char') {
+			attributes_size.char += 1
+		}
+	}
+	class_size_directory.set('vars_size', attributes_size)
 	is_attr_dec = false
 }
 
-// Semantic action that sets the flag to mark that a class declaration has ended by setting the current class variable to null
+// Semantic action that sets the flag to mark that a class declaration has ended by setting the current class variable to null and filling its size directory
 // Does not receive any parameters
 // Does not return anything
 finish_class_dec = () => {
+	class_directory.get(current_class).class_size_directory = class_size_directory
+	current_class = null
+	// Reset virtual memory and number of objects of current class
+	class_virtual_memory = null
+}
+
+// Semantic action that adds the object_count to the class's size directory and resets the object count from the current class to 0
+// Does not receive any parameters
+// Does not return anything
+finish_compound_id_list = () => {
+	object_count = 0
+	current_object = null
 	current_class = null
 }
 
@@ -512,50 +583,58 @@ add_simple_id_operand = () => {
 // Receives the operand and its type (which only specifies if it's a variable or not)
 // Does not return anything
 add_operand = (operand, type) => {
-	if (type === 'var') {
-		if (current_class != null) {
-			const is_inside_class_method =
-				class_directory
+	if (type === 'object') {
+		current_class = current_object.type
+		const is_inside_class_method =
+			class_directory
+				.get(current_class)
+				?.method_directory?.get(current_func)
+				?.var_directory?.get(operand) != null
+		// If variable is not inside the function variables, then it must be part of the class' attributes
+		type = is_inside_class_method
+			? class_directory
 					.get(current_class)
-					.method_directory.get(current_func)
-					.var_directory.get(operand) != null
-			// If variable is not inside the function variables, then it must be part of the class' attributes
-			type = is_inside_class_method
-				? class_directory
-						.get(current_class)
-						.method_directory.get(current_func)
-						.var_directory.get(operand).type
-				: class_directory.get(current_class).attr_directory.get(operand).type
-			operand = is_inside_class_method
-				? class_directory
-						.get(current_class)
-						.method_directory.get(current_func)
-						.var_directory.get(operand).virtual_address
-				: class_directory.get(current_class).attr_directory.get(operand)
-						.virtual_address
+					?.method_directory?.get(current_func)
+					?.var_directory?.get(operand)?.type
+			: class_directory.get(current_class)?.attr_directory?.get(operand)?.type
+		let operand_address = is_inside_class_method
+			? class_directory
+					.get(current_class)
+					?.method_directory?.get(current_func)
+					?.var_directory?.get(operand)?.virtual_address
+			: class_directory.get(current_class)?.attr_directory?.get(operand)
+					?.virtual_address
+
+		const len = Math.ceil(Math.log10(operand_address + 1))
+		operand_address = operand_address / Math.pow(10, len)
+
+		// Get the direction of an attribute of an object as --> 45001.9
+		operand = parseFloat(current_object.address) + operand_address
+		current_object = null
+		current_class = null
+	} else if (type === 'var') {
+		// Search in current var_directory
+		const is_inside_current_func =
+			func_directory.get(current_func).var_directory.get(operand) != null
+
+		// If not found, search in global scope
+		const is_inside_global_scope =
+			func_directory.get(global_func).var_directory.get(operand) != null
+
+		if (is_inside_current_func) {
+			type = func_directory.get(current_func).var_directory.get(operand).type
+			operand = func_directory
+				.get(current_func)
+				.var_directory.get(operand).virtual_address
+		} else if (is_inside_global_scope) {
+			type = func_directory.get(global_func).var_directory.get(operand).type
+			operand = func_directory
+				.get(global_func)
+				.var_directory.get(operand).virtual_address
 		} else {
-			// Search in current var_directory
-			const is_inside_current_func =
-				func_directory.get(current_func).var_directory.get(operand) != null
-
-			// If not found, search in global scope
-			const is_inside_global_scope =
-				func_directory.get(global_func).var_directory.get(operand) != null
-
-			if (is_inside_current_func) {
-				type = func_directory.get(current_func).var_directory.get(operand).type
-				operand = func_directory
-					.get(current_func)
-					.var_directory.get(operand).virtual_address
-			} else if (is_inside_global_scope) {
-				type = func_directory.get(global_func).var_directory.get(operand).type
-				operand = func_directory
-					.get(global_func)
-					.var_directory.get(operand).virtual_address
-			} else {
-				type = 'undefined'
-			}
+			type = 'undefined'
 		}
+		// }
 	} else {
 		// It is a constant
 		switch (type) {
@@ -875,8 +954,6 @@ read_var = (variable) => {
 // Does not receive any parameters
 // Does not return anything
 assign_exp = () => {
-	// console.log('inside assign_exp')
-
 	const res = operands.pop()
 	const result = res.operand
 
@@ -887,7 +964,8 @@ assign_exp = () => {
 
 	const operator = operators.pop()
 
-	if (res.type === left.type) {
+	// Allow the assignment of a float variable with an integer
+	if (res.type === left.type || (left.type === 'float' && res.type === 'int')) {
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand: result,
@@ -1129,6 +1207,8 @@ mark_params_size = () => {
 			}
 		}
 		func_size_directory.set('params_size', params_size)
+	} else {
+		func_size_directory = new Map()
 	}
 }
 
@@ -1177,10 +1257,10 @@ mark_local_vars_size = () => {
 mark_func_start = () => {
 	// console.log('inside mark_func_start')
 	// Mark where the current function starts
-	func_size_directory.set('temps_size', { int: 0, float: 0 })
-	func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
 
 	if (current_class == null) {
+		func_size_directory.set('temps_size', { int: 0, float: 0 })
+		func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
 		func_directory.get(current_func).starting_point = quads.count
 	}
 }
@@ -1299,7 +1379,9 @@ mark_call_params_start = () => {
 		params_count_stack.push(1)
 
 		// Generate array of parameters types
-		params_types_stack.push(func_directory.get(current_func_name_stack.top()).params_type_list)
+		params_types_stack.push(
+			func_directory.get(current_func_name_stack.top()).params_type_list
+		)
 	}
 }
 
@@ -1319,8 +1401,15 @@ add_call_param = () => {
 		}
 
 		// Check parameter type
-		if (current_argument.type !== params_types_stack.top()[params_count_stack.top() - 1]) {
-			console.log(current_argument.type, params_types_stack.top(), params_count_stack.top())
+		if (
+			current_argument.type !==
+			params_types_stack.top()[params_count_stack.top() - 1]
+		) {
+			console.log(
+				current_argument.type,
+				params_types_stack.top(),
+				params_count_stack.top()
+			)
 			console.log('ERROR - Parameter type does not match')
 			throw 'ERROR - Parameter type does not match'
 		}
@@ -1596,7 +1685,9 @@ add_am_dimension = () => {
 		current_dimension_stack.push(current_dimension_stack.pop() + 1)
 		dimensions_stack.data[dimensions_stack.count - 1].dimension =
 			current_dimension_stack.top()
-		current_dimension_list_stack.push(current_dimension_list_stack.pop().nextNode)
+		current_dimension_list_stack.push(
+			current_dimension_list_stack.pop().nextNode
+		)
 	}
 }
 
@@ -1657,6 +1748,15 @@ mark_am_end = () => {
 	}
 }
 
+// -> Object creation and usage semantic actions
+
+// Semantic action that sets the current_object variable
+// Receives the name of the object
+// Does not return anything
+mark_object = (object) => {
+	current_object = func_directory.get(global_func).var_directory.get(object)
+}
+
 // -> Helper functions
 
 // Function that checks if a variable name is already declared in the program
@@ -1680,13 +1780,13 @@ const is_id_duplicated = (id) => {
 				}
 			}
 		}
-	} else {
-		// We are in a func var/param or global var declaration
-		// Check if id already exists
-		if (func_directory.get(current_func).var_directory.has(id)) {
-			console.log('ERROR - Variable already exists')
-			throw 'ERROR - Variable already exists'
-		}
+	}
+
+	// We are in a func var/param or global var declaration
+	// Check if id already exists
+	if (func_directory.get(current_func).var_directory.has(id)) {
+		console.log('ERROR - Variable already exists')
+		throw 'ERROR - Variable already exists'
 	}
 }
 

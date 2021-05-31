@@ -1,0 +1,18 @@
+<-- Fibonacci example using loops and arrays -->
+program fibonacciLoopArray; 
+var <- int i, fib[11]; ->
+
+main() {
+    fib[0] = 0;
+    fib[1] = 1;
+
+    print(fib[0]);
+    print(fib[1]);
+
+    for(i = 2 until 11) {
+        fib[i] = fib[i-2] + fib[i-1];
+        print(fib[i]);
+    }
+
+    print("Fibonacci of 10", fib[10]);
+}
