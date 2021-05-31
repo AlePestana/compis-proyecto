@@ -1,0 +1,16 @@
+program fibonacciRecursive; 
+var <- int n; ->
+
+int func fibonacci (var <- int num; ->)
+{
+    if (num < 2) {
+      return num;
+    } else {
+      return fibonacci(num - 1) + fibonacci(num - 2);
+    }
+}
+
+main() {
+    print("Fibonacci of 10");
+    print(fibonacci(10));
+}

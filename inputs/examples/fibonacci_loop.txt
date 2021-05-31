@@ -1,0 +1,19 @@
+program fibonacciLoopArray; 
+var <- int i, prev, curr, next; ->
+
+main() {
+    prev = 0;
+    curr = 1;
+
+    print(prev);
+    print(curr);
+
+    for(i = 1 until 10) {
+        next = prev + curr;
+        prev = curr;
+        curr = next;
+        print(next);
+    }
+
+    print("Fibonacci of 10", next);
+}
