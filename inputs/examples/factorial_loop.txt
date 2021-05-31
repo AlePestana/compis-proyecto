@@ -1,0 +1,24 @@
+program factorialLoop; 
+var <- int n; ->
+
+int func factorial (var <- int num; ->)
+var <- int result; ->
+{
+    result = num;
+    if (num == 0 | num == 1) {
+      return 1;
+    } 
+    
+    while(num > 1) {
+        num = num - 1;
+        result = result * num;
+    }
+    return result;
+}
+
+main() {
+    print("Enter the number you want the factorial for");
+    read(n);
+    print("Factorial");
+    print(factorial(n));
+}
