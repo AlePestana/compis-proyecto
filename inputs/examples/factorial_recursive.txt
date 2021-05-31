@@ -1,15 +1,15 @@
-<- Factorial example using a recursive function ->
+<-- Factorial example using a recursive function -->
 program factorialRecursive; 
 var <- int n; ->
 
-<- Function that calculates the factorial of a number ->
+<-- Function that calculates the factorial of a number -->
 int func factorial (var <- int num; ->)
 {
-    <- base case ->
+    <-- base case -->
     if (num == 0 | num == 1) {
         return 1;
     } else {
-        <- recursive case ->
+        <-- recursive case -->
         return num * factorial(num - 1);
     }
 }

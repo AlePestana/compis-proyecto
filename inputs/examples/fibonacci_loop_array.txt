@@ -1,4 +1,4 @@
-<- Fibonacci example using loops and arrays ->
+<-- Fibonacci example using loops and arrays -->
 program fibonacciLoopArray; 
 var <- int i, fib[11]; ->
 
