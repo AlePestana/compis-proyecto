@@ -35,12 +35,12 @@ let dimensions_stack = new Stack()
 
 // Additional helpers
 let current_simple_id = null
-let current_func_name = null
-let params_count = null
-let params_types = null
+let current_func_name_stack = new Stack()
+let params_count_stack = new Stack()
+let params_types_stack = new Stack()
 let func_return_exists = null
-let current_dimension = null
 let current_dimension_stack = new Stack()
+let current_dimension_list_stack = new Stack()
 let added_second_dimension = false
 
 // -> Global semantic actions
@@ -1220,6 +1220,7 @@ mark_func_end = () => {
 
 		func_directory.get(current_func).func_size_directory = func_size_directory
 		func_size_directory = null
+		func_return_exists = null
 	}
 }
 
@@ -1266,10 +1267,10 @@ mark_func_call_start = () => {
 	// console.log('inside mark_func_call_start')
 
 	if (current_class == null) {
-		current_func_name = current_simple_id
+		current_func_name_stack.push(current_simple_id)
 		current_simple_id = null
 
-		if (!func_directory.has(current_func_name)) {
+		if (!func_directory.has(current_func_name_stack.top())) {
 			console.log('ERROR - Function not defined')
 			throw 'ERROR - Function not defined'
 		}
@@ -1289,16 +1290,16 @@ mark_call_params_start = () => {
 		const operator = 'era'
 		quads.push({
 			operator: get_opcode(operator),
-			left_operand: current_func_name,
+			left_operand: current_func_name_stack.top(),
 			right_operand: null,
 			result: null,
 		})
 
 		// Start parameter counter to 1
-		params_count = 1
+		params_count_stack.push(1)
 
 		// Generate array of parameters types
-		params_types = func_directory.get(current_func_name).params_type_list
+		params_types_stack.push(func_directory.get(current_func_name_stack.top()).params_type_list)
 	}
 }
 
@@ -1312,13 +1313,14 @@ add_call_param = () => {
 		const current_argument = operands.pop()
 
 		// More parameters were sent
-		if (params_count - 1 >= params_types.length) {
+		if (params_count_stack.top() - 1 >= params_types_stack.top().length) {
 			console.log('ERROR - Number of parameters required does not match')
 			throw 'ERROR - Number of parameters required does not match'
 		}
 
 		// Check parameter type
-		if (current_argument.type !== params_types[params_count - 1]) {
+		if (current_argument.type !== params_types_stack.top()[params_count_stack.top() - 1]) {
+			console.log(current_argument.type, params_types_stack.top(), params_count_stack.top())
 			console.log('ERROR - Parameter type does not match')
 			throw 'ERROR - Parameter type does not match'
 		}
@@ -1336,7 +1338,7 @@ add_call_param = () => {
 
 		const operator = 'param'
 		const left_operand = current_argument.operand
-		const result = 'param' + params_count
+		const result = 'param' + params_count_stack.top()
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand: left_operand,
@@ -1353,7 +1355,7 @@ mark_next_call_param = () => {
 	// console.log('inside mark_next_call_param')
 
 	if (current_class == null) {
-		params_count++
+		params_count_stack.push(params_count_stack.pop() + 1)
 	}
 }
 
@@ -1365,7 +1367,8 @@ verify_call_params_size = () => {
 
 	// More parameters were declared than sent
 	if (current_class == null) {
-		if (params_count - 1 !== params_types.length) {
+		if (params_count_stack.top() - 1 !== params_types_stack.top().length) {
+			console.log(params_count_stack.top(), params_types_stack.top())
 			console.log('ERROR - Number of parameters required does not match')
 			throw 'ERROR - Number of parameters required does not match'
 		}
@@ -1383,9 +1386,9 @@ mark_func_call_end = () => {
 		const operator = 'gosub'
 		quads.push({
 			operator: get_opcode(operator),
-			left_operand: current_func_name,
+			left_operand: current_func_name_stack.top(),
 			right_operand: null,
-			result: func_directory.get(current_func_name).starting_point,
+			result: func_directory.get(current_func_name_stack.top()).starting_point,
 		})
 	}
 	operators.pop()
@@ -1395,7 +1398,7 @@ mark_func_call_end = () => {
 // Does not receive any parameters
 // Does not return anything
 add_func_return = () => {
-	if (func_directory.get(current_func_name).type === 'void') {
+	if (func_directory.get(current_func_name_stack.top()).type === 'void') {
 		console.log('ERROR - Calling void function in expression')
 		throw 'ERROR - Calling void function in expression'
 	}
@@ -1403,13 +1406,13 @@ add_func_return = () => {
 	if (current_class == null) {
 		// Generate temp assignment quad -> =, func_name, null, temp_var
 
-		const result_type = func_directory.get(current_func_name).type
+		const result_type = func_directory.get(current_func_name_stack.top()).type
 		const scope = current_func == global_func ? 'global' : 'local'
 
 		const operator = '='
 		const left_operand = func_directory
 			.get(global_func)
-			.var_directory.get(current_func_name).virtual_address
+			.var_directory.get(current_func_name_stack.top()).virtual_address
 		const result = virtual_memory.get_address(scope, result_type, 'temp')
 
 		func_size_directory.get('temps_size')[result_type]++
@@ -1428,10 +1431,9 @@ add_func_return = () => {
 // Does not receive any parameters
 // Does not return anything
 reset_func_call_helpers = () => {
-	current_func_name = null
-	params_count = null
-	params_types = null
-	func_return_exists = null
+	current_func_name_stack.pop()
+	params_count_stack.pop()
+	params_types_stack.pop()
 }
 
 // -> Array and matrices access(indexing) semantic actions
@@ -1461,7 +1463,7 @@ mark_am_start = () => {
 					throw 'ERROR - Trying to index a variable that has no dimensions'
 				}
 				am_id = id
-				current_dimension_stack.push(value.dimension)
+				current_dimension_list_stack.push(value.dimension)
 				base_address = value.virtual_address
 				am_type = value.type
 				found_in_local_func = true
@@ -1481,7 +1483,7 @@ mark_am_start = () => {
 						throw 'ERROR - Trying to index a variable that has no dimensions'
 					}
 					am_id = id
-					current_dimension_stack.push(value.dimension)
+					current_dimension_list_stack.push(value.dimension)
 					base_address = value.virtual_address
 					am_type = value.type
 					// Setting a global array or matrix value inside of a function
@@ -1491,11 +1493,11 @@ mark_am_start = () => {
 			}
 		}
 
-		current_dimension = 1
+		current_dimension_stack.push(1)
 
 		dimensions_stack.push({
 			am_id,
-			dimension: current_dimension,
+			dimension: current_dimension_stack.top(),
 			base_address,
 			type: am_type,
 			is_global,
@@ -1521,7 +1523,7 @@ mark_am_dimension = () => {
 			throw 'ERROR - Trying to index a variable without a valid integer'
 		}
 
-		if (current_dimension_stack.top() === null) {
+		if (current_dimension_list_stack.top() === null) {
 			console.log(
 				'ERROR - Trying to index a variable without the specified dimensions'
 			)
@@ -1533,7 +1535,7 @@ mark_am_dimension = () => {
 		const left_operand = indexing_variable.operand
 		const right_operand = null
 		const result = get_constant_virtual_address(
-			current_dimension_stack.top().supLimit,
+			current_dimension_list_stack.top().supLimit,
 			'int'
 		)
 		quads.push({
@@ -1548,12 +1550,12 @@ mark_am_dimension = () => {
 		const type = dimensions_stack.top().type
 
 		// Check if it is a matrix
-		if (current_dimension_stack.top().nextNode !== null) {
+		if (current_dimension_list_stack.top().nextNode !== null) {
 			// Generate s1*m1 quad --> {*, indexing_variable, m, temp}
 			const operator = '*'
 			const left_operand = operands.pop().operand
 			const right_operand = get_constant_virtual_address(
-				current_dimension_stack.top().mValue,
+				current_dimension_list_stack.top().mValue,
 				'int'
 			)
 			const result = virtual_memory.get_address(scope, type, 'temp')
@@ -1567,7 +1569,7 @@ mark_am_dimension = () => {
 		}
 
 		// Check if it is a matrix
-		if (current_dimension > 1) {
+		if (current_dimension_stack.top() > 1) {
 			// Generate (s1*m1) + s2 quad --> {+, (s1*m1), s2, temp}
 			const operator = '+'
 			const right_operand = operands.pop().operand
@@ -1591,10 +1593,10 @@ mark_am_dimension = () => {
 add_am_dimension = () => {
 	// console.log('inside add_am_dimension')
 	if (current_class == null) {
-		current_dimension++
+		current_dimension_stack.push(current_dimension_stack.pop() + 1)
 		dimensions_stack.data[dimensions_stack.count - 1].dimension =
-			current_dimension
-		current_dimension_stack.push(current_dimension_stack.pop().nextNode)
+			current_dimension_stack.top()
+		current_dimension_list_stack.push(current_dimension_list_stack.pop().nextNode)
 	}
 }
 
@@ -1606,7 +1608,7 @@ mark_am_end = () => {
 
 	if (current_class == null) {
 		// Verify a matrix was accessed appropriately for its two dimensions (instead of trying to access it as an array)
-		const is_matrix = current_dimension_stack.top().nextNode !== null
+		const is_matrix = current_dimension_list_stack.top().nextNode !== null
 		if (is_matrix && !added_second_dimension) {
 			console.log(
 				'ERROR - Trying to index a variable without the specified dimensions'
@@ -1649,8 +1651,8 @@ mark_am_end = () => {
 		dimensions_stack.pop()
 
 		// Reset dimension variables
-		current_dimension = null
-		current_dimension_stack.pop() // pop dimension
+		current_dimension_stack.pop()
+		current_dimension_list_stack.pop() // pop dimension
 		added_second_dimension = false
 	}
 }

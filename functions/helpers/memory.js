@@ -109,10 +109,13 @@ class Memory {
 
 		if (type === 'int') {
 			index = this.int_vars_count
+			this.int_vars_count++
 		} else if (type === 'float') {
 			index = this.float_vars_count
+			this.float_vars_count++
 		} else {
 			index = this.char_vars_count
+			this.char_vars_count++
 		}
 
 		this.memory[scope_index][type_index][index] = value
