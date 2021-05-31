@@ -365,3 +365,23 @@ console.log(
 //     print("end program");
 // }`)
 // console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
+
+console.log(
+	'\n\nERROR TEST 19 - Return statement outside of function'
+)
+const test19 = parser.parse(`
+program prog1; 
+var <- int n; ->
+
+int func sum (var <- int num1, num2; ->)
+{
+  return num1 + num2;
+}
+
+main() {
+  n = sum(sum(1, 2), 3);
+  print(n);
+}`)
+console.log('--> ' + (test19 ? 'yes :)' : 'no :('))
+
+
