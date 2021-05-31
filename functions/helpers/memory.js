@@ -259,6 +259,46 @@ class Memory {
 			offsets
 		)
 	}
+
+	// Get the address inside an object
+	get_object_address(address, scope) {
+		const object_address = Math.floor(address) // only interested in the non decimal part
+		// 45001 --> 45.001 --> 45 --> 45000
+		const class_address = Math.floor(object_address / 1000)
+		// Obtain decimal part (since that's the actual address of the attribute)
+		const value_address = Math.floor((address % 1) * 10000)
+
+		// Get indexes
+		const class_index = class_address - this.objects_offset / 1000
+		const object_index = object_address - class_address * 1000
+
+		const type = this.get_address_type(value_address, scope)
+
+		return this.memory[this.objects][class_index][object_index].get(
+			value_address,
+			scope,
+			type
+		)
+	}
+
+	// Set the address of an object
+	set_object_address(value, address, scope) {
+		const object_address = Math.floor(address) // only interested in the non decimal part
+		// 45001 --> 45.001 --> 45 --> 45000
+		const class_address = Math.floor(object_address / 1000)
+		// Obtain decimal part (since that's the actual address of the attribute)
+		address = Math.floor((address % 1) * 10000)
+
+		// Get indexes
+		const class_index = class_address - this.objects_offset / 1000
+		const object_index = object_address - class_address * 1000
+
+		return this.memory[this.objects][class_index][object_index].set(
+			value,
+			address,
+			scope
+		)
+	}
 }
 
 module.exports = Memory

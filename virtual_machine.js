@@ -200,8 +200,6 @@ async function execute_virtual_machine(virtual_machine_info) {
 	let exec_stack_size = 0
 	const exec_stack_max_size = 100000
 
-	// Class helpers
-	const object_array = []
 	// Create memory for each object for each class inside the class_directory by pushing to the objects array
 	for (let [class_name, class_value] of class_directory) {
 		const current_class_sizes = {
@@ -214,10 +212,6 @@ async function execute_virtual_machine(virtual_machine_info) {
 			.func_size_directory.get('objects_size')[class_value.base_virtual_address]
 		for (let i = 0; i < object_count; i++) {
 			const object_address = class_value.base_virtual_address + i
-			object_array.push({
-				address: object_address,
-				memory: new Memory(current_class_sizes, main_func_offsets),
-			})
 			data_segment.add_object(
 				object_address,
 				current_class_sizes,
@@ -231,16 +225,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 		if (isConstant(address)) {
 			return getConstant(constants_directory, address)
 		} else if (isObjectAddress(address)) {
-			// Save the object's address before looking for attribute's address
-			const object_address = Math.floor(address) // only interested in the non decimal part
-			// Obtain decimal part (since that's the actual address of the attribute)
-			address = Math.floor((address % 1) * 10000)
-
-			const index = object_array.findIndex(
-				(object) => object.address === object_address
-			)
-			const var_type = getVarType(address)
-			return object_array[index].memory.get(address, 'vars', var_type)
+			return data_segment.get_object_address(address, 'vars')
 		} else {
 			const type = getType(address)
 			if (isGlobalVar(address)) {
@@ -284,16 +269,9 @@ async function execute_virtual_machine(virtual_machine_info) {
 	// Function to set to memory a particular value
 	const setMemoryValue = (result, address, duration) => {
 		if (isObjectAddress(address)) {
-			// Save the object's address before looking for attribute's address
-			const object_address = Math.floor(address) // only interested in the non decimal part
-			// Obtain decimal part (since that's the actual address of the attribute)
-			address = Math.floor((address % 1) * 10000)
-			if (isGlobalVar(address)) {
-				// Find current_object in object_array to get its memory
-				const index = object_array.findIndex(
-					(object) => object.address === object_address
-				)
-				object_array[index].memory.set(result, address, duration)
+			const value_address = Math.floor((address % 1) * 10000)
+			if (isGlobalVar(value_address)) {
+				data_segment.set_object_address(result, address, duration)
 			} else {
 				// For an object's method exec_stack
 				// exec_stack.top().memory.set(result, address, duration)
