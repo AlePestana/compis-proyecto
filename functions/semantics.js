@@ -1457,6 +1457,16 @@ mark_call_params_start = () => {
 			right_operand: null,
 			result: null,
 		})
+
+		// Start parameter counter to 1
+		params_count_stack.push(1)
+
+		// Generate array of parameters types
+		params_types_stack.push(
+			class_directory.get(current_func_name_stack.top().object.type).method_directory.get(current_func_name_stack.top().method).params_type_list
+			//func_directory.get(current_func_name_stack.top()).params_type_list
+		)
+		console.log(params_types_stack)
 	}
 }
 
@@ -1466,7 +1476,7 @@ mark_call_params_start = () => {
 add_call_param = () => {
 	// console.log('inside add_call_param')
 
-	if (current_class == null) {
+	if (!current_func_name_stack.top().object) {
 		const current_argument = operands.pop()
 
 		// More parameters were sent
@@ -1509,6 +1519,8 @@ add_call_param = () => {
 			right_operand: null,
 			result: result,
 		})
+	} else {
+		throw `HERE`
 	}
 }
 
@@ -1530,12 +1542,19 @@ verify_call_params_size = () => {
 	// console.log('inside verify_call_params_size')
 
 	// More parameters were declared than sent
-	if (current_class == null) {
+	if (!current_func_name_stack.top().object) {
 		if (params_count_stack.top() - 1 !== params_types_stack.top().length) {
 			console.log(params_count_stack.top(), params_types_stack.top())
 			console.log('ERROR - Number of parameters required does not match')
 			throw 'ERROR - Number of parameters required does not match'
 		}
+	} else {
+		if (params_count_stack.top() - 1 !== params_types_stack.top().length) {
+			console.log(params_count_stack.top(), params_types_stack.top())
+			console.log('ERROR - Number of parameters required does not match')
+			throw 'ERROR - Number of parameters required does not match'
+		}
+		throw `Inside here`
 	}
 }
 
