@@ -1,0 +1,30 @@
+program prog1; 
+
+  class Person {
+    attributes <- int age; float height; ->
+    methods <-
+    int func getAge(var <- int x; ->)
+    {
+      return age + x;
+    }
+    ->
+  }
+
+  class Animal {
+    attributes <- int years; float spots; ->
+    methods <-
+    void func showSpots()
+    {
+      print(spots);
+    }
+    ->
+  }
+
+  var <- Person person1, person2; Animal animal1, animal2; ->
+
+  main() {
+    person1.age = 15;
+    print("person1 age", person1.getAge(5));
+    animal1.spots = person1.getAge(0) + 2;
+    animal1.showSpots();
+  }

@@ -670,7 +670,7 @@ add_operand = (operand, type) => {
 			const len = Math.ceil(Math.log10(operand_address + 1))
 			operand_address = operand_address / Math.pow(10, len)
 	
-			// Get the direction of an attribute of an object as --> 45001.9
+			// Get the direction of an attribute of an object as --> 0.9
 			operand = operand_address
 		} else {
 			// Search in current var_directory
