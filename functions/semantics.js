@@ -443,11 +443,7 @@ add_id_matrix = (id, sizeR, sizeC) => {
 // Does not receive any parameters
 // Does not return anything
 finish_func_dec = () => {
-	if (current_class != null) {
-		current_func = global_func
-	} else {
-		current_func = null
-	}
+	current_func = global_func
 }
 
 // Semantic action that deletes the function directory after the program finishes and resets all the additional data structures used in the actions
@@ -1533,9 +1529,9 @@ mark_call_params_start = () => {
 // Does not receive any parameters
 // Does not return anything
 add_call_param = () => {
-	// console.log('inside add_call_param')
+	 //console.log('inside add_call_param')
 
-	if (!current_func_name_stack.top().object) {
+	
 		const current_argument = operands.pop()
 
 		// More parameters were sent
@@ -1578,9 +1574,7 @@ add_call_param = () => {
 			right_operand: null,
 			result: result,
 		})
-	} else {
-		throw `HERE`
-	}
+	
 }
 
 // Semantic action that moves the params_count forward to allow iteration over params call
@@ -1601,19 +1595,10 @@ verify_call_params_size = () => {
 	// console.log('inside verify_call_params_size')
 
 	// More parameters were declared than sent
-	if (!current_func_name_stack.top().object) {
-		if (params_count_stack.top() - 1 !== params_types_stack.top().length) {
-			console.log(params_count_stack.top(), params_types_stack.top())
-			console.log('ERROR - Number of parameters required does not match')
-			throw 'ERROR - Number of parameters required does not match'
-		}
-	} else {
-		if (params_count_stack.top() - 1 !== params_types_stack.top().length) {
-			console.log(params_count_stack.top(), params_types_stack.top())
-			console.log('ERROR - Number of parameters required does not match')
-			throw 'ERROR - Number of parameters required does not match'
-		}
-		throw `Inside here`
+	if (params_count_stack.top() - 1 !== params_types_stack.top().length) {
+		console.log(params_count_stack.top(), params_types_stack.top())
+		console.log('ERROR - Number of parameters required does not match')
+		throw 'ERROR - Number of parameters required does not match'
 	}
 }
 
@@ -1622,17 +1607,23 @@ verify_call_params_size = () => {
 // Does not return anything
 mark_func_call_end = () => {
 	// console.log('inside mark_func_call_end')
-
-	if (current_class == null) {
-		// Generate gosub quad -> gosub, func_name, null, starting_point
-		const operator = 'gosub'
-		quads.push({
-			operator: get_opcode(operator),
-			left_operand: current_func_name_stack.top(),
-			right_operand: null,
-			result: func_directory.get(current_func_name_stack.top()).starting_point,
-		})
+	let result
+	let left_operand
+	if (!current_func_name_stack.top().object) {
+		result = func_directory.get(current_func_name_stack.top()).starting_point
+		left_operand = current_func_name_stack.top()
+	} else {
+		result = class_directory.get(current_func_name_stack.top().object.type).method_directory.get(current_func_name_stack.top().method).starting_point
+		left_operand = current_func_name_stack.top().method
 	}
+	// Generate gosub quad -> gosub, func_name, null, starting_point
+	const operator = 'gosub'
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: current_func_name_stack.top(),
+		right_operand: null,
+		result: result,
+	})
 	operators.pop()
 }
 
@@ -1640,33 +1631,45 @@ mark_func_call_end = () => {
 // Does not receive any parameters
 // Does not return anything
 add_func_return = () => {
-	if (func_directory.get(current_func_name_stack.top()).type === 'void') {
-		console.log('ERROR - Calling void function in expression')
-		throw 'ERROR - Calling void function in expression'
+	let left_operand
+	let result_type
+	if (!current_func_name_stack.top().object) {
+		// Its a func call
+		if (func_directory.get(current_func_name_stack.top()).type === 'void') {
+			console.log('ERROR - Calling void function in expression')
+			throw 'ERROR - Calling void function in expression'
+		}
+		// Has to be in main or func
+
+		result_type = func_directory.get(current_func_name_stack.top()).type
+		left_operand = left_operand = func_directory
+		.get(global_func)
+		.var_directory.get(current_func_name_stack.top()).virtual_address
+	} else {
+		// Its a method call
+		if (class_directory.get(current_func_name_stack.top().object.type).method_directory.get(current_func_name_stack.top().method).type === 'void') {
+			throw 'ERROR - Calling void method in expression'
+		}
+		// Has to be in main or func
+
+		result_type = class_directory.get(current_func_name_stack.top().object.type).method_directory.get(current_func_name_stack.top().method).type
+		left_operand = `${current_func_name_stack.top().object.address}.${class_directory.get(current_func_name_stack.top().object.type).method_directory.get(current_func_name_stack.top().method).return_address}`
 	}
 
-	if (current_class == null) {
-		// Generate temp assignment quad -> =, func_name, null, temp_var
+	const scope = current_func == global_func ? 'global' : 'local'
 
-		const result_type = func_directory.get(current_func_name_stack.top()).type
-		const scope = current_func == global_func ? 'global' : 'local'
+	const operator = '='
+	const result = virtual_memory.get_address(scope, result_type, 'temp')
 
-		const operator = '='
-		const left_operand = func_directory
-			.get(global_func)
-			.var_directory.get(current_func_name_stack.top()).virtual_address
-		const result = virtual_memory.get_address(scope, result_type, 'temp')
+	func_size_directory.get('temps_size')[result_type]++
 
-		func_size_directory.get('temps_size')[result_type]++
-
-		quads.push({
-			operator: get_opcode(operator),
-			left_operand: left_operand,
-			right_operand: null,
-			result: result,
-		})
-		operands.push({ operand: result, type: result_type })
-	}
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: left_operand,
+		right_operand: null,
+		result: result,
+	})
+	operands.push({ operand: result, type: result_type })
 }
 
 // Semantic action that clears all current function related variables

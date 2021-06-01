@@ -452,6 +452,10 @@ const grammar = {
 				'simple_id_keyword starting_call_params_parenthesis params_call closing_call_params_parenthesis ;',
 				'mark_func_call_end(); reset_func_call_helpers()',
 			],
+			[
+				'simple_id_keyword . object_compound_id set_object starting_call_params_parenthesis params_call closing_call_params_parenthesis ;',
+				'mark_func_call_end(); reset_func_call_helpers()',
+			]
 			// ['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
 		],
 
