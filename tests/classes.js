@@ -230,7 +230,7 @@ const test9 = parser.parse(`
   class Person {
     attributes <- int age; float height; ->
     methods <-
-    void func getAge(var <- int x; ->)
+    void func getAge(var <- int x; float y; ->)
       {
         print(age);
       }
@@ -241,7 +241,7 @@ const test9 = parser.parse(`
 
   main() {
     person1.age = 15 + 5;
-    person1.getAge(1);
+    person1.getAge(1, 2);
     person2.height = 1;
     print(person2.height);
   }`)
