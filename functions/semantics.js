@@ -631,12 +631,9 @@ add_operand = (operand, type) => {
 			console.log(`ERROR - "${operand}" not found within scope`)
 			throw `ERROR - "${operand}" not found within scope`
 		}
-
-		const len = Math.ceil(Math.log10(operand_address + 1))
-		operand_address = operand_address / Math.pow(10, len)
-
+			
 		// Get the direction of an attribute of an object as --> 45001.9
-		operand = parseFloat(current_object.address) + operand_address
+		operand = (parseFloat(current_object.address) + operand_address / 100000).toFixed(5)
 		current_object = null
 		current_class = null
 	} else if (type === 'var') {
@@ -667,8 +664,10 @@ add_operand = (operand, type) => {
 				throw `ERROR - "${operand}" not found within scope`
 			}
 			
-			const len = Math.ceil(Math.log10(operand_address + 1))
-			operand_address = operand_address / Math.pow(10, len)
+			
+			//const len = Math.ceil(Math.log10(operand_address + 1))
+			//operand_address = operand_address / Math.pow(10, len)
+			operand_address = (operand_address / 100000).toFixed(5)
 	
 			// Get the direction of an attribute of an object as --> 0.9
 			operand = operand_address
@@ -726,7 +725,7 @@ add_negative_operand = () => {
 		const scope = current_func == global_func ? 'global' : 'local'
 		let result
 		if (current_class != null) {
-			result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+			result = (class_virtual_memory.get_address(scope, result_type, 'temp') / 100000).toFixed(5)
 		} else {
 			result = virtual_memory.get_address(scope, result_type, 'temp')
 		}
@@ -772,7 +771,7 @@ add_mult_div_operation = () => {
 			const scope = current_func == global_func ? 'global' : 'local'
 			let result
 			if (current_class != null) {
-				result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+				result = (class_virtual_memory.get_address(scope, result_type, 'temp') / 100000).toFixed(5)
 			} else {
 				result = virtual_memory.get_address(scope, result_type, 'temp')
 			}
@@ -811,7 +810,7 @@ add_sum_sub_operation = () => {
 			const scope = current_func == global_func ? 'global' : 'local'
 			let result
 			if (current_class != null) {
-				result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+				result = (class_virtual_memory.get_address(scope, result_type, 'temp') / 100000).toFixed(5)
 			} else {
 				result = virtual_memory.get_address(scope, result_type, 'temp')
 			}
@@ -871,7 +870,7 @@ add_rel_operation = () => {
 			const scope = current_func == global_func ? 'global' : 'local'
 			let result
 			if (current_class != null) {
-				result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+				result = (class_virtual_memory.get_address(scope, result_type, 'temp') / 100000).toFixed(5)
 			} else {
 				result = virtual_memory.get_address(scope, result_type, 'temp')
 			}
@@ -910,7 +909,7 @@ add_and_operation = () => {
 			const scope = current_func == global_func ? 'global' : 'local'
 			let result
 			if (current_class != null) {
-				result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+				result = (class_virtual_memory.get_address(scope, result_type, 'temp') / 100000).toFixed(5)
 			} else {
 				result = virtual_memory.get_address(scope, result_type, 'temp')
 			}
@@ -949,7 +948,7 @@ add_or_operation = () => {
 			const scope = current_func == global_func ? 'global' : 'local'
 			let result
 			if (current_class != null) {
-				result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+				result = (class_virtual_memory.get_address(scope, result_type, 'temp') / 100000).toFixed(5)
 			} else {
 				result = virtual_memory.get_address(scope, result_type, 'temp')
 			}
@@ -1047,7 +1046,6 @@ read_var = (variable) => {
 assign_exp = () => {
 	const res = operands.pop()
 	const result = res.operand
-
 	const right_operand = null
 
 	const left = operands.pop()
@@ -1696,8 +1694,7 @@ add_func_return = () => {
 		// Has to be in main or func
 
 		result_type = class_directory.get(current_func_name_stack.top().object.type).method_directory.get(current_func_name_stack.top().method).type
-		left_operand = `${current_func_name_stack.top().object.address}.${class_directory.get(current_func_name_stack.top().object.type).method_directory.get(current_func_name_stack.top().method).return_address}`
-		left_operand = parseFloat(left_operand)
+		left_operand = `${(current_func_name_stack.top().object.address + (class_directory.get(current_func_name_stack.top().object.type).method_directory.get(current_func_name_stack.top().method).return_address) / 100000).toFixed(5)}`
 	}
 
 	const scope = current_func == global_func ? 'global' : 'local'
@@ -1705,7 +1702,7 @@ add_func_return = () => {
 	const operator = '='
 	let result
 	if (current_class != null) {
-		result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+		result = (class_virtual_memory.get_address(scope, result_type, 'temp') / 100000).toFixed(5)
 	} else {
 		result = virtual_memory.get_address(scope, result_type, 'temp')
 	}

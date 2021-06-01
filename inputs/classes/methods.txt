@@ -3,9 +3,9 @@ program prog1;
   class Person {
     attributes <- int age; float height; ->
     methods <-
-    int func getAge(var <- int x; ->)
-    {
-      return age + x;
+    int func getAge()
+    { 
+      return age * 2;
     }
     ->
   }
@@ -24,7 +24,6 @@ program prog1;
 
   main() {
     person1.age = 15;
-    print("person1 age", person1.getAge(5));
-    animal1.spots = person1.getAge(0) + 2;
-    animal1.showSpots();
+    print(person1.getAge());
+    
   }
