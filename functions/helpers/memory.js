@@ -170,7 +170,8 @@ class Memory {
 		const index = address - this.get_offset(scope, type)
 		const scope_index = this.get_scope_index(scope)
 		const type_index = this.get_type_index(type)
-
+		//console.log(this.memory)
+		console.log('getting', address, index, scope, type)
 		return this.memory[scope_index][type_index][index]
 	}
 
