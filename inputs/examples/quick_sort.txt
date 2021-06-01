@@ -1,0 +1,64 @@
+<-- Quick sort example using a recursive function -->
+program quickSortExample; 
+var <- int i, n[6]; ->
+
+<-- Function that prints the contents of an array -->
+void func ptArr() {
+    for(i = 0 until 6) {
+        print(n[i]);
+    }
+}
+
+<-- Function that reads to an array -->
+void func rdArr() {
+    i = 0;
+    while(i < 6) {
+        read(n[i]);
+        i = i + 1;
+    }
+}
+
+<-- Function that swaps two elements from an array -->
+void func swap(var <- int a, b; ->) 
+var <- int temp; -> 
+{
+    temp = n[a];
+    n[a] = n[b];
+    n[b] = temp;
+}
+
+<-- Function that finds the pivot -->
+int func partition(var <- int low, high; ->) 
+var <- int pivot, i, j; ->
+{
+    pivot = n[high];
+    i = low - 1;
+    for(j = low until high) {
+        if(n[j] < pivot) {
+            i = i + 1;
+            swap(i, j);
+        }
+    }
+    swap(i + 1, high);
+    return i + 1;
+}
+
+<-- Quick sort function -->
+void func quickSort(var <- int low, high; ->) 
+var <- int pivotIndex; ->
+{
+    if(low < high) {
+        pivotIndex = partition(low, high);
+        quickSort(low, pivotIndex - 1);
+        quickSort(pivotIndex + 1, high);
+    }
+}
+
+main() {
+    print("Quick sort example");
+    print("Input each element of the array");
+    rdArr();
+    quickSort(0, 5);
+    print("Sorted array");
+    ptArr();
+}
