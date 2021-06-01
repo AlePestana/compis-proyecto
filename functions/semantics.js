@@ -724,7 +724,12 @@ add_negative_operand = () => {
 
 	if (result_type !== 'error') {
 		const scope = current_func == global_func ? 'global' : 'local'
-		const result = virtual_memory.get_address(scope, result_type, 'temp')
+		let result
+		if (current_class != null) {
+			result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+		} else {
+			result = virtual_memory.get_address(scope, result_type, 'temp')
+		}
 
 		func_size_directory.get('temps_size')[result_type]++
 
@@ -765,7 +770,12 @@ add_mult_div_operation = () => {
 
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, result_type, 'temp')
+			let result
+			if (current_class != null) {
+				result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+			} else {
+				result = virtual_memory.get_address(scope, result_type, 'temp')
+			}
 
 			func_size_directory.get('temps_size')[result_type]++
 
@@ -799,7 +809,12 @@ add_sum_sub_operation = () => {
 
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, result_type, 'temp')
+			let result
+			if (current_class != null) {
+				result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+			} else {
+				result = virtual_memory.get_address(scope, result_type, 'temp')
+			}
 
 			func_size_directory.get('temps_size')[result_type]++
 
@@ -854,7 +869,12 @@ add_rel_operation = () => {
 
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, result_type, 'temp')
+			let result
+			if (current_class != null) {
+				result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+			} else {
+				result = virtual_memory.get_address(scope, result_type, 'temp')
+			}
 
 			func_size_directory.get('temps_size')[result_type]++
 
@@ -888,7 +908,12 @@ add_and_operation = () => {
 
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, result_type, 'temp')
+			let result
+			if (current_class != null) {
+				result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+			} else {
+				result = virtual_memory.get_address(scope, result_type, 'temp')
+			}
 
 			func_size_directory.get('temps_size')[result_type]++
 
@@ -922,7 +947,12 @@ add_or_operation = () => {
 
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, result_type, 'temp')
+			let result
+			if (current_class != null) {
+				result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+			} else {
+				result = virtual_memory.get_address(scope, result_type, 'temp')
+			}
 
 			func_size_directory.get('temps_size')[result_type]++
 
@@ -1431,16 +1461,20 @@ assign_return = () => {
 	const operator = 'return'
 	const result = operands.pop()
 
+	let func_return_type
 	if (current_class == null) {
-		const func_return_type = func_directory.get(current_func).type
-		if (func_return_type === 'void') {
-			console.log('ERROR - Void function cannot have return expression')
-			throw 'ERROR - Void function cannot have return expression'
-		}
-		if (func_return_type !== result.type) {
-			console.log('ERROR - Return type mismatch')
-			throw 'ERROR - Return type mismatch'
-		}
+		func_return_type = func_directory.get(current_func).type
+	} else {
+		func_return_type = class_directory.get(current_class).method_directory.get(current_func).type
+	}
+
+	if (func_return_type === 'void') {
+		console.log('ERROR - Void function cannot have return expression')
+		throw 'ERROR - Void function cannot have return expression'
+	}
+	if (func_return_type !== result.type) {
+		console.log('ERROR - Return type mismatch')
+		throw 'ERROR - Return type mismatch'
 	}
 
 	quads.push({
@@ -1509,12 +1543,10 @@ mark_call_params_start = () => {
 			func_directory.get(current_func_name_stack.top()).params_type_list
 		)
 	} else {
-		console.log("HERE")
 		// Generate era quad -> era, func_name, null, null
 		const operator = 'era'
 
-		const left_operand = `${current_func_name_stack.top().object.type}.${current_func_name_stack.top().object.address}.${current_func_name_stack.top().method}`
-		//const left_operand = `${current_func_name_stack.top().object.address}.${current_func_name_stack.top().method}`
+		const left_operand = `${current_func_name_stack.top().object.address}.${current_func_name_stack.top().method}`
 		console.log(left_operand)
 		
 		quads.push({
@@ -1625,13 +1657,13 @@ mark_func_call_end = () => {
 		left_operand = current_func_name_stack.top()
 	} else {
 		result = class_directory.get(current_func_name_stack.top().object.type).method_directory.get(current_func_name_stack.top().method).starting_point
-		left_operand = current_func_name_stack.top().method
+		left_operand = `${current_func_name_stack.top().object.address}.${current_func_name_stack.top().method}`
 	}
 	// Generate gosub quad -> gosub, func_name, null, starting_point
 	const operator = 'gosub'
 	quads.push({
 		operator: get_opcode(operator),
-		left_operand: current_func_name_stack.top(),
+		left_operand: left_operand,
 		right_operand: null,
 		result: result,
 	})
@@ -1665,12 +1697,18 @@ add_func_return = () => {
 
 		result_type = class_directory.get(current_func_name_stack.top().object.type).method_directory.get(current_func_name_stack.top().method).type
 		left_operand = `${current_func_name_stack.top().object.address}.${class_directory.get(current_func_name_stack.top().object.type).method_directory.get(current_func_name_stack.top().method).return_address}`
+		left_operand = parseFloat(left_operand)
 	}
 
 	const scope = current_func == global_func ? 'global' : 'local'
 
 	const operator = '='
-	const result = virtual_memory.get_address(scope, result_type, 'temp')
+	let result
+	if (current_class != null) {
+		result = class_virtual_memory.get_address(scope, result_type, 'temp') / 100000
+	} else {
+		result = virtual_memory.get_address(scope, result_type, 'temp')
+	}
 
 	func_size_directory.get('temps_size')[result_type]++
 
@@ -1814,7 +1852,11 @@ mark_am_dimension = () => {
 				current_dimension_list_stack.top().mValue,
 				'int'
 			)
-			const result = virtual_memory.get_address(scope, type, 'temp')
+			let result = virtual_memory.get_address(scope, type, 'temp')
+			if (current_class != null) {
+				result /= 100000
+			}
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -1830,7 +1872,11 @@ mark_am_dimension = () => {
 			const operator = '+'
 			const right_operand = operands.pop().operand
 			const left_operand = operands.pop().operand
-			const result = virtual_memory.get_address(scope, type, 'temp')
+			let result = virtual_memory.get_address(scope, type, 'temp')
+			if (current_class != null) {
+				result /= 100000
+			}
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -1890,7 +1936,10 @@ mark_am_end = () => {
 			? 'global'
 			: 'local'
 		const type = dimensions_stack.top().type
-		const result = virtual_memory.get_address(scope, type, 'pointer')
+		let result = virtual_memory.get_address(scope, type, 'pointer')
+		if (current_class != null) {
+			result /= 100000
+		}
 
 		func_size_directory.get('pointers_size')[type]++
 
