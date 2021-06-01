@@ -36,6 +36,7 @@ let dimensions_stack = new Stack()
 // Additional helpers
 let virtual_memory = null
 let current_simple_id = null
+let current_compound_id = null
 
 // Funcs helpers
 let current_func_name_stack = new Stack()
@@ -195,6 +196,18 @@ add_func_id = (func_id) => {
 			type: current_type,
 			var_directory: new Map(),
 		})
+		if (current_type !== 'void') {
+			const return_address = class_virtual_memory.get_address(
+				'global',
+				current_type,
+				'perm'
+			)
+			class_directory.get(current_class).attr_directory.set(func_id, {
+				type: current_type,
+				virtual_address: return_address,
+			})
+			class_directory.get(current_class).method_directory.get(func_id).return_address = return_address
+		}
 	} else {
 		if (func_directory.has(func_id)) {
 			console.log('ERROR - Function already exists')
@@ -579,6 +592,15 @@ add_simple_id_operand = () => {
 	current_simple_id = null
 }
 
+set_compound_id = (compound_id) => {
+	current_compound_id = compound_id
+}
+
+add_current_compound_id = () => {
+	add_operand(current_compound_id, 'object')
+	current_compound_id = null
+}
+
 // Semantic action that adds an operand to the operands stack by checking its type from either the class or global function directory
 // Receives the operand and its type (which only specifies if it's a variable or not)
 // Does not return anything
@@ -613,28 +635,56 @@ add_operand = (operand, type) => {
 		current_object = null
 		current_class = null
 	} else if (type === 'var') {
-		// Search in current var_directory
-		const is_inside_current_func =
+		if (current_class != null) {
+			// We are in a method declaration, check for parameters, vars, or attributes
+			const is_inside_class_method = class_directory
+			.get(current_class)
+			?.method_directory?.get(current_func)
+			?.var_directory?.get(operand) != null
+			//console.log()
+			// If variable is not inside the function variables, then it must be part of the class' attributes
+			type = is_inside_class_method
+			? class_directory
+					.get(current_class)
+					?.method_directory?.get(current_func)
+					?.var_directory?.get(operand)?.type
+			: class_directory.get(current_class)?.attr_directory?.get(operand)?.type
+			let operand_address = is_inside_class_method
+			? class_directory
+					.get(current_class)
+					?.method_directory?.get(current_func)
+					?.var_directory?.get(operand)?.virtual_address
+			: class_directory.get(current_class)?.attr_directory?.get(operand)
+					?.virtual_address
+			
+			const len = Math.ceil(Math.log10(operand_address + 1))
+			operand_address = operand_address / Math.pow(10, len)
+	
+			// Get the direction of an attribute of an object as --> 45001.9
+			operand = operand_address
+		} else {
+			// Search in current var_directory
+			const is_inside_current_func =
 			func_directory.get(current_func).var_directory.get(operand) != null
 
-		// If not found, search in global scope
-		const is_inside_global_scope =
-			func_directory.get(global_func).var_directory.get(operand) != null
+			// If not found, search in global scope
+			const is_inside_global_scope =
+				func_directory.get(global_func).var_directory.get(operand) != null
 
-		if (is_inside_current_func) {
-			type = func_directory.get(current_func).var_directory.get(operand).type
-			operand = func_directory
-				.get(current_func)
-				.var_directory.get(operand).virtual_address
-		} else if (is_inside_global_scope) {
-			type = func_directory.get(global_func).var_directory.get(operand).type
-			operand = func_directory
-				.get(global_func)
-				.var_directory.get(operand).virtual_address
-		} else {
-			type = 'undefined'
+			if (is_inside_current_func) {
+				type = func_directory.get(current_func).var_directory.get(operand).type
+				operand = func_directory
+					.get(current_func)
+					.var_directory.get(operand).virtual_address
+			} else if (is_inside_global_scope) {
+				type = func_directory.get(global_func).var_directory.get(operand).type
+				operand = func_directory
+					.get(global_func)
+					.var_directory.get(operand).virtual_address
+			} else {
+				type = 'undefined'
+			}
 		}
-		// }
 	} else {
 		// It is a constant
 		switch (type) {
@@ -1345,8 +1395,19 @@ assign_return = () => {
 // Does not return anything
 mark_func_call_start = () => {
 	// console.log('inside mark_func_call_start')
-
-	if (current_class == null) {
+	if (current_object != null) {
+		current_func_name_stack.push({
+			object: current_object,
+			method: current_compound_id
+		})
+		console.log(current_func_name_stack)
+		console.log(current_object)
+		if (!class_directory.get(current_object.type).method_directory.has(current_compound_id)) {
+			console.log('ERROR - Method not defined')
+			throw 'ERROR - Method not defined'
+		}
+		current_object = null
+	} else {
 		current_func_name_stack.push(current_simple_id)
 		current_simple_id = null
 
@@ -1364,8 +1425,7 @@ mark_func_call_start = () => {
 // Does not return anything
 mark_call_params_start = () => {
 	// console.log('inside mark_call_params_start')
-
-	if (current_class == null) {
+	if (!current_func_name_stack.top().object) {
 		// Generate era quad -> era, func_name, null, null
 		const operator = 'era'
 		quads.push({
@@ -1382,6 +1442,21 @@ mark_call_params_start = () => {
 		params_types_stack.push(
 			func_directory.get(current_func_name_stack.top()).params_type_list
 		)
+	} else {
+		console.log("HERE")
+		// Generate era quad -> era, func_name, null, null
+		const operator = 'era'
+
+		const left_operand = `${current_func_name_stack.top().object.type}.${current_func_name_stack.top().object.address}.${current_func_name_stack.top().method}`
+		//const left_operand = `${current_func_name_stack.top().object.address}.${current_func_name_stack.top().method}`
+		console.log(left_operand)
+		
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: left_operand,
+			right_operand: null,
+			result: null,
+		})
 	}
 }
 
@@ -1753,8 +1828,9 @@ mark_am_end = () => {
 // Semantic action that sets the current_object variable
 // Receives the name of the object
 // Does not return anything
-mark_object = (object) => {
-	current_object = func_directory.get(global_func).var_directory.get(object)
+mark_object = () => {
+	// first get the objects class
+	current_object = func_directory.get(global_func).var_directory.get(current_simple_id)
 }
 
 // -> Helper functions
