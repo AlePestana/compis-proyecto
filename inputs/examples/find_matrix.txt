@@ -1,0 +1,48 @@
+<-- Find function example for an matrix -->
+program findFunctionMatrixExample; 
+var <- float x[3][3], valueToFind; int resultR, resultC; ->
+
+<-- Function to read the values of a matrix -->
+void func rdMat()
+var <- int i, j; ->
+{
+    i = 0;
+    j = 0;
+    while(i < 3) {
+        while(j < 3) {
+            read(x[i][j]);
+            j = j + 1;
+        }
+        j = 0;
+        i = i + 1;
+    }
+}
+
+<-- Function that finds the index of a value inside a matrix -->
+void func find(var <- float value; ->)
+var <- int i, j; ->
+{
+    for(i = 0 until 3) {
+        for(j = 0 until 3) {
+            if(x[i][j] == value) {
+                resultR = i;
+                resultC = j; 
+            }
+        }
+    }
+}
+
+main() {
+    resultR = -1;
+    resultC = -1;
+
+    print("Input the values of the matrix");
+    rdMat();
+
+    print("Input the number you would like to find");
+    read(valueToFind);
+
+    find(valueToFind);
+    print("Row index is", resultR);
+    print("Col index is", resultC);
+}
