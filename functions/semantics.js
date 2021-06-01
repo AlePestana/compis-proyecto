@@ -627,6 +627,11 @@ add_operand = (operand, type) => {
 			: class_directory.get(current_class)?.attr_directory?.get(operand)
 					?.virtual_address
 
+		if (operand_address == null) {
+			console.log(`ERROR - "${operand}" not found within scope`)
+			throw `ERROR - "${operand}" not found within scope`
+		}
+
 		const len = Math.ceil(Math.log10(operand_address + 1))
 		operand_address = operand_address / Math.pow(10, len)
 
@@ -656,6 +661,11 @@ add_operand = (operand, type) => {
 					?.var_directory?.get(operand)?.virtual_address
 			: class_directory.get(current_class)?.attr_directory?.get(operand)
 					?.virtual_address
+
+			if (operand_address == null) {
+				console.log(`ERROR - "${operand}" not found within scope`)
+				throw `ERROR - "${operand}" not found within scope`
+			}
 			
 			const len = Math.ceil(Math.log10(operand_address + 1))
 			operand_address = operand_address / Math.pow(10, len)
@@ -682,7 +692,8 @@ add_operand = (operand, type) => {
 					.get(global_func)
 					.var_directory.get(operand).virtual_address
 			} else {
-				type = 'undefined'
+				console.log(`ERROR - "${operand}" not found within scope`)
+				throw `ERROR - "${operand}" not found within scope`
 			}
 		}
 	} else {
