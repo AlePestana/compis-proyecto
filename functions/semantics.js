@@ -443,7 +443,11 @@ add_id_matrix = (id, sizeR, sizeC) => {
 // Does not receive any parameters
 // Does not return anything
 finish_func_dec = () => {
-	current_func = global_func
+	if (current_class != null) {
+		current_func = global_func
+	} else {
+		current_func = null
+	}
 }
 
 // Semantic action that deletes the function directory after the program finishes and resets all the additional data structures used in the actions
@@ -1234,6 +1238,14 @@ create_params_directory = () => {
 		}
 		//console.log(params_type_list)
 		func_directory.get(current_func).params_type_list = params_type_list
+	} else {
+		params_directory = new Map(class_directory.get(current_class).method_directory.get(current_func).var_directory)
+		let params_type_list = new Array()
+		for (let [param, info] of params_directory) {
+			params_type_list.push(info.type)
+		}
+		class_directory.get(current_class).method_directory.get(current_func).params_type_list = params_type_list
+		//console.log(params_directory)
 	}
 }
 
@@ -1259,6 +1271,17 @@ mark_params_size = () => {
 		func_size_directory.set('params_size', params_size)
 	} else {
 		func_size_directory = new Map()
+		let params_size = { int: 0, float: 0, char: 0 }
+		for (let type of class_directory.get(current_class).method_directory.get(current_func).params_type_list) {
+			if (type === 'int') {
+				params_size.int += 1
+			} else if (type === 'float') {
+				params_size.float += 1
+			} else if (type === 'char') {
+				params_size.char += 1
+			}
+		}
+		func_size_directory.set('params_size', params_size)
 	}
 }
 
@@ -1267,11 +1290,15 @@ mark_params_size = () => {
 // Does not return anything
 mark_local_vars_size = () => {
 	// console.log('inside mark_local_vars_size')
+	let all_vars
 	if (current_class == null) {
-		let local_vars_size = { int: 0, float: 0, char: 0 }
-
 		// Turn current variable directory into array in order to be able to iterate over it
-		const all_vars = Array.from(func_directory.get(current_func).var_directory)
+		all_vars = Array.from(func_directory.get(current_func).var_directory)
+	} else {
+		// Turn current variable directory into array in order to be able to iterate over it
+		all_vars = Array.from(class_directory.get(current_class).method_directory.get(current_func).var_directory)
+	}
+	let local_vars_size = { int: 0, float: 0, char: 0 }
 
 		// Filter variable directory by creating a new array of variables (removing the params)
 		const local_vars = all_vars.filter(
@@ -1298,7 +1325,6 @@ mark_local_vars_size = () => {
 		}
 
 		func_size_directory.set('local_vars_size', local_vars_size)
-	}
 }
 
 // Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory, and initializes the temps and pointers counters in the func_size_directory helper structure
@@ -1308,10 +1334,12 @@ mark_func_start = () => {
 	// console.log('inside mark_func_start')
 	// Mark where the current function starts
 
-	if (current_class == null) {
-		func_size_directory.set('temps_size', { int: 0, float: 0 })
-		func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
+	func_size_directory.set('temps_size', { int: 0, float: 0 })
+	func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
+	if (current_class == null) {	
 		func_directory.get(current_func).starting_point = quads.count
+	} else {
+		class_directory.get(current_class).method_directory.get(current_func).starting_point = quads.count
 	}
 }
 
@@ -1349,6 +1377,36 @@ mark_func_end = () => {
 		})
 
 		func_directory.get(current_func).func_size_directory = func_size_directory
+		func_size_directory = null
+		func_return_exists = null
+	} else {
+		// Check if function that returns has returned something
+		if (class_directory.get(current_class).method_directory.get(current_func).type !== 'void') {
+			if (!func_return_exists) {
+				console.log('ERROR - Method does not return a value')
+				throw 'ERROR - Method does not return a value'
+			}
+		}
+
+		// Release current var_directory
+		class_directory.get(current_class).method_directory.get(current_func).var_directory = null
+
+		// Release temp params_directory
+		params_directory = null
+
+		// Release local addresses from memory
+		class_virtual_memory.reset_local_addresses()
+
+		// Generate quad -> ENDFUNC, null, null, null
+		const operator = 'endfunc'
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: null,
+			right_operand: null,
+			result: null,
+		})
+
+		class_directory.get(current_class).method_directory.get(current_func).func_size_directory = func_size_directory
 		func_size_directory = null
 		func_return_exists = null
 	}
@@ -1402,6 +1460,7 @@ mark_func_call_start = () => {
 		})
 		console.log(current_func_name_stack)
 		console.log(current_object)
+		console.log(class_directory.get(current_object.type))
 		if (!class_directory.get(current_object.type).method_directory.has(current_compound_id)) {
 			console.log('ERROR - Method not defined')
 			throw 'ERROR - Method not defined'
@@ -1875,13 +1934,13 @@ const is_id_duplicated = (id) => {
 				}
 			}
 		}
-	}
-
-	// We are in a func var/param or global var declaration
-	// Check if id already exists
-	if (func_directory.get(current_func).var_directory.has(id)) {
-		console.log('ERROR - Variable already exists')
-		throw 'ERROR - Variable already exists'
+	} else {
+		// We are in a func var/param or global var declaration
+		// Check if id already exists
+		if (func_directory.get(current_func).var_directory.has(id)) {
+			console.log('ERROR - Variable already exists')
+			throw 'ERROR - Variable already exists'
+		}
 	}
 }
 
