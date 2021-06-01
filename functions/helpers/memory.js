@@ -170,8 +170,6 @@ class Memory {
 		const index = address - this.get_offset(scope, type)
 		const scope_index = this.get_scope_index(scope)
 		const type_index = this.get_type_index(type)
-		//console.log(this.memory)
-		console.log('getting', address, index, scope, type)
 		return this.memory[scope_index][type_index][index]
 	}
 
@@ -267,7 +265,9 @@ class Memory {
 		// 45001 --> 45.001 --> 45 --> 45000
 		const class_address = Math.floor(object_address / 1000)
 		// Obtain decimal part (since that's the actual address of the attribute)
-		const value_address = Math.floor((address % 1) * 10000)
+		const len = address.toString().split('.')[1].length
+		const value_address =
+			Number(address.toString().split('.')[1]) * (len <= 2 ? 1000 : 1)
 
 		// Get indexes
 		const class_index = class_address - this.objects_offset / 1000
@@ -288,7 +288,8 @@ class Memory {
 		// 45001 --> 45.001 --> 45 --> 45000
 		const class_address = Math.floor(object_address / 1000)
 		// Obtain decimal part (since that's the actual address of the attribute)
-		address = Math.floor((address % 1) * 10000)
+		const len = address.toString().split('.')[1].length
+		address = Number(address.toString().split('.')[1]) * (len <= 2 ? 1000 : 1)
 
 		// Get indexes
 		const class_index = class_address - this.objects_offset / 1000

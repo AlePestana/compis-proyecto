@@ -25,5 +25,6 @@ program prog1;
   main() {
     person1.age = 15;
     print(person1.getAge());
-    
+    animal1.spots = 5;
+    animal1.showSpots();
   }
