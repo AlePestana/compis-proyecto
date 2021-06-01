@@ -544,7 +544,15 @@ async function execute_virtual_machine(virtual_machine_info) {
 
 				// Validate type of input according to variable type
 				address = quad.result
-				let type = getType(address)
+
+				let value_address = address
+				if (isObjectAddress(value_address)) {
+					const len = value_address.toString().split('.')[1].length
+					value_address =
+						Number(value_address.toString().split('.')[1]) *
+						(len <= 2 ? 1000 : 1)
+				}
+				let type = getType(value_address)
 
 				// Get type of variable we're reading to
 				switch (type) {
