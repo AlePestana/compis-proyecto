@@ -379,11 +379,7 @@ const grammar = {
 
 		assignment_operator: [['=', 'add_operator($1)']],
 
-		var_name: [
-			
-			['simple_id', '$$'],
-			//['compound_id', '$$'],
-		],
+		var_name: [['simple_id', '$$']],
 
 		simple_id: [
 			[
@@ -405,14 +401,12 @@ const grammar = {
 
 		simple_id_keyword: [['ID', 'set_simple_id($1)']],
 
-		//compound_id: [['ID . ID method_call', '$$']], // Objects
+		// For objects it looks like --> ID . ID method_call
 
-		object_compound_id: [
-			['ID', 'set_compound_id($1)'],
-		],
+		object_compound_id: [['ID', 'set_compound_id($1)']],
 
 		method_call: [
-			['', "add_current_compound_id()"],
+			['', 'add_current_compound_id()'],
 			[
 				'starting_call_params_parenthesis params_call closing_call_params_parenthesis',
 				'mark_func_call_end(); add_func_return(); reset_func_call_helpers()',
@@ -425,13 +419,10 @@ const grammar = {
 				'starting_call_params_parenthesis params_call closing_call_params_parenthesis',
 				'mark_func_call_end(); add_func_return(); reset_func_call_helpers()',
 			], // Call a function with a return type
-			['. object_compound_id set_object method_call', ``],
-			//['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
+			['. object_compound_id set_object method_call', '$$'],
 		],
 
-		set_object: [
-			['', 'mark_object();'],
-		],
+		set_object: [['', 'mark_object()']],
 
 		//func_call_id_keyword: [['ID', 'mark_func_call_start()']],
 
@@ -457,8 +448,7 @@ const grammar = {
 			[
 				'simple_id_keyword . object_compound_id set_object starting_call_params_parenthesis params_call closing_call_params_parenthesis ;',
 				'mark_func_call_end(); reset_func_call_helpers()',
-			]
-			// ['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
+			], // ['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
 		],
 
 		io: [
