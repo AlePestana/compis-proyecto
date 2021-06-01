@@ -1,0 +1,13 @@
+program prog1; 
+var <- int x; float y; ->
+
+float func surprise2 (var <- int z; float k; ->)
+{
+    print("inside func 2");
+    print(z, k);
+    return k;
+}
+
+main() {
+    y = surprise2(2, 6.7);
+}

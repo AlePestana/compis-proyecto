@@ -1,0 +1,88 @@
+<-- Example with two classes -->
+program personAnimalExample; 
+
+<-- Declaring the Person class -->
+class Person {
+    attributes <- 
+        int age; 
+        float height; 
+        char initial;
+    ->
+    methods <- 
+        int func getAge()
+        { 
+            return age;
+        }
+
+        float func getHeight()
+        { 
+            return height * 100;
+        }
+    ->
+}
+
+<-- Declaring the Animal class -->
+class Animal {
+    attributes <- 
+        char initial; 
+        int years; 
+    ->
+    methods <- ->
+}
+
+var <- Person person1; Animal animal1; int hasDog; ->
+
+<-- Function to read the attributes of the Person class -->
+void func rdPerson()
+{
+    print("Input the initial of the person");
+    read(person1.initial);
+    print("Input the age of the person");
+    read(person1.age);
+    print("Input the height of the person in meters");
+    read(person1.height);
+}
+
+<-- Function to read the attributes of the Animal class -->
+void func rdAnimal()
+{
+    print("Input the initial of the animal");
+    read(animal1.initial);
+    print("Input the number of years");
+    read(animal1.years);
+}
+
+<-- Function that calculates the factorial of a number -->
+int func factorial (var <- int num; ->)
+var <- int result; ->
+{
+    result = num;
+
+    <-- base case -->
+    if (num == 0 | num == 1) {
+      return 1;
+    } 
+    
+    while(num > 1) {
+        num = num - 1;
+        result = result * num;
+    }
+    return result;
+}
+
+main() {
+    rdPerson();
+    print("Looks like", person1.initial, "has the following attributes");
+    print("age", person1.getAge());
+    print("height in cm", person1.getHeight());
+    print("This person owns a dog");
+    print("Input 1 for yes or 0 for no");
+    read(hasDog);
+
+    if(hasDog) {
+        rdAnimal();
+        print("Your dog is likely going to last", factorial(animal1.years), "years");
+    }else {
+        print("You should pet a dog");
+    }
+}

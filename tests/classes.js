@@ -174,3 +174,75 @@ class Bye {
 main() {}`
 // const test6 = parser.parse(program6)
 // console.log('--> ' + (test6 ? 'yes :)' : 'no :('))
+
+console.log('\n\nTEST 7 - lass with method that returns attribute')
+const test7 = parser.parse(`
+  program prog1; 
+
+  class Person {
+    attributes <- int age; float height; ->
+    methods <-
+    int func getAge()
+      {
+        return age;
+      }
+    ->
+  }
+
+  var <- Person person1, person2; ->
+
+  main() {
+    person1.age = 15 + 5;
+    print(1);
+    person2.height = 1;
+    print(person2.height);
+  }`)
+console.log('--> ' + (test7 ? 'yes :)' : 'no :('))
+
+console.log('\n\nTEST 8 - Call class method that returns something')
+const test8 = parser.parse(`
+  program prog1; 
+
+  class Person {
+    attributes <- int age; float height; ->
+    methods <-
+    int func getAge(var <- int x; ->)
+      {
+        return age;
+      }
+    ->
+  }
+
+  var <- Person person1, person2; ->
+
+  main() {
+    person1.age = 15 + 5;
+    print(person1.getAge(1));
+    person2.height = 1;
+    print(person2.height);
+  }`)
+console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
+
+console.log('\n\nTEST 9 - Call void class method')
+const test9 = parser.parse(`
+  program prog1; 
+
+  class Person {
+    attributes <- int age; float height; ->
+    methods <-
+    void func getAge(var <- int x; float y; ->)
+      {
+        print(age);
+      }
+    ->
+  }
+
+  var <- Person person1, person2; ->
+
+  main() {
+    person1.age = 15 + 5;
+    person1.getAge(1, 2);
+    person2.height = 1;
+    print(person2.height);
+  }`)
+console.log('--> ' + (test9 ? 'yes :)' : 'no :('))
