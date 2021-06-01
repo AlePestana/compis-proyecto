@@ -2,7 +2,10 @@
 program fibonacciLoopArray; 
 var <- int i, fib[11]; ->
 
-main() {
+<-- Function that calculates the fibonacci of 10 -->
+void func fibonacci() 
+var <- int i; -> 
+{
     fib[0] = 0;
     fib[1] = 1;
 
@@ -13,6 +16,9 @@ main() {
         fib[i] = fib[i-2] + fib[i-1];
         print(fib[i]);
     }
+}
 
+main() {
+    fibonacci();
     print("Fibonacci of 10", fib[10]);
 }

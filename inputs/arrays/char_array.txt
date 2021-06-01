@@ -1,0 +1,9 @@
+program prog1; 
+    var <- char y[2]; ->
+
+main() {
+    y[0] = "h";
+    y[1] = "o";
+    print(y[0]);
+    print(y[1]);
+}

@@ -1,0 +1,32 @@
+<-- Find function example for an array -->
+program findFunctionArrayExample; 
+var <- char x[10]; int result; ->
+
+<-- Function that finds the index of a value inside an array -->
+int func find(var <- char value; ->)
+var <- int i; ->
+{
+    for(i = 0 until 10) {
+        if(x[i] == value) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+main() {
+    x[0] = "c";
+    x[1] = "d";
+    x[2] = "f";
+    x[3] = "g";
+    x[4] = "s";
+    x[5] = "b";
+    x[6] = "m";
+    x[7] = "n";
+    x[8] = "x";
+    x[9] = "p";
+    result = find("s");
+    print("Index of s is", result);
+    result = find("a");
+    print("Index of a is", result);
+}

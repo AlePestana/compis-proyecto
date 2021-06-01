@@ -644,6 +644,10 @@ add_operand = (operand, type) => {
 			case 'float':
 				operand = parseFloat(operand)
 				break
+			case 'char':
+				// Remove "" from char
+				operand = operand.slice(1, -1)
+				break
 		}
 		operand = get_constant_virtual_address(operand, type)
 	}
@@ -1636,7 +1640,10 @@ mark_am_dimension = () => {
 
 		// Helper for retrieving appropriate address from virtual_memory
 		const scope = current_func == global_func ? 'global' : 'local'
-		const type = dimensions_stack.top().type
+		const type =
+			dimensions_stack.top().type === 'char'
+				? 'int'
+				: dimensions_stack.top().type
 
 		// Check if it is a matrix
 		if (current_dimension_list_stack.top().nextNode !== null) {

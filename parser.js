@@ -64,6 +64,7 @@ const grammar = {
 			// Literals
 			['{digits}\\.{digits}', "return 'FLOAT_CTE'"],
 			['{digits}', "return 'INT_CTE'"],
+			['\\"{letter}\\"', "return 'CHAR_CTE'"],
 			['\\"({letters}|{digits}|{blank})+\\"', "return 'STRING_CTE'"],
 
 			// Comments
@@ -359,6 +360,7 @@ const grammar = {
 			['left_parenthesis expression right_parenthesis', '$$'],
 			['FLOAT_CTE', `add_operand($1, 'float')`],
 			['INT_CTE', `add_operand($1, 'int')`],
+			['CHAR_CTE', `add_operand($1, 'char')`],
 			['var_name', '$$'],
 		],
 
