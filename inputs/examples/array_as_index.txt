@@ -1,0 +1,12 @@
+<-- Simple example to test an array as an index of another array -->
+program nestedArrayAsIndexExample; 
+
+var <- int x[3], y[2], z, res; ->
+
+main() {
+    y[0] = 1;
+    x[y[0]] = 2;
+    z = 0;
+    res = x[y[z]];
+    print(res);
+}
