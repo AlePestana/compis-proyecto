@@ -33,9 +33,6 @@ async function execute() {
 	const filename = process.argv[2]
 	const input = await readFile(filename)
 
-	console.log(
-		'\n\n-------------------------------------------------------------------------------------------'
-	)
 	const result = parser.parse(input)
 
 	// If parser does not throw any errors, execute virtual machine
