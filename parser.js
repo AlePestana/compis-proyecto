@@ -31,7 +31,6 @@ const grammar = {
 
 			// Class reserved words
 			['class', "return 'CLASS'"],
-			['extends', "return 'EXTENDS'"],
 			['attributes', "return 'ATTRIBUTES'"],
 			['methods', "return 'METHODS'"],
 
@@ -136,10 +135,6 @@ const grammar = {
 		class: [
 			[
 				'CLASS class_id_keyword { attributes methods }',
-				'finish_class_dec(); $$',
-			],
-			[
-				'CLASS class_id_keyword EXTENDS ID { attributes methods }',
 				'finish_class_dec(); $$',
 			],
 		],

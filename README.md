@@ -125,3 +125,19 @@ AS_Documentation in https://docs.google.com/document/d/1jp9XdFYVZX3s2JJBVLnCjyrr
 | tests/expressions.js               |                                          Modify expressions tests |
 | tests/funcs.js                     |                                            Modify functions tests |
 | virtual_machine.js                 |        Execute intermediate for everything except arrays/matrices |
+
+##### 8th and Final delivery
+| Files changed                      |                                         Functionalities delivered |
+| :--------------------------------- | ----------------------------------------------------------------: |
+| functions/helpers/memory.js        |               Change memory to arrays and add support for objects |
+| functions/semantics.js             |                     Functions for classes definitions and objects |
+| functions/virtualMemory.js         |                                         Add addresses for objects |
+| inputs/arrays/*                    |                       Add test programs using arrays and matrices |
+| inputs/classes/*                   |                       Add test programs using classes and objects |
+| inputs/examples/*                  |                         Add test programs for required test cases |
+| inputs/funcs/*                     |                              Add test programs that use functions |
+| inputs/linear_statements/*         |                      Add test programs that use linear statements |
+| inputs/statements/*                |                     Add test programs that use general statements |
+| parser.js                          |  Add semantic actions to rules for classes calls and declarations |
+| tests/*                            |                         Add tests for all requirements test cases |
+| virtual_machine.js                 |                     Execute code for arrays/matrices, and objects |
