@@ -9,6 +9,27 @@ Armando Roque Villasana A01138717
 
 Compiler's class final project
 
+***
+## How to run ArrowScript
+Inside project folder, first install the Jison dependency for Node:
+```
+npm install
+```
+Once Jison is installed, you are ready to go!
+Run any program with the following syntax:
+```
+node ArrowScript.js <input_file>
+```
+If you want, you can try out any of our sample programs included with this project. 
+Let's try Fibonacci out:
+```
+node ArrowScript.js inputs/examples/fibonacci_recursive.txt
+```
+And voilá, you've run your first ArrowScript program!
+
+
+***
+## Documentation
 
 AS_Syntax_Diagrams in https://lucid.app/lucidchart/89702a55-72f8-44ad-88f8-5bdccaf2084a/view?page=0_0#
 
