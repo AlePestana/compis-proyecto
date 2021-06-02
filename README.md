@@ -20,9 +20,6 @@ AS_Demo_Video in https://drive.google.com/drive/folders/1h6GLuofDwk_ip7JT_6Mz-Sv
 ## ArrowScript User Manual
 ### →Script - Language definition
 
-
-*Sections in italics are optional*                                                                                   
-**Bold words** are **reserved** for the language
 Comments are indicated by <— —>
 
 #### General language structure
@@ -30,34 +27,34 @@ Comments are indicated by <— —>
 The general program structure of ArrowScript is of the following:
 
 ```jsx
-**program** ProgName**;**
+program ProgName;
 
-*<class declarations>
-<global vars>*
-*<function declarations>*
+<class declarations>
+<global vars>
+<function declarations>
 
 <-- comments -->
 
-**main() 
-{**
-	*<statements>*
-**}**
+main() 
+{
+	<statements>
+}
 ```
 
 Most importantly, we have variable declarations (which can be local or global)
 
 ```jsx
-**var <-**
-	<type*>* ids;
-	*<type> ids; 
-	[...]*
-**->**
+var <-
+	<type> ids;
+	<type> ids; 
+	[...]
+->
 ```
 
 → For the type, we accept either:
 
 ```jsx
-**int** | **float** | **char** | ClassName
+int | float | char | ClassName
 ```
 
 → For the ids we accept a list of id separated by commas
@@ -72,8 +69,8 @@ Most importantly, we have variable declarations (which can be local or global)
 
 ```jsx
 Person id1, id2;   /-> two objects of the Person class
-**int** id3, id4[2];   /-> a single-valued variable and an array of size 2
-**float** id5[3][5];   /-> matrix of 3 rows and 5 columns
+int id3, id4[2];   /-> a single-valued variable and an array of size 2
+float id5[3][5];   /-> matrix of 3 rows and 5 columns
 ```
 
 → Multi-dimensional structures (arrays and matrices) can only be declared with *int_cte* (integer constants) but they can be indexed or calles using variables (see below)
@@ -83,15 +80,15 @@ Person id1, id2;   /-> two objects of the Person class
 A basic class declaration (0-n) looks like the following:
 
 ```jsx
-**class** ClassName
-**{**
-	**attributes** 
-		*<vars>*
-****
-	**methods <-** 
-		*<funcs>*
-	**->**
-**}**
+class ClassName
+{
+	attributes 
+		<vars>
+
+	methods <- 
+		<funcs>
+	->
+}
 ```
 
 → All attributes and methods are public
@@ -106,11 +103,11 @@ A basic class declaration (0-n) looks like the following:
 Function declarations (0-n) have the form:
 
 ```jsx
-*<return_type>* **func** funcName**(** *<params>* **)**
-*<vars>*
-**{**
-	*<statements>*
-**}**
+<return_type> func funcName( <params> )
+<vars>
+{
+	<statements>
+}
 ```
 
 → They support recursion
@@ -125,7 +122,7 @@ Function declarations (0-n) have the form:
 → For the returnType we accept any of:
 
 ```jsx
-**int** | **float** | **char** | **void**
+int | float | char | void
 ```
 
 → For the params
@@ -142,15 +139,15 @@ The basic piece of the language consists of statements, which can be of several 
 An assignment statement saves the result of the expression in a var’s memory.
 
 ```jsx
-<var> **=** <expression>**;**
+<var> = <expression>;
 ```
 
 The expression's value can come from calling a function or method that returns a value.
 
 ```jsx
-<var> **=** funcName( *<params>* ) *<expression>***;**
+<var> = funcName( <params> ) <expression>;
 
-<var> **=** objectName.funcName( *<params>* ) *<expression>***;**
+<var> = objectName.funcName( <params> ) <expression>;
 ```
 
 → The var being assigned to can be any of the following:
@@ -171,9 +168,9 @@ objectName.attribute
 A function call can look like the following (one is a function and the other one is a method):
 
 ```jsx
-funcName( *<params>* )**;**
+funcName( <params> );
 
-objectName.funcName( *<params>* )**;**
+objectName.funcName( <params> );
 ```
 
 → For the params that a function receives we can have:
@@ -189,7 +186,7 @@ objectName.funcName( *<params>* )**;**
 ArrowScript can read from the console and store values to variables using the **read** statement.
 
 ```jsx
-**read(**<varNames>**);**
+read(<varNames>);
 ```
 
 → For varNames
@@ -207,7 +204,7 @@ objectName.attribute
 Values can also be printed to the standard output using the **print** statement
 
 ```jsx
-**print(**<outputVars>**);**
+read(<varNames>);
 ```
 
 → For the outputVars we can have
@@ -217,7 +214,7 @@ Values can also be printed to the standard output using the **print** statement
 ```jsx
 string_cte 
 
-****<expression>
+<expression>
 
 <varName>
 ```
@@ -238,14 +235,14 @@ objectName.attribute
 We can control the execution flow in the form of **if...else** statements:
 
 ```jsx
-**if(**<expression>**) 
-{**
+if(<expression>) 
+{
 	<statements>
-**}**
-***else
-{**
+}
+else
+{
 	<statements>
-**}***
+}
 ```
 
 ##### Iteration *statements*
@@ -257,10 +254,10 @@ A key feature is the ability to iterate over a certain part of code.
 The most general way to do this is with a *traditional* **while** loop.
 
 ```jsx
-**while(**<expression>**)**
-**{**
+while(<expression>)
+{
 	<statements>
-**}**
+}
 ```
 
 → Repeat *statements* while expression evaluates to true
@@ -270,10 +267,10 @@ The most general way to do this is with a *traditional* **while** loop.
 Or we can iterate a determined number of times with a **for until** loop
 
 ```jsx
-**for(**<numericAssignment> **until** <expression>**)**
-**{**
+for(<numericAssignment> until <expression>)
+{
 	<statements>
-**}**
+}
 ```
 
 → Repeat *statements* while expression evaluates to true
@@ -283,7 +280,7 @@ Or we can iterate a determined number of times with a **for until** loop
 → For numericAssignment we have a statement with the following form:
 
 ```jsx
-<numericAssignment> **=** <numericExpression>
+<numericAssignment> = <numericExpression>
 ```
 
 → For numericVarName we accept:
@@ -297,7 +294,7 @@ Or we can iterate a determined number of times with a **for until** loop
 → For numericType we accept:
 
 ```jsx
-**int**
+int
 ```
 
 ##### Return statement
