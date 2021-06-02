@@ -1,8 +1,10 @@
 program prog1; 
-var <- int x; ->
+var <- float x; ->
 
 main() {
     print("Before reading user input");
     read(x);
     print("User input was", x);
+    x = 5.5;
+    print("assigned x again", x);
 }

@@ -1,0 +1,19 @@
+program prog1; 
+var <- int x[3]; float y[2][2]; ->
+
+void func hi (var <- int a; ->)
+{
+    print("inside hi");
+    print("received", a);
+}
+
+void func hiFloat (var <- float a; ->)
+{
+    print("inside hi");
+    print("received", a);
+}
+
+main() {
+    hi(x);
+    hiFloat(y);
+}

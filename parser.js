@@ -31,7 +31,6 @@ const grammar = {
 
 			// Class reserved words
 			['class', "return 'CLASS'"],
-			['extends', "return 'EXTENDS'"],
 			['attributes', "return 'ATTRIBUTES'"],
 			['methods', "return 'METHODS'"],
 
@@ -64,7 +63,11 @@ const grammar = {
 			// Literals
 			['{digits}\\.{digits}', "return 'FLOAT_CTE'"],
 			['{digits}', "return 'INT_CTE'"],
+			['\\"{letter}\\"', "return 'CHAR_CTE'"],
 			['\\"({letters}|{digits}|{blank})+\\"', "return 'STRING_CTE'"],
+
+			// Comments
+			['\\<--({letters}|{digits}|{blank})+\\-->', '/* ignore comments*/'],
 
 			['\\<-', "return '<-'"],
 			['\\->', "return '->'"],
@@ -125,15 +128,15 @@ const grammar = {
 		program_id_keyword: [['ID', 'add_program_id($1)']],
 
 		classes: [
+			['class classes', '$$'],
+			['', '$$'],
+		],
+
+		class: [
 			[
 				'CLASS class_id_keyword { attributes methods }',
 				'finish_class_dec(); $$',
 			],
-			[
-				'CLASS class_id_keyword EXTENDS ID { attributes methods }',
-				'finish_class_dec(); $$',
-			],
-			['', '$$'],
 		],
 
 		class_id_keyword: [['ID', 'add_class_id($1)']],
@@ -196,10 +199,10 @@ const grammar = {
 
 		compound_id_list: [
 			[', compound_id_dec compound_id_list', '$$'],
-			['', '$$'],
+			['', 'finish_compound_id_list()'],
 		],
 
-		compound_id_dec: [['var_id', '$$']],
+		compound_id_dec: [['ID', 'add_compound_id($1)']],
 
 		simple_type: [
 			['INT', 'set_current_type($1)'],
@@ -216,11 +219,11 @@ const grammar = {
 
 		func: [
 			[
-				'void_keyword FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace func_statements closing_func_brace',
+				'void_keyword FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace statements closing_func_brace',
 				'finish_func_dec(); $$',
 			],
 			[
-				'simple_type FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace func_statements closing_func_brace',
+				'simple_type FUNC func_id_keyword ( params closing_params_parenthesis dec_vars starting_func_brace statements closing_func_brace',
 				'finish_func_dec(); $$',
 			],
 		],
@@ -245,12 +248,7 @@ const grammar = {
 
 		closing_func_brace: [['}', 'mark_func_end()']],
 
-		func_statements: [['statements return_statement', '$$']],
-
-		return_statement: [
-			['return_expression ; func_statements', '$$'],
-			['', '$$'],
-		],
+		return_statement: [['return_expression ;', '$$']],
 
 		return_expression: [['RETURN expression', 'assign_return()']],
 
@@ -265,6 +263,7 @@ const grammar = {
 			['io', '$$'],
 			['control', '$$'],
 			['iteration', '$$'],
+			['return_statement', '$$'],
 		],
 
 		opening_main_bracket: [['{', 'mark_main_start();']],
@@ -333,7 +332,7 @@ const grammar = {
 		sub_operator: [['-', 'add_operator($1)']],
 
 		// term
-		term: [['factor mult_div_operation', '$$']],
+		term: [['neg_factor mult_div_operation', '$$']],
 
 		mult_div_operation: [
 			['mult_operator right_factor mult_div_operation', '$$'],
@@ -341,16 +340,22 @@ const grammar = {
 			['', 'add_mult_div_operation()'],
 		],
 
-		right_factor: [['factor', 'add_mult_div_operation()']],
+		right_factor: [['neg_factor', 'add_mult_div_operation()']],
 
 		mult_operator: [['*', 'add_operator($1)']],
 
 		div_operator: [['/', 'add_operator($1)']],
 
+		neg_factor: [
+			['- factor', 'add_negative_operand()'],
+			['factor', '$$'],
+		],
+
 		factor: [
 			['left_parenthesis expression right_parenthesis', '$$'],
-			['INT_CTE', `add_operand($1, 'int')`],
 			['FLOAT_CTE', `add_operand($1, 'float')`],
+			['INT_CTE', `add_operand($1, 'int')`],
+			['CHAR_CTE', `add_operand($1, 'char')`],
 			['var_name', '$$'],
 		],
 
@@ -369,10 +374,7 @@ const grammar = {
 
 		assignment_operator: [['=', 'add_operator($1)']],
 
-		var_name: [
-			['simple_id', '$$'],
-			['compound_id', '$$'],
-		],
+		var_name: [['simple_id', '$$']],
 
 		simple_id: [
 			[
@@ -386,8 +388,6 @@ const grammar = {
 			['simple_id_keyword func_call', '$$'],
 		],
 
-		am_id_keyword: [['ID', `add_operand($1, 'var')`]],
-
 		starting_am_bracket: [['[', 'add_simple_id_operand(); mark_am_start()']],
 
 		closing_am_bracket: [[']', 'mark_am_dimension()']],
@@ -396,7 +396,17 @@ const grammar = {
 
 		simple_id_keyword: [['ID', 'set_simple_id($1)']],
 
-		compound_id: [['ID . simple_id', `add_operand($1, 'var')`]], // Objects
+		// For objects it looks like --> ID . ID method_call
+
+		object_compound_id: [['ID', 'set_compound_id($1)']],
+
+		method_call: [
+			['', 'add_current_compound_id()'],
+			[
+				'starting_call_params_parenthesis params_call closing_call_params_parenthesis',
+				'mark_func_call_end(); add_func_return(); reset_func_call_helpers()',
+			],
+		],
 
 		func_call: [
 			['', 'add_simple_id_operand()'], // If only a simple id is provided, add it to the operands stack and reset the current_simple_id variable to null
@@ -404,8 +414,10 @@ const grammar = {
 				'starting_call_params_parenthesis params_call closing_call_params_parenthesis',
 				'mark_func_call_end(); add_func_return(); reset_func_call_helpers()',
 			], // Call a function with a return type
-			// ['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
+			['. object_compound_id set_object method_call', '$$'],
 		],
+
+		set_object: [['', 'mark_object()']],
 
 		//func_call_id_keyword: [['ID', 'mark_func_call_start()']],
 
@@ -428,7 +440,10 @@ const grammar = {
 				'simple_id_keyword starting_call_params_parenthesis params_call closing_call_params_parenthesis ;',
 				'mark_func_call_end(); reset_func_call_helpers()',
 			],
-			// ['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
+			[
+				'simple_id_keyword . object_compound_id set_object starting_call_params_parenthesis params_call closing_call_params_parenthesis ;',
+				'mark_func_call_end(); reset_func_call_helpers()',
+			], // ['ID . ID ( params_call ) ;', '$$'], // Calling a method from a class
 		],
 
 		io: [

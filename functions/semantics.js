@@ -4,6 +4,8 @@
 // Output: does not return something since all actions are global
 // Used by: parser.js (since it specifies the actions to be executed by it)
 
+// Flag to debug (print to terminal intermediate code)
+const debug = false
 // Semantic cube
 const oracle = require('./cube')
 
@@ -11,7 +13,7 @@ const oracle = require('./cube')
 const get_opcode = require('./opcodes')
 
 // Virtual Memory Addresses
-const virtual_memory = require('./virtualMemory')
+const VirtualMemory = require('./virtualMemory')
 
 // Helper structures
 const Stack = require('./helpers/stack.js')
@@ -34,14 +36,26 @@ let for_stack = new Stack()
 let dimensions_stack = new Stack()
 
 // Additional helpers
+let virtual_memory = null
 let current_simple_id = null
-let current_func_name = null
-let params_count = null
-let params_types = null
+let current_compound_id = null
+
+// Funcs helpers
+let current_func_name_stack = new Stack()
+let params_count_stack = new Stack()
+let params_types_stack = new Stack()
 let func_return_exists = null
-let current_dimension = null
-let current_dimension_list = null
+
+// Array and matrix helpers
+let current_dimension_stack = new Stack()
+let current_dimension_list_stack = new Stack()
 let added_second_dimension = false
+
+// Class helpers
+let current_class = null
+let current_object = null
+let object_count = 0
+let class_size_directory = null
 
 // -> Global semantic actions
 
@@ -68,6 +82,8 @@ constants_directory = null
 // Does not return anything
 create_func_directory = function () {
 	func_directory = new Map()
+	virtual_memory = new VirtualMemory()
+	virtual_memory.initialize_counters()
 }
 
 // Semantic action that creates a new empty instance of the constants directory
@@ -93,12 +109,13 @@ insert_goto_main_quad = () => {
 	})
 }
 
-// Semantic action that fills the initial goto (main) with the next quad counter and calculates the program's global variables' size, and creates the empty structure for the temp vars
+// Semantic action that fills the initial goto (main) with the next quad counter and calculates the program's global variables' size, and creates the empty structure for the temp and pointer vars
 // Does not receive any parameters
 // Does not return anything
 mark_main_start = () => {
 	quads.data[0].result = quads.count
 	let vars_size = { int: 0, float: 0, char: 0 }
+	let objects_size = {}
 
 	// Turn current variable directory into array in order to be able to iterate over it
 	const local_vars = Array.from(func_directory.get(global_func).var_directory)
@@ -118,12 +135,21 @@ mark_main_start = () => {
 			vars_size.float += size
 		} else if (local_var[1].type === 'char') {
 			vars_size.char += size
+		} else {
+			const class_address = Math.floor(local_var[1].address / 1000) * 1000
+			// Check if we already have another object of the same type
+			if (!objects_size[class_address]) {
+				objects_size[class_address] = 0
+			}
+			objects_size[class_address]++
 		}
 	}
 
 	func_size_directory = new Map()
 	func_size_directory.set('vars_size', vars_size)
 	func_size_directory.set('temps_size', { int: 0, float: 0 })
+	func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
+	func_size_directory.set('objects_size', objects_size)
 }
 
 // Semantic action that adds the final end quad, assigns the size_directory to main in the func_directory, and resets the helper func_size_directory structure
@@ -172,6 +198,20 @@ add_func_id = (func_id) => {
 			type: current_type,
 			var_directory: new Map(),
 		})
+		if (current_type !== 'void') {
+			const return_address = class_virtual_memory.get_address(
+				'global',
+				current_type,
+				'perm'
+			)
+			class_directory.get(current_class).attr_directory.set(func_id, {
+				type: current_type,
+				virtual_address: return_address,
+			})
+			class_directory
+				.get(current_class)
+				.method_directory.get(func_id).return_address = return_address
+		}
 	} else {
 		if (func_directory.has(func_id)) {
 			console.log('ERROR - Function already exists')
@@ -213,13 +253,13 @@ add_id = (id) => {
 		if (is_attr_dec) {
 			class_directory.get(current_class).attr_directory.set(id, {
 				type: current_type,
-				virtual_address: virtual_memory.get_address(
+				virtual_address: class_virtual_memory.get_address(
 					'global',
 					current_type,
 					'perm'
 				),
 				dimension: null,
-			}) // ???
+			})
 		} else {
 			// Is method declaration
 			class_directory
@@ -227,7 +267,7 @@ add_id = (id) => {
 				.method_directory.get(current_func)
 				.var_directory.set(id, {
 					type: current_type,
-					virtual_address: virtual_memory.get_address(
+					virtual_address: class_virtual_memory.get_address(
 						'local',
 						current_type,
 						'perm'
@@ -260,6 +300,22 @@ add_id = (id) => {
 				.var_directory.set(id, { type: current_type })
 		}
 	}
+}
+
+// Semantic action that adds an object's name to the class directory
+// Receives the object's name
+// Does not return anything
+add_compound_id = (id) => {
+	// Update current_class to the type being added
+	current_class = current_type
+	is_id_duplicated(id)
+	// Obtain address of the current class and add the object that's used
+	const current_class_address =
+		class_directory.get(current_class).base_virtual_address
+	const object_address = current_class_address + object_count++
+	func_directory
+		.get(global_func)
+		.var_directory.set(id, { type: current_type, address: object_address })
 }
 
 // Semantic action that adds an array variable name to the class or global function directory (depending on the previously set variables), adds its dimension node, gets its virtual addresses, and verifies it is not duplicated
@@ -403,16 +459,20 @@ delete_func_directory = function () {
 		quads,
 		func_directory,
 		constants_directory,
+		class_directory,
 	}
-	console.log('Func directory before exit')
-	console.log(func_directory)
-	func_directory.forEach((value, key, map) => {
-		console.log(key)
-		console.log(value)
-	})
+	if (debug) {
+		console.log('Func directory before exit')
+		console.log(func_directory)
+
+		func_directory.forEach((value, key, map) => {
+			console.log(key)
+			console.log(value)
+		})
+		console.log('Quads before exit')
+		print_quads(quads)
+	}
 	func_directory = null
-	console.log('Quads before exit')
-	print_quads(quads)
 	quads = new Queue()
 	operators = new Stack()
 	operands = new Stack()
@@ -425,8 +485,10 @@ delete_func_directory = function () {
 // Does not receive any parameters
 // Does not return anything
 delete_constants_directory = () => {
-	console.log('constants_directory before exit')
-	console.log(constants_directory)
+	if (debug) {
+		console.log('constants_directory before exit')
+		console.log(constants_directory)
+	}
 	constants_directory = null
 }
 
@@ -444,7 +506,6 @@ reset_virtual_memory = () => {
 // Does not return anything
 create_class_directory = () => {
 	class_directory = new Map()
-	current_class = null
 }
 
 // Semantic action that adds a class name to the class directory, sets the current class variable and creates new instances of both attribute and methods directory for the object
@@ -453,11 +514,19 @@ create_class_directory = () => {
 add_class_id = (class_id) => {
 	current_class = class_id
 
+	// Create a virtual memory object instance for the class and initialize counters
+	class_virtual_memory = new VirtualMemory()
+	class_virtual_memory.initialize_counters()
+
 	class_directory.set(class_id, {
 		type: 'class',
 		attr_directory: new Map(),
 		method_directory: new Map(),
+		base_virtual_address: virtual_memory.get_class_address(),
+		class_size_directory: new Map(),
 	})
+
+	class_size_directory = new Map()
 }
 
 // Semantic action that sets the flag to mark that attribute declarations for a class has started
@@ -471,13 +540,38 @@ start_attributes_dec = () => {
 // Does not receive any parameters
 // Does not return anything
 finish_attr_dec = () => {
+	const attributes_size = { int: 0, float: 0, char: 0 }
+
+	for (let [attribute, value] of class_directory.get(current_class)
+		?.attr_directory) {
+		if (value.type === 'int') {
+			attributes_size.int += 1
+		} else if (value.type === 'float') {
+			attributes_size.float += 1
+		} else if (value.type === 'char') {
+			attributes_size.char += 1
+		}
+	}
+	class_size_directory.set('vars_size', attributes_size)
 	is_attr_dec = false
 }
 
-// Semantic action that sets the flag to mark that a class declaration has ended by setting the current class variable to null
+// Semantic action that sets the flag to mark that a class declaration has ended by setting the current class variable to null and filling its size directory
 // Does not receive any parameters
 // Does not return anything
 finish_class_dec = () => {
+	class_directory.get(current_class).class_size_directory = class_size_directory
+	current_class = null
+	// Reset virtual memory and number of objects of current class
+	class_virtual_memory = null
+}
+
+// Semantic action that adds the object_count to the class's size directory and resets the object count from the current class to 0
+// Does not receive any parameters
+// Does not return anything
+finish_compound_id_list = () => {
+	object_count = 0
+	current_object = null
 	current_class = null
 }
 
@@ -485,8 +579,10 @@ finish_class_dec = () => {
 // Does not receive any parameters
 // Does not return anything
 delete_class_directory = () => {
-	console.log('Class directory before exit')
-	console.log(class_directory)
+	if (debug) {
+		console.log('Class directory before exit')
+		console.log(class_directory)
+	}
 	class_directory = null
 }
 
@@ -507,31 +603,94 @@ add_simple_id_operand = () => {
 	current_simple_id = null
 }
 
+// Semantic action that sets the current_compound_id variable with the provided id
+// Receives the compound_id
+// Does not return anything
+set_compound_id = (compound_id) => {
+	current_compound_id = compound_id
+}
+
+// Semantic action that adds the current_compound_id variable to the operands stack and sets its value to null
+// Does not receive any parameters
+// Does not return anything
+add_current_compound_id = () => {
+	add_operand(current_compound_id, 'object')
+	current_compound_id = null
+}
+
 // Semantic action that adds an operand to the operands stack by checking its type from either the class or global function directory
 // Receives the operand and its type (which only specifies if it's a variable or not)
 // Does not return anything
 add_operand = (operand, type) => {
-	if (type === 'var') {
+	if (type === 'object') {
+		current_class = current_object.type
+		const is_inside_class_method =
+			class_directory
+				.get(current_class)
+				?.method_directory?.get(current_func)
+				?.var_directory?.get(operand) != null
+		// If variable is not inside the function variables, then it must be part of the class' attributes
+		type = is_inside_class_method
+			? class_directory
+					.get(current_class)
+					?.method_directory?.get(current_func)
+					?.var_directory?.get(operand)?.type
+			: class_directory.get(current_class)?.attr_directory?.get(operand)?.type
+		let operand_address = is_inside_class_method
+			? class_directory
+					.get(current_class)
+					?.method_directory?.get(current_func)
+					?.var_directory?.get(operand)?.virtual_address
+			: class_directory.get(current_class)?.attr_directory?.get(operand)
+					?.virtual_address
+
+		if (operand_address == null) {
+			console.log(`ERROR - "${operand}" not found within scope`)
+			throw `ERROR - "${operand}" not found within scope`
+		}
+
+		// Get the direction of an attribute of an object as --> 45001.9
+		const len = Math.ceil(Math.log10(operand_address + 1))
+		operand_address = operand_address / Math.pow(10, len)
+
+		// Change operand address from 5001 --> 0.5001
+		operand = parseFloat(current_object.address) + operand_address
+		current_object = null
+		current_class = null
+	} else if (type === 'var') {
 		if (current_class != null) {
+			// We are in a method declaration, check for parameters, vars, or attributes
 			const is_inside_class_method =
 				class_directory
 					.get(current_class)
-					.method_directory.get(current_func)
-					.var_directory.get(operand) != null
+					?.method_directory?.get(current_func)
+					?.var_directory?.get(operand) != null
+			//console.log()
 			// If variable is not inside the function variables, then it must be part of the class' attributes
 			type = is_inside_class_method
 				? class_directory
 						.get(current_class)
-						.method_directory.get(current_func)
-						.var_directory.get(operand).type
-				: class_directory.get(current_class).attr_directory.get(operand).type
-			operand = is_inside_class_method
+						?.method_directory?.get(current_func)
+						?.var_directory?.get(operand)?.type
+				: class_directory.get(current_class)?.attr_directory?.get(operand)?.type
+			let operand_address = is_inside_class_method
 				? class_directory
 						.get(current_class)
-						.method_directory.get(current_func)
-						.var_directory.get(operand).virtual_address
-				: class_directory.get(current_class).attr_directory.get(operand)
-						.virtual_address
+						?.method_directory?.get(current_func)
+						?.var_directory?.get(operand)?.virtual_address
+				: class_directory.get(current_class)?.attr_directory?.get(operand)
+						?.virtual_address
+
+			if (operand_address == null) {
+				console.log(`ERROR - "${operand}" not found within scope`)
+				throw `ERROR - "${operand}" not found within scope`
+			}
+
+			const len = Math.ceil(Math.log10(operand_address + 1))
+			operand_address = operand_address / Math.pow(10, len)
+
+			// Get the direction of an attribute of an object as --> 0.9
+			operand = operand_address
 		} else {
 			// Search in current var_directory
 			const is_inside_current_func =
@@ -552,7 +711,8 @@ add_operand = (operand, type) => {
 					.get(global_func)
 					.var_directory.get(operand).virtual_address
 			} else {
-				type = 'undefined'
+				console.log(`ERROR - "${operand}" not found within scope`)
+				throw `ERROR - "${operand}" not found within scope`
 			}
 		}
 	} else {
@@ -564,10 +724,51 @@ add_operand = (operand, type) => {
 			case 'float':
 				operand = parseFloat(operand)
 				break
+			case 'char':
+				// Remove "" from char
+				operand = operand.slice(1, -1)
+				break
 		}
 		operand = get_constant_virtual_address(operand, type)
 	}
 	operands.push({ operand, type })
+}
+
+// Semantic action that adds a quad to get the negative value of a factor when the negation is required
+// Does not receive any parameters
+// Does not return anything
+add_negative_operand = () => {
+	const right = operands.pop()
+	const right_operand = right.operand
+	const left_operand = get_constant_virtual_address(0, 'int')
+	const operator = '-'
+
+	const result_type = oracle('int', right.type, operator)
+
+	if (result_type !== 'error') {
+		const scope = current_func == global_func ? 'global' : 'local'
+		let result
+		if (current_class != null) {
+			result = class_virtual_memory.get_address(scope, result_type, 'temp')
+			const len = Math.ceil(Math.log10(result + 1))
+			result = result / Math.pow(10, len)
+		} else {
+			result = virtual_memory.get_address(scope, result_type, 'temp')
+		}
+
+		func_size_directory.get('temps_size')[result_type]++
+
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand,
+			right_operand,
+			result,
+		})
+		operands.push({ operand: result, type: result_type })
+	} else {
+		console.log('ERROR - Type mismatch')
+		throw 'ERROR - Type mismatch'
+	}
 }
 
 // Semantic action that adds an operator to the operators stack
@@ -594,7 +795,14 @@ add_mult_div_operation = () => {
 
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, result_type, 'temp')
+			let result
+			if (current_class != null) {
+				result = class_virtual_memory.get_address(scope, result_type, 'temp')
+				const len = Math.ceil(Math.log10(result + 1))
+				result = result / Math.pow(10, len)
+			} else {
+				result = virtual_memory.get_address(scope, result_type, 'temp')
+			}
 
 			func_size_directory.get('temps_size')[result_type]++
 
@@ -628,7 +836,14 @@ add_sum_sub_operation = () => {
 
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, result_type, 'temp')
+			let result
+			if (current_class != null) {
+				result = class_virtual_memory.get_address(scope, result_type, 'temp')
+				const len = Math.ceil(Math.log10(result + 1))
+				result = result / Math.pow(10, len)
+			} else {
+				result = virtual_memory.get_address(scope, result_type, 'temp')
+			}
 
 			func_size_directory.get('temps_size')[result_type]++
 
@@ -683,7 +898,14 @@ add_rel_operation = () => {
 
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, result_type, 'temp')
+			let result
+			if (current_class != null) {
+				result = class_virtual_memory.get_address(scope, result_type, 'temp')
+				const len = Math.ceil(Math.log10(result + 1))
+				result = result / Math.pow(10, len)
+			} else {
+				result = virtual_memory.get_address(scope, result_type, 'temp')
+			}
 
 			func_size_directory.get('temps_size')[result_type]++
 
@@ -717,7 +939,14 @@ add_and_operation = () => {
 
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, result_type, 'temp')
+			let result
+			if (current_class != null) {
+				result = class_virtual_memory.get_address(scope, result_type, 'temp')
+				const len = Math.ceil(Math.log10(result + 1))
+				result = result / Math.pow(10, len)
+			} else {
+				result = virtual_memory.get_address(scope, result_type, 'temp')
+			}
 
 			func_size_directory.get('temps_size')[result_type]++
 
@@ -751,7 +980,14 @@ add_or_operation = () => {
 
 		if (result_type !== 'error') {
 			const scope = current_func == global_func ? 'global' : 'local'
-			const result = virtual_memory.get_address(scope, result_type, 'temp')
+			let result
+			if (current_class != null) {
+				result = class_virtual_memory.get_address(scope, result_type, 'temp')
+				const len = Math.ceil(Math.log10(result + 1))
+				result = result / Math.pow(10, len)
+			} else {
+				result = virtual_memory.get_address(scope, result_type, 'temp')
+			}
 
 			func_size_directory.get('temps_size')[result_type]++
 
@@ -823,7 +1059,7 @@ read_var = (variable) => {
 	// if variable is within scope
 	if (is_var_in_scope(variable)) {
 		const operator = 'read'
-		const result = variable
+		const result = operands.pop().operand
 
 		const left_operand = null
 		const right_operand = null
@@ -844,11 +1080,8 @@ read_var = (variable) => {
 // Does not receive any parameters
 // Does not return anything
 assign_exp = () => {
-	// console.log('inside assign_exp')
-
 	const res = operands.pop()
 	const result = res.operand
-
 	const right_operand = null
 
 	const left = operands.pop()
@@ -856,9 +1089,8 @@ assign_exp = () => {
 
 	const operator = operators.pop()
 
-	console.log('assigning expression')
-	console.log(res, left)
-	if (res.type === left.type) {
+	// Allow the assignment of a float variable with an integer
+	if (res.type === left.type || (left.type === 'float' && res.type === 'int')) {
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand: result,
@@ -1075,8 +1307,20 @@ create_params_directory = () => {
 		for (let [param, info] of params_directory) {
 			params_type_list.push(info.type)
 		}
-		//console.log(params_type_list)
 		func_directory.get(current_func).params_type_list = params_type_list
+	} else {
+		params_directory = new Map(
+			class_directory
+				.get(current_class)
+				.method_directory.get(current_func).var_directory
+		)
+		let params_type_list = new Array()
+		for (let [param, info] of params_directory) {
+			params_type_list.push(info.type)
+		}
+		class_directory
+			.get(current_class)
+			.method_directory.get(current_func).params_type_list = params_type_list
 	}
 }
 
@@ -1100,6 +1344,21 @@ mark_params_size = () => {
 			}
 		}
 		func_size_directory.set('params_size', params_size)
+	} else {
+		func_size_directory = new Map()
+		let params_size = { int: 0, float: 0, char: 0 }
+		for (let type of class_directory
+			.get(current_class)
+			.method_directory.get(current_func).params_type_list) {
+			if (type === 'int') {
+				params_size.int += 1
+			} else if (type === 'float') {
+				params_size.float += 1
+			} else if (type === 'char') {
+				params_size.char += 1
+			}
+		}
+		func_size_directory.set('params_size', params_size)
 	}
 }
 
@@ -1108,50 +1367,62 @@ mark_params_size = () => {
 // Does not return anything
 mark_local_vars_size = () => {
 	// console.log('inside mark_local_vars_size')
+	let all_vars
 	if (current_class == null) {
-		let local_vars_size = { int: 0, float: 0, char: 0 }
-
 		// Turn current variable directory into array in order to be able to iterate over it
-		const all_vars = Array.from(func_directory.get(current_func).var_directory)
-
-		// Filter variable directory by creating a new array of variables (removing the params)
-		const local_vars = all_vars.filter(
-			(var_name) => !params_directory.has(var_name[0])
+		all_vars = Array.from(func_directory.get(current_func).var_directory)
+	} else {
+		// Turn current variable directory into array in order to be able to iterate over it
+		all_vars = Array.from(
+			class_directory.get(current_class).method_directory.get(current_func)
+				.var_directory
 		)
+	}
+	let local_vars_size = { int: 0, float: 0, char: 0 }
 
-		// Each local_var has the form -> [ 'k', { type: 'int', virtual_address: 5000, dimension: null } ]
-		for (let local_var of local_vars) {
-			let size = 1
-			let dimNode = local_var[1].dimension
-			while (dimNode != null) {
-				// Check if it is array or matrix
-				size *= dimNode.supLimit + 1
-				dimNode = dimNode.nextNode
-			}
+	// Filter variable directory by creating a new array of variables (removing the params)
+	const local_vars = all_vars.filter(
+		(var_name) => !params_directory.has(var_name[0])
+	)
 
-			if (local_var[1].type === 'int') {
-				local_vars_size.int += size
-			} else if (local_var[1].type === 'float') {
-				local_vars_size.float += size
-			} else if (local_var[1].type === 'char') {
-				local_vars_size.char += size
-			}
+	// Each local_var has the form -> [ 'k', { type: 'int', virtual_address: 5000, dimension: null } ]
+	for (let local_var of local_vars) {
+		let size = 1
+		let dimNode = local_var[1].dimension
+		while (dimNode != null) {
+			// Check if it is array or matrix
+			size *= dimNode.supLimit + 1
+			dimNode = dimNode.nextNode
 		}
 
-		func_size_directory.set('local_vars_size', local_vars_size)
+		if (local_var[1].type === 'int') {
+			local_vars_size.int += size
+		} else if (local_var[1].type === 'float') {
+			local_vars_size.float += size
+		} else if (local_var[1].type === 'char') {
+			local_vars_size.char += size
+		}
 	}
+
+	func_size_directory.set('local_vars_size', local_vars_size)
 }
 
-// Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory, and initializes the temps counters in the func_size_directory helper structure
+// Semantic action that marks the start of a function by adding the current quadruples counter to a new attribute 'starting_point' in the global func directory, and initializes the temps and pointers counters in the func_size_directory helper structure
 // Does not receive any parameters
 // Does not return anything
 mark_func_start = () => {
 	// console.log('inside mark_func_start')
-	// Mark where the current function starts
-	func_size_directory.set('temps_size', { int: 0, float: 0 })
 
+	func_size_directory.set('temps_size', { int: 0, float: 0 })
+	func_size_directory.set('pointers_size', { int: 0, float: 0, char: 0 })
+
+	// Mark where the current function starts
 	if (current_class == null) {
 		func_directory.get(current_func).starting_point = quads.count
+	} else {
+		class_directory
+			.get(current_class)
+			.method_directory.get(current_func).starting_point = quads.count
 	}
 }
 
@@ -1176,6 +1447,9 @@ mark_func_end = () => {
 		// Release temp params_directory
 		params_directory = null
 
+		// Release local addresses from memory
+		virtual_memory.reset_local_addresses()
+
 		// Generate quad -> ENDFUNC, null, null, null
 		const operator = 'endfunc'
 		quads.push({
@@ -1187,26 +1461,77 @@ mark_func_end = () => {
 
 		func_directory.get(current_func).func_size_directory = func_size_directory
 		func_size_directory = null
+		func_return_exists = null
+	} else {
+		// Check if function that returns has returned something
+		if (
+			class_directory.get(current_class).method_directory.get(current_func)
+				.type !== 'void'
+		) {
+			if (!func_return_exists) {
+				console.log('ERROR - Method does not return a value')
+				throw 'ERROR - Method does not return a value'
+			}
+		}
+
+		// Release current var_directory
+		class_directory
+			.get(current_class)
+			.method_directory.get(current_func).var_directory = null
+
+		// Release temp params_directory
+		params_directory = null
+
+		// Release local addresses from memory
+		class_virtual_memory.reset_local_addresses()
+
+		// Generate quad -> ENDFUNC, null, null, null
+		const operator = 'endfunc'
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: null,
+			right_operand: null,
+			result: null,
+		})
+
+		class_directory
+			.get(current_class)
+			.method_directory.get(current_func).func_size_directory =
+			func_size_directory
+
+		func_size_directory = null
+		func_return_exists = null
 	}
 }
 
-// Semantic action that verifies that a return expression matches the function's type and generates the 'return' quad
+// Semantic action that verifies that a return expression is within a function, that it matches the function's type and generates the 'return' quad
 // Does not receive any parameters
 // Does not return anything
 assign_return = () => {
+	if (current_func === global_func) {
+		console.log('ERROR - Return statement can only be inside a function')
+		throw 'ERROR - Return statement can only be inside a function'
+	}
+
 	const operator = 'return'
 	const result = operands.pop()
 
+	let func_return_type
 	if (current_class == null) {
-		const func_return_type = func_directory.get(current_func).type
-		if (func_return_type === 'void') {
-			console.log('ERROR - Void function cannot have return expression')
-			throw 'ERROR - Void function cannot have return expression'
-		}
-		if (func_return_type !== result.type) {
-			console.log('ERROR - Return type mismatch')
-			throw 'ERROR - Return type mismatch'
-		}
+		func_return_type = func_directory.get(current_func).type
+	} else {
+		func_return_type = class_directory
+			.get(current_class)
+			.method_directory.get(current_func).type
+	}
+
+	if (func_return_type === 'void') {
+		console.log('ERROR - Void function cannot have return expression')
+		throw 'ERROR - Void function cannot have return expression'
+	}
+	if (func_return_type !== result.type) {
+		console.log('ERROR - Return type mismatch')
+		throw 'ERROR - Return type mismatch'
 	}
 
 	quads.push({
@@ -1227,11 +1552,26 @@ assign_return = () => {
 mark_func_call_start = () => {
 	// console.log('inside mark_func_call_start')
 
-	if (current_class == null) {
-		current_func_name = current_simple_id
+	if (current_object != null) {
+		current_func_name_stack.push({
+			object: current_object,
+			method: current_compound_id,
+		})
+
+		if (
+			!class_directory
+				.get(current_object.type)
+				.method_directory.has(current_compound_id)
+		) {
+			console.log('ERROR - Method not defined')
+			throw 'ERROR - Method not defined'
+		}
+		current_object = null
+	} else {
+		current_func_name_stack.push(current_simple_id)
 		current_simple_id = null
 
-		if (!func_directory.has(current_func_name)) {
+		if (!func_directory.has(current_func_name_stack.top())) {
 			console.log('ERROR - Function not defined')
 			throw 'ERROR - Function not defined'
 		}
@@ -1245,22 +1585,49 @@ mark_func_call_start = () => {
 // Does not return anything
 mark_call_params_start = () => {
 	// console.log('inside mark_call_params_start')
-
-	if (current_class == null) {
+	if (!current_func_name_stack.top().object) {
 		// Generate era quad -> era, func_name, null, null
 		const operator = 'era'
 		quads.push({
 			operator: get_opcode(operator),
-			left_operand: current_func_name,
+			left_operand: current_func_name_stack.top(),
 			right_operand: null,
 			result: null,
 		})
 
 		// Start parameter counter to 1
-		params_count = 1
+		params_count_stack.push(1)
 
 		// Generate array of parameters types
-		params_types = func_directory.get(current_func_name).params_type_list
+		params_types_stack.push(
+			func_directory.get(current_func_name_stack.top()).params_type_list
+		)
+	} else {
+		// Generate era quad -> era, func_name, null, null
+		const operator = 'era'
+
+		// Will have the form --> 45000.getAge
+		const left_operand = `${current_func_name_stack.top().object.address}.${
+			current_func_name_stack.top().method
+		}`
+
+		quads.push({
+			operator: get_opcode(operator),
+			left_operand: left_operand,
+			right_operand: null,
+			result: null,
+		})
+
+		// Start parameter counter to 1
+		params_count_stack.push(1)
+
+		// Generate array of parameters types
+		params_types_stack.push(
+			class_directory
+				.get(current_func_name_stack.top().object.type)
+				.method_directory.get(current_func_name_stack.top().method)
+				.params_type_list
+		)
 	}
 }
 
@@ -1268,32 +1635,47 @@ mark_call_params_start = () => {
 // Does not receive any parameters
 // Does not return anything
 add_call_param = () => {
-	// console.log('inside add_call_param')
+	//console.log('inside add_call_param')
 
-	if (current_class == null) {
-		const current_argument = operands.pop()
+	const current_argument = operands.pop()
 
-		// More parameters were sent
-		if (params_count - 1 >= params_types.length) {
-			console.log('ERROR - Number of parameters required does not match')
-			throw 'ERROR - Number of parameters required does not match'
-		}
+	// More parameters were sent
+	if (params_count_stack.top() - 1 >= params_types_stack.top().length) {
+		console.log('ERROR - Number of parameters required does not match')
+		throw 'ERROR - Number of parameters required does not match'
+	}
 
-		if (current_argument.type !== params_types[params_count - 1]) {
-			console.log('ERROR - Parameter type does not match')
-			throw 'ERROR - Parameter type does not match'
-		} else {
-			const operator = 'param'
-			const left_operand = current_argument.operand
-			const result = 'param' + params_count
-			quads.push({
-				operator: get_opcode(operator),
-				left_operand: left_operand,
-				right_operand: null,
-				result: result,
-			})
+	// Check parameter type
+	if (
+		current_argument.type !==
+			params_types_stack.top()[params_count_stack.top() - 1] &&
+		params_types_stack.top()[params_count_stack.top() - 1] !== 'float' &&
+		current_argument.type !== 'int'
+	) {
+		console.log('ERROR - Parameter type does not match')
+		throw 'ERROR - Parameter type does not match'
+	}
+
+	// Check parameter is not an array or matrix
+	// If it's not in the function directory it means it's a constant, so it's fine
+	for (let [, value] of func_directory.get(current_func).var_directory) {
+		if (value.virtual_address === current_argument.operand) {
+			if (value.dimension !== null) {
+				console.log('ERROR - Parameter type does not match')
+				throw 'ERROR - Parameter type does not match'
+			}
 		}
 	}
+
+	const operator = 'param'
+	const left_operand = current_argument.operand
+	const result = 'param' + params_count_stack.top()
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: left_operand,
+		right_operand: null,
+		result: result,
+	})
 }
 
 // Semantic action that moves the params_count forward to allow iteration over params call
@@ -1301,9 +1683,8 @@ add_call_param = () => {
 // Does not return anything
 mark_next_call_param = () => {
 	// console.log('inside mark_next_call_param')
-
 	if (current_class == null) {
-		params_count++
+		params_count_stack.push(params_count_stack.pop() + 1)
 	}
 }
 
@@ -1314,11 +1695,9 @@ verify_call_params_size = () => {
 	// console.log('inside verify_call_params_size')
 
 	// More parameters were declared than sent
-	if (current_class == null) {
-		if (params_count - 1 !== params_types.length) {
-			console.log('ERROR - Number of parameters required does not match')
-			throw 'ERROR - Number of parameters required does not match'
-		}
+	if (params_count_stack.top() - 1 !== params_types_stack.top().length) {
+		console.log('ERROR - Number of parameters required does not match')
+		throw 'ERROR - Number of parameters required does not match'
 	}
 }
 
@@ -1327,17 +1706,29 @@ verify_call_params_size = () => {
 // Does not return anything
 mark_func_call_end = () => {
 	// console.log('inside mark_func_call_end')
-
-	if (current_class == null) {
-		// Generate gosub quad -> gosub, func_name, null, starting_point
-		const operator = 'gosub'
-		quads.push({
-			operator: get_opcode(operator),
-			left_operand: current_func_name,
-			right_operand: null,
-			result: func_directory.get(current_func_name).starting_point,
-		})
+	let result
+	let left_operand
+	if (!current_func_name_stack.top().object) {
+		result = func_directory.get(current_func_name_stack.top()).starting_point
+		left_operand = current_func_name_stack.top()
+	} else {
+		result = class_directory
+			.get(current_func_name_stack.top().object.type)
+			.method_directory.get(current_func_name_stack.top().method).starting_point
+		// Will have the form --> 45000.getAge
+		left_operand = `${current_func_name_stack.top().object.address}.${
+			current_func_name_stack.top().method
+		}`
 	}
+
+	// Generate gosub quad -> gosub, func_name, null, starting_point
+	const operator = 'gosub'
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: left_operand,
+		right_operand: null,
+		result: result,
+	})
 	operators.pop()
 }
 
@@ -1345,43 +1736,76 @@ mark_func_call_end = () => {
 // Does not receive any parameters
 // Does not return anything
 add_func_return = () => {
-	if (func_directory.get(current_func_name).type === 'void') {
-		console.log('ERROR - Calling void function in expression')
-		throw 'ERROR - Calling void function in expression'
-	}
+	let left_operand
+	let result_type
 
-	if (current_class == null) {
-		// Generate temp assignment quad -> =, func_name, null, temp_var
+	if (!current_func_name_stack.top().object) {
+		// Its a func call
+		if (func_directory.get(current_func_name_stack.top()).type === 'void') {
+			console.log('ERROR - Calling void function in expression')
+			throw 'ERROR - Calling void function in expression'
+		}
 
-		const result_type = func_directory.get(current_func_name).type
-		const scope = current_func == global_func ? 'global' : 'local'
-
-		const operator = '='
-		const left_operand = func_directory
+		result_type = func_directory.get(current_func_name_stack.top()).type
+		left_operand = func_directory
 			.get(global_func)
-			.var_directory.get(current_func_name).virtual_address
-		const result = virtual_memory.get_address(scope, result_type, 'temp')
+			.var_directory.get(current_func_name_stack.top()).virtual_address
+	} else {
+		// Its a method call
+		if (
+			class_directory
+				.get(current_func_name_stack.top().object.type)
+				.method_directory.get(current_func_name_stack.top().method).type ===
+			'void'
+		) {
+			throw 'ERROR - Calling void method in expression'
+		}
 
-		func_size_directory.get('temps_size')[result_type]++
+		result_type = class_directory
+			.get(current_func_name_stack.top().object.type)
+			.method_directory.get(current_func_name_stack.top().method).type
 
-		quads.push({
-			operator: get_opcode(operator),
-			left_operand: left_operand,
-			right_operand: null,
-			result: result,
-		})
-		operands.push({ operand: result, type: result_type })
+		// Will have the form --> class_address.return_address --> 45000.5001
+		const object_address = current_func_name_stack.top().object.address
+		let return_address = class_directory
+			.get(current_func_name_stack.top().object.type)
+			.method_directory.get(current_func_name_stack.top().method).return_address
+		const len = Math.ceil(Math.log10(return_address + 1))
+		return_address = return_address / Math.pow(10, len)
+
+		left_operand = object_address + return_address
 	}
+
+	const scope = current_func == global_func ? 'global' : 'local'
+
+	const operator = '='
+	let result
+	if (current_class != null) {
+		result = class_virtual_memory.get_address(scope, result_type, 'temp')
+		const len = Math.ceil(Math.log10(result + 1))
+		result = result / Math.pow(10, len)
+	} else {
+		result = virtual_memory.get_address(scope, result_type, 'temp')
+	}
+
+	func_size_directory.get('temps_size')[result_type]++
+
+	quads.push({
+		operator: get_opcode(operator),
+		left_operand: left_operand,
+		right_operand: null,
+		result: result,
+	})
+	operands.push({ operand: result, type: result_type })
 }
 
 // Semantic action that clears all current function related variables
 // Does not receive any parameters
 // Does not return anything
 reset_func_call_helpers = () => {
-	current_func_name = null
-	params_count = null
-	params_types = null
-	func_return_exists = null
+	current_func_name_stack.pop()
+	params_count_stack.pop()
+	params_types_stack.pop()
 }
 
 // -> Array and matrices access(indexing) semantic actions
@@ -1396,33 +1820,59 @@ mark_am_start = () => {
 	let am_id = null
 	let base_address = null
 	let am_type = null
+	let found_in_local_func = false,
+		is_global = false
 
 	if (current_class == null) {
-		// Get id of given address
+		// Get id of given address by checking local scope
 		for (let [id, value] of func_directory.get(current_func).var_directory) {
-			if (value.virtual_address == address) {
+			if (value.virtual_address === address) {
 				// Found id, checking if it has a dimension (to verify it is indeed an array or matrix)
-				if (value.dimension == null) {
+				if (value.dimension === null) {
 					console.log(
 						'ERROR - Trying to index a variable that has no dimensions'
 					)
 					throw 'ERROR - Trying to index a variable that has no dimensions'
 				}
 				am_id = id
-				current_dimension_list = value.dimension
+				current_dimension_list_stack.push(value.dimension)
 				base_address = value.virtual_address
 				am_type = value.type
+				found_in_local_func = true
 				break
 			}
 		}
 
-		current_dimension = 1
+		// If it wasn't found in local scope, get id of given address by checking global scope
+		if (!found_in_local_func) {
+			for (let [id, value] of func_directory.get(global_func).var_directory) {
+				if (value.virtual_address === address) {
+					// Found id, checking if it has a dimension (to verify it is indeed an array or matrix)
+					if (value.dimension === null) {
+						console.log(
+							'ERROR - Trying to index a variable that has no dimensions'
+						)
+						throw 'ERROR - Trying to index a variable that has no dimensions'
+					}
+					am_id = id
+					current_dimension_list_stack.push(value.dimension)
+					base_address = value.virtual_address
+					am_type = value.type
+					// Setting a global array or matrix value inside of a function
+					is_global = true
+					break
+				}
+			}
+		}
+
+		current_dimension_stack.push(1)
 
 		dimensions_stack.push({
 			am_id,
-			dimension: current_dimension,
+			dimension: current_dimension_stack.top(),
 			base_address,
 			type: am_type,
+			is_global,
 		})
 
 		// Add fake bottom to the operators stack
@@ -1445,7 +1895,7 @@ mark_am_dimension = () => {
 			throw 'ERROR - Trying to index a variable without a valid integer'
 		}
 
-		if (current_dimension_list === null) {
+		if (current_dimension_list_stack.top() === null) {
 			console.log(
 				'ERROR - Trying to index a variable without the specified dimensions'
 			)
@@ -1457,7 +1907,7 @@ mark_am_dimension = () => {
 		const left_operand = indexing_variable.operand
 		const right_operand = null
 		const result = get_constant_virtual_address(
-			current_dimension_list.supLimit,
+			current_dimension_list_stack.top().supLimit,
 			'int'
 		)
 		quads.push({
@@ -1469,18 +1919,26 @@ mark_am_dimension = () => {
 
 		// Helper for retrieving appropriate address from virtual_memory
 		const scope = current_func == global_func ? 'global' : 'local'
-		const type = dimensions_stack.top().type
+		const type =
+			dimensions_stack.top().type === 'char'
+				? 'int'
+				: dimensions_stack.top().type
 
 		// Check if it is a matrix
-		if (current_dimension_list.nextNode !== null) {
+		if (current_dimension_list_stack.top().nextNode !== null) {
 			// Generate s1*m1 quad --> {*, indexing_variable, m, temp}
 			const operator = '*'
 			const left_operand = operands.pop().operand
 			const right_operand = get_constant_virtual_address(
-				current_dimension_list.mValue,
+				current_dimension_list_stack.top().mValue,
 				'int'
 			)
-			const result = virtual_memory.get_address(scope, type, 'temp')
+			let result = virtual_memory.get_address(scope, type, 'temp')
+			if (current_class != null) {
+				const len = Math.ceil(Math.log10(result + 1))
+				result = result / Math.pow(10, len)
+			}
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -1491,12 +1949,17 @@ mark_am_dimension = () => {
 		}
 
 		// Check if it is a matrix
-		if (current_dimension > 1) {
+		if (current_dimension_stack.top() > 1) {
 			// Generate (s1*m1) + s2 quad --> {+, (s1*m1), s2, temp}
 			const operator = '+'
 			const right_operand = operands.pop().operand
 			const left_operand = operands.pop().operand
-			const result = virtual_memory.get_address(scope, type, 'temp')
+			let result = virtual_memory.get_address(scope, type, 'temp')
+			if (current_class != null) {
+				const len = Math.ceil(Math.log10(result + 1))
+				result = result / Math.pow(10, len)
+			}
+
 			quads.push({
 				operator: get_opcode(operator),
 				left_operand,
@@ -1515,10 +1978,12 @@ mark_am_dimension = () => {
 add_am_dimension = () => {
 	// console.log('inside add_am_dimension')
 	if (current_class == null) {
-		current_dimension++
+		current_dimension_stack.push(current_dimension_stack.pop() + 1)
 		dimensions_stack.data[dimensions_stack.count - 1].dimension =
-			current_dimension
-		current_dimension_list = current_dimension_list.nextNode
+			current_dimension_stack.top()
+		current_dimension_list_stack.push(
+			current_dimension_list_stack.pop().nextNode
+		)
 	}
 }
 
@@ -1530,7 +1995,7 @@ mark_am_end = () => {
 
 	if (current_class == null) {
 		// Verify a matrix was accessed appropriately for its two dimensions (instead of trying to access it as an array)
-		const is_matrix = current_dimension_list.nextNode !== null
+		const is_matrix = current_dimension_list_stack.top().nextNode !== null
 		if (is_matrix && !added_second_dimension) {
 			console.log(
 				'ERROR - Trying to index a variable without the specified dimensions'
@@ -1539,14 +2004,29 @@ mark_am_end = () => {
 		}
 		const final_am_aux = operands.pop().operand
 		const base_virtual_address = dimensions_stack.top().base_address
+		const is_global_am = dimensions_stack.top().is_global
 
 		// Generate final_am_aux (s1*m1 + s2 OR s1) + base_virtual_address quad --> {+, final_am_aux, base_virtual_address, temp}
 		const operator = '+'
 		const left_operand = final_am_aux
-		const right_operand = base_virtual_address
-		const scope = current_func == global_func ? 'global' : 'local'
+		const right_operand = get_constant_virtual_address(
+			base_virtual_address,
+			'int'
+		)
+		const scope = is_global_am
+			? 'global'
+			: current_func == global_func
+			? 'global'
+			: 'local'
 		const type = dimensions_stack.top().type
-		const result = virtual_memory.get_address(scope, type, 'pointer')
+		let result = virtual_memory.get_address(scope, type, 'pointer')
+		if (current_class != null) {
+			const len = Math.ceil(Math.log10(result + 1))
+			result = result / Math.pow(10, len)
+		}
+
+		func_size_directory.get('pointers_size')[type]++
+
 		quads.push({
 			operator: get_opcode(operator),
 			left_operand,
@@ -1562,10 +2042,21 @@ mark_am_end = () => {
 		dimensions_stack.pop()
 
 		// Reset dimension variables
-		current_dimension = null
-		current_dimension_list = null
+		current_dimension_stack.pop()
+		current_dimension_list_stack.pop() // pop dimension
 		added_second_dimension = false
 	}
+}
+
+// -> Object creation and usage semantic actions
+
+// Semantic action that sets the current_object variable by checking the current_simple_id
+// Receives the name of the object
+// Does not return anything
+mark_object = () => {
+	current_object = func_directory
+		.get(global_func)
+		.var_directory.get(current_simple_id)
 }
 
 // -> Helper functions

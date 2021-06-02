@@ -279,11 +279,9 @@ console.log(
 //     }`)
 // console.log('--> ' + (test15 ? 'yes :)' : 'no :('))
 
-console.log(
-	'\n\nERROR TEST 16 - Calling a void func in an expression'
-)
+console.log('\n\nERROR TEST 16 - Calling a void func in an expression')
 // const test16 = parser.parse(`
-// 	program prog1; 
+// 	program prog1;
 //     var <- int x, y; ->
 
 //     void func surprise (var <- int z; ->)
@@ -311,7 +309,7 @@ console.log(
 	'\n\nERROR TEST 17 - Calling a func in an expression with type mismatch'
 )
 // const test17 = parser.parse(`
-//     program prog1; 
+//     program prog1;
 //     var <- float x, y; ->
 
 //     int func surprise (var <- int z; ->)
@@ -334,3 +332,48 @@ console.log(
 //         print("end program");
 //     }`)
 // console.log('--> ' + (test17 ? 'yes :)' : 'no :('))
+
+console.log('\n\nERROR TEST 18 - Return statement outside of function')
+// const test18 = parser.parse(`
+// program prog1;
+// var <- int x, y; float a; ->
+
+// void func surprise1(var <- int z; ->)
+// var <- int k; ->
+// {
+//     print("inside surprise1 function");
+//     print("end surprise 1");
+// }
+
+// int func surprise2(var <- float z; ->)
+// var <- float k; ->
+// {
+//     print("inside surprise2 function");
+//     print("end surprise 2");
+//     return 1;
+// }
+
+// main() {
+//     x = 5;
+//     y = 6;
+//     surprise1(x);
+//     return surprise2(a);
+//     print("end program");
+// }`)
+// console.log('--> ' + (test18 ? 'yes :)' : 'no :('))
+
+console.log('\n\nTEST 19 - Nested function call as param')
+const test19 = parser.parse(`
+program prog1; 
+var <- int n; ->
+
+int func sum (var <- int num1, num2; ->)
+{
+  return num1 + num2;
+}
+
+main() {
+  n = sum(sum(1, 2), 3);
+  print(n);
+}`)
+console.log('--> ' + (test19 ? 'yes :)' : 'no :('))

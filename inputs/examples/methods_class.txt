@@ -1,0 +1,34 @@
+<-- Example with a class methods -->
+program methodExample; 
+
+<-- Declaring the Person class -->
+class Person {
+    attributes <- int age; float height; ->
+    methods <-
+        int func getAge()
+        { 
+            return age * 2;
+        }
+    ->
+}
+
+<-- Declaring the Animal class -->
+class Animal {
+    attributes <- int years; float spots; ->
+    methods <-
+        void func showSpots()
+        {
+            print(spots);
+        }
+    ->
+}
+
+var <- Person person1, person2; Animal animal1, animal2; ->
+
+main() {
+    person1.age = 15;
+    print("Person1 age is", person1.getAge());
+    animal1.spots = 5;
+    print("Spots are");
+    animal1.showSpots();
+}

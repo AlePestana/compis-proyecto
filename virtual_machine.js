@@ -53,11 +53,11 @@ const funcs_offsets = {
 
 // Function that checks if an address belongs to the global scope
 const isGlobalVar = (address) => {
-	if (address < 14000 || (address >= 33000 && address <= 38999)) {
-		return true
-	} else {
-		return false
-	}
+	return (
+		(address > 1 && address < 14000) ||
+		(address >= 33000 && address <= 38999) ||
+		address > 45000
+	)
 }
 
 // Function that checks if an address belongs to a constant (all constants are stored after virtual address 25000)
@@ -67,7 +67,7 @@ const isConstant = (address) => {
 
 // Function that checks if an address belongs to a pointer (all pointers are stored after virtual address 33000)
 const isPointer = (address) => {
-	return address >= 33000
+	return address >= 33000 && address <= 44999
 }
 
 // Function that returns the value of a constant by receiving the constants directory and the address
@@ -101,13 +101,32 @@ const getTempVarType = (address) => {
 	}
 }
 
-// Function that gets the type of a variable from the var_directory
-const getVarType = (var_directory, address) => {
-	for (let [, value] of var_directory.entries()) {
-		if (value.virtual_address === address) return value.type
+// Function that returns the type of a pointer var by checking the memory ranges designated for pointers
+const getPointerVarType = (address) => {
+	if (isBetween(address, 33000, 34999) || isBetween(address, 39000, 40999)) {
+		return 'int'
+	} else if (
+		isBetween(address, 35000, 36999) ||
+		isBetween(address, 41000, 42999)
+	) {
+		return 'float'
+	} else {
+		return 'char'
 	}
 }
 
+// Function that gets the type of a global variable
+const getVarType = (address) => {
+	if (isBetween(address, 5000, 7999)) {
+		return 'int'
+	} else if (isBetween(address, 9000, 10999)) {
+		return 'float'
+	} else if (isBetween(address, 12000, 13999)) {
+		return 'char'
+	}
+}
+
+// Function that gets the type of local variable
 const getLocalVarType = (address) => {
 	if (isBetween(address, 14000, 18999)) {
 		return 'int'
@@ -116,6 +135,38 @@ const getLocalVarType = (address) => {
 	} else {
 		return 'char'
 	}
+}
+
+// Function that gets the type for any given address
+const getType = (address) => {
+	if (isGlobalVar(address)) {
+		if (isTempVar(address)) {
+			return getTempVarType(address)
+		} else if (isPointer(address)) {
+			return getPointerVarType(address)
+		} else {
+			return getVarType(address)
+		}
+	} else {
+		// it's local
+		if (isTempVar(address)) {
+			return getTempVarType(address)
+		} else if (isPointer(address)) {
+			return getPointerVarType(address)
+		} else {
+			return getLocalVarType(address)
+		}
+	}
+}
+
+// Function that checks if an address belongs to an object by verifying if it has decimal points
+const isObjectAddress = (address) => {
+	return address % 1 != 0
+}
+
+// Function that gets the address of a class
+const getClassBaseAddress = (address) => {
+	return Math.floor(address / 1000) * 1000
 }
 
 // Function that executes the virtual machine by creating the data, code, and stack segment
@@ -128,21 +179,23 @@ async function execute_virtual_machine(virtual_machine_info) {
 	}
 
 	// Retrieve relevant information from parser
-	const { quads, func_directory, constants_directory } = virtual_machine_info
+	const { quads, func_directory, constants_directory, class_directory } =
+		virtual_machine_info
 
 	// Declare all necessary types
 	const code_segment = quads
-	// Create memory map for main
 	let current_func = func_directory.entries().next().value[0] // returns the name of the first func inside the current directory
 	const main_size_directory =
 		func_directory.get(current_func).func_size_directory
 	const main_func_sizes = {
-		int_vars_count: main_size_directory.get('vars_size').int,
-		float_vars_count: main_size_directory.get('vars_size').float,
-		char_vars_count: main_size_directory.get('vars_size').char,
-		int_temps_count: main_size_directory.get('temps_size').int,
-		float_temps_count: main_size_directory.get('temps_size').float,
+		int_vars_size: main_size_directory.get('vars_size').int,
+		float_vars_size: main_size_directory.get('vars_size').float,
+		char_vars_size: main_size_directory.get('vars_size').char,
+		int_temps_size: main_size_directory.get('temps_size').int,
+		float_temps_size: main_size_directory.get('temps_size').float,
+		objects_size: main_size_directory.get('objects_size'),
 	}
+	// Create memory for main
 	const data_segment = new Memory(main_func_sizes, main_func_offsets)
 	const exec_stack = new Stack()
 	let ip = 0 // instruction pointer
@@ -152,24 +205,76 @@ async function execute_virtual_machine(virtual_machine_info) {
 	let exec_stack_size = 0
 	const exec_stack_max_size = 100000
 
+	// Create memory for each object for each class inside the class_directory by pushing to the objects array
+	for (let [class_name, class_value] of class_directory) {
+		const current_class_sizes = {
+			int_vars_size: class_value.class_size_directory.get('vars_size').int,
+			float_vars_size: class_value.class_size_directory.get('vars_size').float,
+			char_vars_size: class_value.class_size_directory.get('vars_size').char,
+		}
+		const object_count = func_directory
+			.get(current_func)
+			.func_size_directory.get('objects_size')[class_value.base_virtual_address]
+		for (let i = 0; i < object_count; i++) {
+			const object_address = class_value.base_virtual_address + i
+			// Add each object to the corresponding class
+			data_segment.add_object(
+				object_address,
+				current_class_sizes,
+				main_func_offsets
+			)
+		}
+	}
+
 	// Function to look on corresponding memory for a variable's value
 	const getOperandValue = (address) => {
 		if (isConstant(address)) {
 			return getConstant(constants_directory, address)
+		} else if (isObjectAddress(address)) {
+			if (address > 1) {
+				// Accessing from func or main, its data_segment, it can only access attributes
+				return data_segment.get_object_address(address, 'vars')
+			} else {
+				// A method is trying to get the value of an attribute of the same class
+				// This has the form --> 0.5
+				// Working with exec_stack, but might want to consider its global variables (which are in data_segment)
+				const local_address = address // Store the 0.5 before changing
+				// Change from 0.5 to 5000
+				const len = address.toString().split('.')[1].length
+				address =
+					Number(address.toString().split('.')[1]) * (len <= 2 ? 1000 : 1)
+
+				const type = getType(address)
+				// Might be exec_stack, or might be data_segment
+				if (isGlobalVar(address)) {
+					// data_segment but with address from top of exec_stack
+					// Looking for address --> current_object.local_address --> 45000.5000
+					return data_segment.get_object_address(
+						exec_stack.top().instance_address + local_address,
+						'vars'
+					)
+				} else {
+					// Working with exec stack
+					if (isTempVar(address)) {
+						return exec_stack.top().memory.get(address, 'temps', type)
+					} else {
+						// Local Variables
+						return exec_stack.top().memory.get(address, 'vars', type)
+					}
+				}
+			}
 		} else {
+			const type = getType(address)
 			if (isGlobalVar(address)) {
 				// Working with data_segment
 				if (isTempVar(address)) {
 					// Look for temp value in corresponding memory (since it must have already been stored)
-					const temp_type = getTempVarType(address)
-					return data_segment.get(address, 'temps', temp_type)
+					return data_segment.get(address, 'temps', type)
 				} else if (isPointer(address)) {
-					console.log('its a pointer')
+					const actual_address = getPointingAddress(address, type, 'global')
+					return data_segment.get(actual_address, 'vars', type)
 				} else {
-					const var_type = getVarType(
-						func_directory.get(current_func).var_directory,
-						address
-					)
+					const var_type = getVarType(address)
 					// Look for value in corresponding memory
 					return data_segment.get(address, 'vars', var_type)
 				}
@@ -177,25 +282,48 @@ async function execute_virtual_machine(virtual_machine_info) {
 				// Working with exec_stack
 				if (isTempVar(address)) {
 					// Look for temp value in corresponding memory (since it must have already been stored)
-					const temp_type = getTempVarType(address)
-					return exec_stack.top().memory.get(address, 'temps', temp_type)
+					return exec_stack.top().memory.get(address, 'temps', type)
+				} else if (isPointer(address)) {
+					const actual_address = getPointingAddress(address, type, 'local')
+					return exec_stack.top().memory.get(actual_address, 'vars', type)
 				} else {
-					//console.log(exec_stack.top().name)
-					const var_type = getLocalVarType(address)
-					return exec_stack.top().memory.get(address, 'vars', var_type)
+					return exec_stack.top().memory.get(address, 'vars', type)
 				}
 			}
 		}
 	}
 
+	// Function that gets the address that the pointer is pointing to
+	const getPointingAddress = (address, pointer_type, scope) => {
+		// Just return the address, not the value
+		if (scope === 'global') {
+			return data_segment.get(address, 'pointers', pointer_type)
+		} else {
+			return exec_stack.top().memory.get(address, 'pointers', pointer_type)
+		}
+	}
+
 	// Function to set to memory a particular value
 	const setMemoryValue = (result, address, duration) => {
-		if (isGlobalVar(address)) {
-			// data_segment
-			data_segment.set(result, address, duration)
+		if (isObjectAddress(address)) {
+			// Change from 0.5 to 5000
+			const len = address.toString().split('.')[1].length
+			const value_address =
+				Number(address.toString().split('.')[1]) * (len <= 2 ? 1000 : 1)
+			if (isGlobalVar(value_address)) {
+				// Sending the complete address --> 45000.5
+				data_segment.set_object_address(result, address, duration)
+			} else {
+				exec_stack.top().memory.set(result, value_address, duration)
+			}
 		} else {
-			// exec_stack
-			exec_stack.top().memory.set(result, address, duration)
+			if (isGlobalVar(address)) {
+				// data_segment
+				data_segment.set(result, address, duration)
+			} else {
+				// exec_stack
+				exec_stack.top().memory.set(result, address, duration)
+			}
 		}
 	}
 
@@ -210,6 +338,7 @@ async function execute_virtual_machine(virtual_machine_info) {
 				'params_size' => { int: 1, float: 0, char: 0 },
 				'local_vars_size' => { int: 1, float: 0, char: 0 },
 				'temps_size' => { int: 6, float: 0 }
+				'pointers_size' => { int: 1, float: 2, char: 0 }
 			} 
 			*/
 			total += Object.values(size_directory).reduce((a, b) => a + b, 0)
@@ -220,21 +349,21 @@ async function execute_virtual_machine(virtual_machine_info) {
 
 	const getFunctionSizes = (size_directory) => {
 		return {
-			int_vars_count:
+			int_vars_size:
 				size_directory.get('params_size').int +
 				size_directory.get('local_vars_size').int,
-			float_vars_count:
+			float_vars_size:
 				size_directory.get('params_size').float +
 				size_directory.get('local_vars_size').float,
-			char_vars_count:
+			char_vars_size:
 				size_directory.get('params_size').char +
 				size_directory.get('local_vars_size').char,
-			int_temps_count: size_directory.get('temps_size').int,
-			float_temps_count: size_directory.get('temps_size').float,
+			int_temps_size: size_directory.get('temps_size').int,
+			float_temps_size: size_directory.get('temps_size').float,
 		}
 	}
 
-	let left_operand, right_operand, result, address
+	let left_operand, right_operand, result, address, duration
 
 	// Execute code_segment
 	while (ip != -1) {
@@ -243,15 +372,14 @@ async function execute_virtual_machine(virtual_machine_info) {
 			case 1: // +
 				left_operand = getOperandValue(quad.left_operand)
 				right_operand = getOperandValue(quad.right_operand)
-				result =
-					getOperandValue(quad.left_operand) +
-					getOperandValue(quad.right_operand)
+				result = left_operand + right_operand
 				address = quad.result
 				if (debug) {
 					console.log('+')
 				}
 				// Save result on memory
-				setMemoryValue(result, address, 'temps')
+				duration = isPointer(address) ? 'pointers' : 'temps'
+				setMemoryValue(result, address, duration)
 				ip++
 				break
 
@@ -378,8 +506,25 @@ async function execute_virtual_machine(virtual_machine_info) {
 				if (debug) {
 					console.log('=')
 				}
-				// This will break when assigning values to global variables inside funcs ????
-				const duration = isTempVar(address) ? 'temps' : 'vars'
+
+				if (isTempVar(address)) {
+					duration = 'temps'
+				} else if (isPointer(address)) {
+					duration = 'pointers'
+				} else {
+					duration = 'vars'
+				}
+
+				if (duration === 'pointers') {
+					// First get the actual address
+					const pointer_type = getPointerVarType(address)
+					const scope = isGlobalVar(address) ? 'global' : 'local'
+					address = getPointingAddress(address, pointer_type, scope)
+					// The final address must be a var
+					duration = 'vars'
+				}
+
+				// Set memory value
 				setMemoryValue(result, address, duration)
 				ip++
 				break
@@ -395,25 +540,62 @@ async function execute_virtual_machine(virtual_machine_info) {
 				break
 			case 13: // read
 				// Read user input
-				result = await receive_user_input()
-				// Validate type ???
-				switch (result.type) {
+				result = await receive_user_input() // this is of type string
+
+				// Validate type of input according to variable type
+				address = quad.result
+
+				let value_address = address
+				if (isObjectAddress(value_address)) {
+					const len = value_address.toString().split('.')[1].length
+					value_address =
+						Number(value_address.toString().split('.')[1]) *
+						(len <= 2 ? 1000 : 1)
+				}
+				let type = getType(value_address)
+
+				// Get type of variable we're reading to
+				switch (type) {
 					case 'int':
-						console.log('Check is int')
+						const int_number = Number.parseInt(result)
+						// has to be != instead of !==, otherwise it errors out
+						if (Number.isNaN(int_number) || result != int_number) {
+							console.log('ERROR - Input type mismatch')
+							throw 'ERROR - Input type mismatch'
+						}
 						break
 					case 'float':
-						console.log('Check is float')
+						const float_number = Number.parseFloat(result)
+						if (Number.isNaN(float_number) || result != float_number) {
+							console.log('ERROR - Input type mismatch')
+							throw 'ERROR - Input type mismatch'
+						}
 						break
 					case 'char':
-						console.log('Check is char')
+						if (result.length !== 1) {
+							console.log('ERROR - Input type mismatch')
+							throw 'ERROR - Input type mismatch'
+						}
 						break
 				}
-				// Look for address in func_directory
-				address = func_directory
-					.get(current_func)
-					.var_directory.get(quad.result).virtual_address // Quad should probably also have an address and not a name?
+
+				if (isTempVar(address)) {
+					duration = 'temps'
+				} else if (isPointer(address)) {
+					duration = 'pointers'
+				} else {
+					duration = 'vars'
+				}
+
+				if (duration === 'pointers') {
+					// First get the actual address
+					const scope = isGlobalVar(address) ? 'global' : 'local'
+					address = getPointingAddress(address, type, scope)
+					// The final address must be a var
+					duration = 'vars'
+				}
 				// Save result on memory
-				setMemoryValue(result, address, 'vars')
+				setMemoryValue(result, address, duration)
 				ip++
 				break
 			case 14: // gotoT
@@ -439,24 +621,52 @@ async function execute_virtual_machine(virtual_machine_info) {
 				ip = exec_stack.pop().return_address
 				break
 			case 18: // era
-				let curr_function_name = quad.left_operand
-				let curr_function_size = getTotalFunctionSize(
-					func_directory.get(curr_function_name).func_size_directory
-				)
-				if (exec_stack_size + curr_function_size > exec_stack_max_size) {
+				let current_function_name = quad.left_operand
+
+				let size_directory
+
+				let instance_address = null
+
+				let class_name = null
+
+				if (current_function_name.includes('.')) {
+					const address = parseInt(current_function_name.substring(0, 5))
+					current_function_name = current_function_name.substring(6)
+
+					instance_address = address
+
+					const base_class_address = getClassBaseAddress(address)
+					// Get to which class it belongs to
+					class_directory.forEach((value, key) => {
+						if (value.base_virtual_address == base_class_address) {
+							size_directory = value.method_directory.get(
+								current_function_name
+							).func_size_directory
+							class_name = key
+						}
+					})
+					current_function_name = current_function_name
+				} else {
+					size_directory = func_directory.get(
+						current_function_name
+					).func_size_directory
+				}
+
+				let current_function_size = getTotalFunctionSize(size_directory)
+				if (exec_stack_size + current_function_size > exec_stack_max_size) {
 					console.log('ERROR - Stack overflow')
 					throw 'ERROR - Stack overflow'
 				}
 				// Add current function size to total size of execution stack
-				exec_stack_size += curr_function_size
-				let curr_function_sizes = getFunctionSizes(
-					func_directory.get(curr_function_name).func_size_directory
-				)
-				let func_call_mem = new Memory(curr_function_sizes, funcs_offsets)
+				exec_stack_size += current_function_size
+				let current_function_sizes = getFunctionSizes(size_directory)
+				let func_call_mem = new Memory(current_function_sizes, funcs_offsets)
 				func_calls_in_build.push({
-					name: curr_function_name,
+					name: current_function_name,
 					memory: func_call_mem,
 					return_address: null,
+					instance_address,
+					class_name,
 				})
 				ip++
 				break
@@ -469,11 +679,19 @@ async function execute_virtual_machine(virtual_machine_info) {
 				break
 			case 20: // param
 				const argument = getOperandValue(quad.left_operand)
-				const param_num = parseInt(quad.result.slice(5)) // Read after param
+				const param_num = parseInt(quad.result.slice(5)) // Read after param\
 
-				const argument_type = func_directory.get(func_calls_in_build.top().name)
-					.params_type_list[param_num - 1]
-
+				let argument_type
+				if (func_calls_in_build.top().instance_address != null) {
+					// it is a method
+					argument_type = class_directory
+						.get(func_calls_in_build.top().class_name)
+						.method_directory.get(func_calls_in_build.top().name)
+						.params_type_list[param_num - 1]
+				} else {
+					argument_type = func_directory.get(func_calls_in_build.top().name)
+						.params_type_list[param_num - 1]
+				}
 				func_calls_in_build.top().memory.add_parameter(argument, argument_type)
 
 				ip++
@@ -483,12 +701,36 @@ async function execute_virtual_machine(virtual_machine_info) {
 				break
 			case 22: // return
 				result = getOperandValue(quad.result)
-				address = func_directory.get(exec_stack.top().name).return_address
+
+				// Obtain address where to store the result of the function (the return value)
+				if (exec_stack.top().instance_address != null) {
+					const curr_class_name = exec_stack.top().class_name
+					const curr_func_name = exec_stack.top().name
+					const object_address = exec_stack.top().instance_address
+					let return_address = class_directory
+						.get(curr_class_name)
+						.method_directory.get(curr_func_name).return_address
+
+					const len = Math.ceil(Math.log10(return_address + 1))
+					return_address = return_address / Math.pow(10, len)
+					// Changing address to form --> object_address.return_address
+					address = object_address + return_address
+				} else {
+					address = func_directory.get(exec_stack.top().name).return_address
+				}
+
 				setMemoryValue(result, address, 'vars')
 
 				ip = exec_stack.pop().return_address
 				break
 			case 23: // verify
+				let index = getOperandValue(quad.left_operand)
+				let upper_bound = getOperandValue(quad.result)
+
+				if (index > upper_bound || index < 0) {
+					console.log('ERROR - Index out of bounds')
+					throw 'ERROR - Index out of bounds'
+				}
 				ip++
 				break
 			default:

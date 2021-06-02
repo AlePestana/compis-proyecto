@@ -1,0 +1,45 @@
+<-- Multiply matrices example -->
+program multiplyMatricesExample; 
+var <- int a[2][2], b[2][2], res[2][2]; ->
+
+<-- Function that prints the contents of a matrix -->
+void func ptMat()
+var <- int i, j; ->
+{
+    for(i = 0 until 2) {
+        for(j = 0 until 2) {
+            print(res[i][j]);
+        }
+    }
+}
+
+<-- Function that multiplies two matrices -->
+void func multiply() 
+var <- int i, j, k; ->
+{
+    for(i = 0 until 2) {
+        for(j = 0 until 2) {
+            res[i][j] = 0;
+            for(k = 0 until 2) {
+                res[i][j] = res[i][j] + a[i][k] * b[k][j];
+            }
+        }
+    }
+}
+
+main() {
+    print("Multiplying two matrices");
+    a[0][0] = 1;
+    a[0][1] = 2;
+    a[1][0] = 3;
+    a[1][1] = 4;
+
+    b[0][0] = 1;
+    b[0][1] = 1;
+    b[1][0] = 1;
+    b[1][1] = 1;
+
+    multiply();
+    print("Result");
+    ptMat();
+}

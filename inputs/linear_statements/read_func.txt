@@ -1,0 +1,19 @@
+program prog1; 
+var <- float x; ->
+
+void func hi() 
+{
+    print("Before reading user input inside func");
+    read(x);
+    print("User input inside func was", x);
+}
+
+main() {
+    print("Before reading user input");
+    read(x);
+    print("User input was", x);
+    x = 5.5;
+    print("Assigned x again", x);
+    hi();
+    print("User input outside func was", x);
+}

@@ -12,14 +12,15 @@ function isBetween(x, min, max) {
 class Memory {
 	constructor(
 		{
-			int_vars_size,
-			float_vars_size,
-			char_vars_size,
-			int_temps_size,
-			float_temps_size,
-			int_pointers_size,
-			float_pointers_size,
-			char_pointers_size,
+			int_vars_size = 0,
+			float_vars_size = 0,
+			char_vars_size = 0,
+			int_temps_size = 0,
+			float_temps_size = 0,
+			int_pointers_size = 0,
+			float_pointers_size = 0,
+			char_pointers_size = 0,
+			objects_size = 0,
 		},
 		{
 			int_vars_offset,
@@ -32,22 +33,38 @@ class Memory {
 			char_pointers_offset,
 		}
 	) {
-		this.memory = {
-			vars: {
-				int: new Array(int_vars_size),
-				float: new Array(float_vars_size),
-				char: new Array(char_vars_size),
-			},
-			temps: {
-				int: new Array(int_temps_size),
-				float: new Array(float_temps_size),
-			},
-			pointers: {
-				int: new Array(int_pointers_size),
-				float: new Array(float_pointers_size),
-				char: new Array(char_pointers_size),
-			},
-		}
+		// Memory array
+		this.memory = [
+			// vars
+			[
+				new Array(int_vars_size),
+				new Array(float_vars_size),
+				new Array(char_vars_size),
+			],
+			// temps
+			[new Array(int_temps_size), new Array(float_temps_size)],
+			// pointers
+			[
+				new Array(int_pointers_size),
+				new Array(float_pointers_size),
+				new Array(char_pointers_size),
+			],
+			// classes
+			// objects_size is an object with the form --> { 46000: 2, 45000: 1 }
+			new Array(Object.keys(objects_size).length),
+			,
+		]
+
+		// Indexes
+		this.vars = 0
+		this.temps = 1
+		this.pointers = 2
+		this.objects = 3
+		this.int = 0
+		this.float = 1
+		this.char = 2
+
+		// Offsets
 		this.int_vars_offset = int_vars_offset
 		this.float_vars_offset = float_vars_offset
 		this.char_vars_offset = char_vars_offset
@@ -56,6 +73,9 @@ class Memory {
 		this.int_pointers_offset = int_pointers_offset
 		this.float_pointers_offset = float_pointers_offset
 		this.char_pointers_offset = char_pointers_offset
+		this.objects_offset = 45000
+
+		// Counters
 		this.int_vars_count = 0
 		this.float_vars_count = 0
 		this.char_vars_count = 0
@@ -64,24 +84,56 @@ class Memory {
 		this.int_pointers_count = 0
 		this.float_pointers_count = 0
 		this.char_pointers_count = 0
+
+		// Initialize empty object memory spaces
+		for (let [class_address, object_count] of Object.entries(objects_size)) {
+			// 45000 --> 45
+			class_address = parseInt(class_address) // parse as int since object keys are considered strings
+			const index = class_address / 1000 - this.objects_offset / 1000
+			this.memory[this.objects][index] = new Array(object_count)
+		}
 	}
 
-	// Add a value to the memory
-	// push(value, scope, type) {
-	// 	this.memory[scope][type].push(value)
-	// }
+	// Get the index for each corresponding type
+	get_type_index(type) {
+		if (type === 'int') {
+			return this.int
+		} else if (type === 'float') {
+			return this.float
+		} else {
+			return this.char
+		}
+	}
+
+	// Get the index for each corresponding scope
+	get_scope_index(scope) {
+		if (scope === 'vars') {
+			return this.vars
+		} else if (scope === 'temps') {
+			return this.temps
+		} else {
+			return this.pointers
+		}
+	}
 
 	// Push a parameter value to the memory
 	add_parameter(value, type) {
 		let index = 0
+		const scope_index = this.vars
+		const type_index = this.get_type_index(type)
+
 		if (type === 'int') {
 			index = this.int_vars_count
+			this.int_vars_count++
 		} else if (type === 'float') {
 			index = this.float_vars_count
+			this.float_vars_count++
 		} else {
 			index = this.char_vars_count
+			this.char_vars_count++
 		}
-		this.memory['vars'][type][index] = value
+
+		this.memory[scope_index][type_index][index] = value
 	}
 
 	// Get the offset according to scope of variable and type
@@ -112,11 +164,13 @@ class Memory {
 	}
 
 	// Get a value from an address
-	// Scope = vars or temp
+	// Scope = vars, temps or pointers
 	// Type = int, float or char
 	get(address, scope, type) {
 		const index = address - this.get_offset(scope, type)
-		return this.memory[scope][type][index]
+		const scope_index = this.get_scope_index(scope)
+		const type_index = this.get_type_index(type)
+		return this.memory[scope_index][type_index][index]
 	}
 
 	// Dependending on the provided address, returns the type of variable (according to the scopes and offsets specified)
@@ -159,8 +213,11 @@ class Memory {
 	// Update the value from a given address
 	set(value, address, scope) {
 		const type = this.get_address_type(address, scope)
+		const scope_index = this.get_scope_index(scope)
+		const type_index = this.get_type_index(type)
 		const index = address - this.get_offset(scope, type)
-		this.memory[scope][type][index] = value
+
+		this.memory[scope_index][type_index][index] = value
 
 		// Update counters
 		if (scope === 'vars') {
@@ -186,6 +243,63 @@ class Memory {
 				this.char_pointers_count++
 			}
 		}
+	}
+
+	// Add an object inside the corresponding class array
+	add_object(object_address, class_sizes, offsets) {
+		// 45001 --> 45.001 --> 45
+		const class_address = Math.floor(object_address / 1000)
+
+		const class_index = class_address - this.objects_offset / 1000
+		const object_index = object_address - class_address * 1000 // so we can do 46001-46000 = 1
+
+		this.memory[this.objects][class_index][object_index] = new Memory(
+			class_sizes,
+			offsets
+		)
+	}
+
+	// Get the address inside an object
+	get_object_address(address, scope) {
+		const object_address = Math.floor(address) // only interested in the non decimal part
+		// 45001 --> 45.001 --> 45 --> 45000
+		const class_address = Math.floor(object_address / 1000)
+		// Obtain decimal part (since that's the actual address of the attribute)
+		const len = address.toString().split('.')[1].length
+		const value_address =
+			Number(address.toString().split('.')[1]) * (len <= 2 ? 1000 : 1)
+
+		// Get indexes
+		const class_index = class_address - this.objects_offset / 1000
+		const object_index = object_address - class_address * 1000
+
+		const type = this.get_address_type(value_address, scope)
+
+		return this.memory[this.objects][class_index][object_index].get(
+			value_address,
+			scope,
+			type
+		)
+	}
+
+	// Set the address of an object
+	set_object_address(value, address, scope) {
+		const object_address = Math.floor(address) // only interested in the non decimal part
+		// 45001 --> 45.001 --> 45 --> 45000
+		const class_address = Math.floor(object_address / 1000)
+		// Obtain decimal part (since that's the actual address of the attribute)
+		const len = address.toString().split('.')[1].length
+		address = Number(address.toString().split('.')[1]) * (len <= 2 ? 1000 : 1)
+
+		// Get indexes
+		const class_index = class_address - this.objects_offset / 1000
+		const object_index = object_address - class_address * 1000
+
+		return this.memory[this.objects][class_index][object_index].set(
+			value,
+			address,
+			scope
+		)
 	}
 }
 

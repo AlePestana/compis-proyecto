@@ -85,3 +85,34 @@ console.log('\nERROR TEST 7 - Trying to index a matrix as an array')
 //     print(x[1]);
 //   }`)
 // console.log('--> ' + (test7 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 8 - Printing matrix value within function')
+const test8 = parser.parse(`
+	program prog1; 
+    var <- float x[3][2]; ->
+
+  void func myFunc1 (var <- int id1; ->) { 
+    print(x[0][0]);
+  }
+
+	main() {
+    x[1][0] = 4.4;
+    myFunc1(2);
+    print(x[1][0]);
+  }`)
+console.log('--> ' + (test8 ? 'yes :)' : 'no :('))
+
+console.log('\nTEST 9 - Printing matrix value within function')
+const test9 = parser.parse(`
+program prog1; 
+var <- int x[3], y[2], p[2], z, res; ->
+
+main() {
+y[0] = 1;
+x[y[0]] = 2;
+z = 0;
+p[1] = 0;
+res = x[y[p[1]]];
+print(res);
+}`)
+console.log('--> ' + (test9 ? 'yes :)' : 'no :('))

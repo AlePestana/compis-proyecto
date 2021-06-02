@@ -1,0 +1,27 @@
+<-- Fibonacci example using a for loop -->
+program fibonacciLoopArray; 
+var <- int result; ->
+
+<-- Function that calculates the fibonacci in the num position -->
+int func fibonacci (var <- int num; ->) 
+var <- int i, prev, curr, next; ->
+{
+    prev = 0;
+    curr = 1;
+
+    print(prev);
+    print(curr);
+
+    for(i = 1 until 10) {
+        next = prev + curr;
+        prev = curr;
+        curr = next;
+        print(next);
+    }
+    return next;
+}
+
+main() {
+    result = fibonacci(10);
+    print("Fibonacci of 10", result);
+}
