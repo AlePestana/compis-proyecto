@@ -4,6 +4,8 @@
 // Output: does not return something since all actions are global
 // Used by: parser.js (since it specifies the actions to be executed by it)
 
+// Flag to debug (print to terminal intermediate code)
+const debug = false
 // Semantic cube
 const oracle = require('./cube')
 
@@ -459,15 +461,18 @@ delete_func_directory = function () {
 		constants_directory,
 		class_directory,
 	}
-	console.log('Func directory before exit')
-	console.log(func_directory)
-	func_directory.forEach((value, key, map) => {
-		console.log(key)
-		console.log(value)
-	})
+	if (debug) {
+		console.log('Func directory before exit')
+		console.log(func_directory)
+
+		func_directory.forEach((value, key, map) => {
+			console.log(key)
+			console.log(value)
+		})
+		console.log('Quads before exit')
+		print_quads(quads)
+	}
 	func_directory = null
-	console.log('Quads before exit')
-	print_quads(quads)
 	quads = new Queue()
 	operators = new Stack()
 	operands = new Stack()
@@ -480,8 +485,10 @@ delete_func_directory = function () {
 // Does not receive any parameters
 // Does not return anything
 delete_constants_directory = () => {
-	console.log('constants_directory before exit')
-	console.log(constants_directory)
+	if (debug) {
+		console.log('constants_directory before exit')
+		console.log(constants_directory)
+	}
 	constants_directory = null
 }
 
@@ -572,8 +579,10 @@ finish_compound_id_list = () => {
 // Does not receive any parameters
 // Does not return anything
 delete_class_directory = () => {
-	console.log('Class directory before exit')
-	console.log(class_directory)
+	if (debug) {
+		console.log('Class directory before exit')
+		console.log(class_directory)
+	}
 	class_directory = null
 }
 
@@ -1687,7 +1696,6 @@ verify_call_params_size = () => {
 
 	// More parameters were declared than sent
 	if (params_count_stack.top() - 1 !== params_types_stack.top().length) {
-		console.log(params_count_stack.top(), params_types_stack.top())
 		console.log('ERROR - Number of parameters required does not match')
 		throw 'ERROR - Number of parameters required does not match'
 	}
